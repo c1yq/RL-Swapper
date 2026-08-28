@@ -20,6 +20,22 @@ DARK_BG = "#1A1A1A"
 PANEL_BG = "#222222"
 ACCENT = "#3B82F6"
 
+HITBOX_MAP = {
+    'Octane': ['Octane', 'Octane ZSR', 'Fennec', 'Takumi', 'Takumi RX-T', 'Twinzer', 'Bone Shaker', 'Marauder', 'Scarab', 'Zippy', 'Armadillo', 'Grog', 'Triton', 'Proteus', 'Vulcan', 'Fast 4WD', 'Mudcat', 'Mudcat GXT', 'Harbinger', 'Harbinger GXT', 'Jackal', 'Dingo', 'Outlaw', 'Outlaw GXT', 'Nomad', 'Nomad GXT', 'Aston Martin Valhalla', 'BMW M240i', 'Bugatti Centodieci', 'Ford Bronco Raptor', 'Ford F-150 RLE', 'Ford Mustang Mach-E RLE', 'Honda Civic Type R', 'Honda Civic Type R-LE', 'Jurassic Jeep Wrangler', 'Maestro', 'Nissan Silvia', 'Nissan Silvia RLE', 'Primo', 'Redline', 'Sweet Tooth', 'Volkswagen Golf GTI', 'Volkswagen Golf GTI RLE', 'Admiral', 'Mako'],
+    'Dominus': ['Dominus', 'Dominus GT', 'Ice Charger', 'Aftershock', 'Masamune', 'Ripper', 'DeLorean Time Machine', 'Batmobile (1989)', 'Fast & Furious Dodge Charger', 'Fast & Furious Nissan Skyline', 'Ecto-1', 'K.I.T.T.', 'McLaren 570S', 'Gazella GT', 'MR11', 'Nemesis', 'Diestro', 'Ronin', 'Ronin GXT', 'Peregrine TT', 'Tyranno', 'Tyranno GXT', 'Mamba', 'Nissan Z Performance', '007''s Aston Martin DBS', 'Aston Martin DB5', 'Audi RS 3', 'BMW M4 CSL', 'Bugatti Bolide', 'Chikara', 'Chikara GXT', 'Emperor', 'Emperor II', 'Ferrari 296 GTB', 'Ford Mustang Shelby GT500', 'Formula 1', 'Guardian', 'Guardian GXT', 'Lamborghini Countach LPI 800-4', 'Lamborghini Huracan STO', 'McLaren 765LT', 'Porsche 911 Turbo', 'Porsche 911 Turbo RLE', 'Samus'' Gunship', 'Maserati Grecale Trofeo', 'Nissan Fairlady Z', 'Fairlady'],
+    'Breakout': ['Breakout', 'Breakout Type-S', 'Animus GP', 'Cyclone', 'Samurai', 'Komodo', 'Nexus', 'Nexus SC'],
+    'Plank': ['Batmobile (2016)', 'Mantis', 'Paladin', 'Centio', 'Centio V17', 'Artemis', 'Artemis GXT', 'Sentinel'],
+    'Hybrid': ['Endo', 'Venom', 'X-Devil', 'X-Devil Mk2', 'Jager 619', 'Jager 619 RS', 'Nimbus', 'Tygris', 'Insidio', 'R3MX', 'R3MX GXT', 'Esper', 'Silvia'],
+    'Merc': ['Merc', 'Battle Bus', 'Ford Bronco', 'Nomad']
+}
+
+def get_hitbox(name):
+    for k, v in HITBOX_MAP.items():
+        for car in v:
+            if car.lower() == name.lower() or car.lower() in name.lower():
+                return k
+    return "Unknown"
+
 def get_resource_path(relative_path):
     try:
         base_path = sys._MEIPASS
@@ -30,7 +46,13 @@ def get_resource_path(relative_path):
 def can_fit(visual_dict, sacrifice_dict):
     v_parts = visual_dict["parts"]
     s_parts = sacrifice_dict["parts"]
-    # Sacrifice string length MUST be <= Visual string length
+    
+    is_body = (visual_dict["item"].slot == "Body" and sacrifice_dict["item"].slot == "Body")
+    if is_body:
+        if visual_dict.get("hitbox") != sacrifice_dict.get("hitbox"):
+            return False
+            
+    # STRIKEST RESTRICTIONS FOR ALL ITEMS (INCLUDING BODIES)
     if len(sacrifice_dict["stem"]) > len(visual_dict["stem"]): return False
     if len(s_parts) == len(v_parts):
         for s, v in zip(s_parts, v_parts):
@@ -41,6 +63,7 @@ def can_fit(visual_dict, sacrifice_dict):
             if len(s_parts[-1]) > len(v_parts[-1]): return False
         for s, v in zip(s_parts, v_parts):
             if len(s) > len(v): return False
+            
     return True
 
 class RLSwapperApp(ctk.CTk):
@@ -84,7 +107,7 @@ class RLSwapperApp(ctk.CTk):
                 f.write("# RL Swaps Log\n\n")
 
         self.categorized_items = {}
-        ignored_slots = {'Currency', 'Crate', 'Blueprint', 'Player Title', 'Player Anthem', 'Esports Team', 'Body'}
+        ignored_slots = {'Currency', 'Crate', 'Blueprint', 'Player Title', 'Player Anthem', 'Esports Team'}
         seen_keys = {}
         
         for itm in self.items:
@@ -110,15 +133,29 @@ class RLSwapperApp(ctk.CTk):
             parts = [p for p in str(itm.asset_path).split(".") if p]
             stem_bare = itm.asset_package.lower().replace("_sf.upk", "").replace(".upk", "")
             
+            hitbox = None
+            display_name = prod_name
+            if itm.slot == "Body":
+                hitbox = get_hitbox(prod_name)
+                display_name = f"{prod_name} [{hitbox}]"
+            
             self.categorized_items[itm.slot].append({
-                "display": prod_name, 
+                "display": display_name,
+                "product_name": prod_name,
                 "item": itm,
                 "parts": parts,
-                "stem": stem_bare
+                "stem": stem_bare,
+                "hitbox": hitbox
             })
+            
+        for slot in self.categorized_items:
+            self.categorized_items[slot] = sorted(self.categorized_items[slot], key=lambda x: x["display"])
 
         self.header_frame = ctk.CTkFrame(self, fg_color="transparent")
         self.header_frame.pack(fill="x", padx=20, pady=20)
+        
+        self.in_dir_btn = ctk.CTkButton(self.header_frame, text="?? Set RL Folder", fg_color=PANEL_BG, text_color="#E0E0E0", hover_color="#333333", border_width=1, border_color="#555", command=self.set_in_dir)
+        self.in_dir_btn.pack(side="left", padx=(0, 10))
         
         self.out_dir_btn = ctk.CTkButton(self.header_frame, text="?? Set Output Dir", fg_color=PANEL_BG, text_color="#E0E0E0", hover_color="#333333", border_width=1, border_color="#555", command=self.set_output_dir)
         self.out_dir_btn.pack(side="left")
@@ -129,7 +166,7 @@ class RLSwapperApp(ctk.CTk):
         self.logs_btn = ctk.CTkButton(self.header_frame, text="Logs", fg_color=PANEL_BG, text_color="#E0E0E0", hover_color="#333333", border_width=1, border_color="#555", command=self.show_logs)
         self.logs_btn.pack(side="right")
         
-        popular_order = ["Decal", "Wheels", "Rocket Boost", "Goal Explosion", "Trail", "Antenna", "Topper"]
+        popular_order = ["Body", "Decal", "Wheels", "Rocket Boost", "Goal Explosion", "Trail", "Antenna", "Topper"]
         sorted_slots = [s for s in popular_order if s in self.categorized_items] + [s for s in self.categorized_items if s not in popular_order]
         
         self.tabview = ctk.CTkTabview(self, fg_color=PANEL_BG, segmented_button_fg_color=DARK_BG, segmented_button_selected_color=ACCENT, segmented_button_selected_hover_color="#2563EB")
@@ -226,6 +263,12 @@ class RLSwapperApp(ctk.CTk):
         self.btn_generate = ctk.CTkButton(self.bot_frame, text="GENERATE ONLY", text_color="#FFF", fg_color="#10B981", hover_color="#059669", font=ctk.CTkFont(size=18, weight="bold"), height=50, command=lambda: self.do_swap(in_game=False))
         self.btn_generate.pack(side="right", fill="x", expand=True, padx=(10, 0))
 
+    def set_in_dir(self):
+        folder = filedialog.askdirectory(initialdir=self.folder, title="Select CookedPCConsole Directory")
+        if folder:
+            self.folder = folder
+            messagebox.showinfo("RL Folder", f"Rocket League CookedPCConsole folder set to:\n{self.folder}")
+            
     def set_output_dir(self):
         folder = filedialog.askdirectory(initialdir=self.output_dir, title="Select Output Directory")
         if folder:
