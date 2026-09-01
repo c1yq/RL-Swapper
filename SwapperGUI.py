@@ -78,7 +78,9 @@ class RLSwapperApp(ctk.CTk):
         else:
             self.app_dir = os.path.dirname(os.path.abspath(__file__))
             
-        self.swaps_log = os.path.join(self.app_dir, "swaps.txt")
+        self.appdata_dir = os.path.join(os.environ.get('LOCALAPPDATA', self.app_dir), 'RLSwapper')
+        os.makedirs(self.appdata_dir, exist_ok=True)
+        self.swaps_log = os.path.join(self.appdata_dir, 'swaps.txt')
         self.output_dir = self.app_dir  
         
         self.folder = r'C:\Program Files\Epic Games\rocketleague\TAGame\CookedPCConsole'
@@ -157,8 +159,6 @@ class RLSwapperApp(ctk.CTk):
         self.in_dir_btn = ctk.CTkButton(self.header_frame, text="?? Set RL Folder", fg_color=PANEL_BG, text_color="#E0E0E0", hover_color="#333333", border_width=1, border_color="#555", command=self.set_in_dir)
         self.in_dir_btn.pack(side="left", padx=(0, 10))
         
-        self.out_dir_btn = ctk.CTkButton(self.header_frame, text="?? Set Output Dir", fg_color=PANEL_BG, text_color="#E0E0E0", hover_color="#333333", border_width=1, border_color="#555", command=self.set_output_dir)
-        self.out_dir_btn.pack(side="left")
         
         self.title_label = ctk.CTkLabel(self.header_frame, text="RL SWAPPER", text_color="#E0E0E0", font=ctk.CTkFont(family="Segoe UI", size=28, weight="bold"))
         self.title_label.pack(side="left", expand=True)
@@ -257,24 +257,16 @@ class RLSwapperApp(ctk.CTk):
         self.bot_frame = ctk.CTkFrame(self, fg_color="transparent")
         self.bot_frame.pack(fill="x", padx=20, pady=20)
         
-        self.btn_swap = ctk.CTkButton(self.bot_frame, text="SWAP IN-GAME", text_color="#FFF", fg_color=ACCENT, hover_color="#2563EB", font=ctk.CTkFont(size=18, weight="bold"), height=50, command=lambda: self.do_swap(in_game=True))
+        self.btn_swap = ctk.CTkButton(self.bot_frame, text="REPLACE IN-GAME", text_color="#FFF", fg_color=ACCENT, hover_color="#2563EB", font=ctk.CTkFont(size=18, weight="bold"), height=50, command=lambda: self.do_swap(in_game=True))
         self.btn_swap.pack(side="left", fill="x", expand=True, padx=(0, 10))
-        
-        self.btn_generate = ctk.CTkButton(self.bot_frame, text="GENERATE ONLY", text_color="#FFF", fg_color="#10B981", hover_color="#059669", font=ctk.CTkFont(size=18, weight="bold"), height=50, command=lambda: self.do_swap(in_game=False))
+        self.btn_generate = ctk.CTkButton(self.bot_frame, text="GENERATE FILE ONLY", text_color="#FFF", fg_color="#10B981", hover_color="#059669", font=ctk.CTkFont(size=18, weight="bold"), height=50, command=lambda: self.do_swap(in_game=False))
         self.btn_generate.pack(side="right", fill="x", expand=True, padx=(10, 0))
-
     def set_in_dir(self):
         folder = filedialog.askdirectory(initialdir=self.folder, title="Select CookedPCConsole Directory")
         if folder:
             self.folder = folder
             messagebox.showinfo("RL Folder", f"Rocket League CookedPCConsole folder set to:\n{self.folder}")
             
-    def set_output_dir(self):
-        folder = filedialog.askdirectory(initialdir=self.output_dir, title="Select Output Directory")
-        if folder:
-            self.output_dir = folder
-            messagebox.showinfo("Output Directory", f"Output directory set to:\n{self.output_dir}")
-
     def show_logs(self):
         log_win = ctk.CTkToplevel(self)
         log_win.title("Swaps Log")
@@ -292,35 +284,28 @@ class RLSwapperApp(ctk.CTk):
             
         textbox.configure(state="disabled")
         
-        def clear_logs_and_undo():
-            if messagebox.askyesno("Undo All Changes", "This will restore all backed-up .upk files in CookedPCConsole and clear the log file. Proceed?"):
-                count = self.undo_all_changes()
+        def purge_backups():
+            if messagebox.askyesno("Clear Swap History", "This will permanently delete all .bak backup files and clear your swap log so you can start completely fresh.\n\nNote: This will NOT restore swapped items. You must Verify Game Files in Steam/Epic to revert items to normal.\n\nProceed?"):
+                count = 0
+                try:
+                    for root, dirs, files in os.walk(self.folder):
+                        for f in files:
+                            if f.endswith(".bak"):
+                                os.remove(os.path.join(root, f))
+                                count += 1
+                except Exception: pass
+                
                 textbox.configure(state="normal")
                 textbox.delete("1.0", "end")
-                textbox.insert("1.0", f"Restored {count} files. Logs cleared.")
+                textbox.insert("1.0", f"Purged {count} obsolete backups. Logs cleared.")
                 textbox.configure(state="disabled")
                 with open(self.swaps_log, "w", encoding="utf-8") as f:
                     f.write("# RL Swaps Log\n\n")
-                messagebox.showinfo("Success", f"Undid all changes. Restored {count} files.")
+                messagebox.showinfo("Success", f"Cleared swap history and deleted {count} backups.")
         
-        btn_undo = ctk.CTkButton(log_win, text="Undo All Changes (Restore In-Game Backups)", fg_color="#EF4444", hover_color="#DC2626", command=clear_logs_and_undo)
-        btn_undo.pack(fill="x", padx=10, pady=10)
-        
-    def undo_all_changes(self):
-        restored_count = 0
-        try:
-            for root, dirs, files in os.walk(self.folder):
-                for f in files:
-                    if f.endswith(".bak"):
-                        upk_name = f[:-4]
-                        try:
-                            shutil.copy2(os.path.join(root, f), os.path.join(root, upk_name))
-                            os.remove(os.path.join(root, f))
-                            restored_count += 1
-                        except Exception: pass
-        except Exception: pass
-        return restored_count
-        
+        btn_purge = ctk.CTkButton(log_win, text="Clear Swap History & Delete Backups", fg_color="#F59E0B", hover_color="#D97706", command=purge_backups)
+        btn_purge.pack(fill="x", padx=10, pady=(0, 10))
+
     def append_to_log(self, target_item, donor_item, mode="SWAPPED"):
         upk_name = f"{target_item.asset_package}"
         with open(self.swaps_log, "a", encoding="utf-8") as f:
@@ -340,11 +325,13 @@ class RLSwapperApp(ctk.CTk):
         if in_game:
             out_dir = Path(self.folder)
             btn = self.btn_swap
-            btn_text = "SWAP IN-GAME"
+            btn_text = "REPLACE IN-GAME"
         else:
-            out_dir = Path(self.output_dir)
+            selected_dir = filedialog.askdirectory(title="Select where to save the generated file")
+            if not selected_dir: return
+            out_dir = Path(selected_dir)
             btn = self.btn_generate
-            btn_text = "GENERATE ONLY"
+            btn_text = "GENERATE FILE ONLY"
             
         btn.configure(text="PROCESSING...", fg_color="#D84315", text_color="#FFF", state="disabled")
         threading.Thread(target=self.run_engine, args=(donor_item, target_item, out_dir, in_game, btn, btn_text), daemon=True).start()

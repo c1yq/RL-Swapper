@@ -803,8 +803,11 @@ def swap_one_package(
 
     backup_path = output_path.with_suffix(output_path.suffix + ".bak")
     if backup_path.exists():
-        raise RuntimeError(
-            f"{output_path.name} is already swapped — restore it first before swapping again.")
+        if output_path.exists() and output_path.stat().st_mtime > backup_path.stat().st_mtime:
+            backup_path.unlink()
+        else:
+            raise RuntimeError(
+                f"{output_path.name} is already swapped — restore it first before swapping again.")
     if output_path.exists() and not options.overwrite:
         raise FileExistsError(f"Output already exists: {output_path}")
 
