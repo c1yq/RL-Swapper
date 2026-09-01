@@ -19,6 +19,7 @@ ctk.set_default_color_theme("blue")
 DARK_BG = "#1A1A1A"
 PANEL_BG = "#222222"
 ACCENT = "#3B82F6"
+RED = "#EF4444"
 
 HITBOX_MAP = {
     'Octane': ['Octane', 'Octane ZSR', 'Fennec', 'Takumi', 'Takumi RX-T', 'Twinzer', 'Bone Shaker', 'Marauder', 'Scarab', 'Zippy', 'Armadillo', 'Grog', 'Triton', 'Proteus', 'Vulcan', 'Fast 4WD', 'Mudcat', 'Mudcat GXT', 'Harbinger', 'Harbinger GXT', 'Jackal', 'Dingo', 'Outlaw', 'Outlaw GXT', 'Nomad', 'Nomad GXT', 'Aston Martin Valhalla', 'BMW M240i', 'Bugatti Centodieci', 'Ford Bronco Raptor', 'Ford F-150 RLE', 'Ford Mustang Mach-E RLE', 'Honda Civic Type R', 'Honda Civic Type R-LE', 'Jurassic Jeep Wrangler', 'Maestro', 'Nissan Silvia', 'Nissan Silvia RLE', 'Primo', 'Redline', 'Sweet Tooth', 'Volkswagen Golf GTI', 'Volkswagen Golf GTI RLE', 'Admiral', 'Mako'],
@@ -81,11 +82,22 @@ class RLSwapperApp(ctk.CTk):
         self.appdata_dir = os.path.join(os.environ.get('LOCALAPPDATA', self.app_dir), 'RLSwapper')
         os.makedirs(self.appdata_dir, exist_ok=True)
         self.swaps_log = os.path.join(self.appdata_dir, 'swaps.txt')
-        self.output_dir = self.app_dir  
+        self.config_file = os.path.join(self.appdata_dir, 'config.json')
         
         self.folder = r'C:\Program Files\Epic Games\rocketleague\TAGame\CookedPCConsole'
         if not os.path.exists(self.folder):
             self.folder = r'C:\Program Files (x86)\Steam\steamapps\common\rocketleague\TAGame\CookedPCConsole'
+            
+        if os.path.exists(self.config_file):
+            try:
+                with open(self.config_file, 'r') as f:
+                    config = json.load(f)
+                    if 'rl_folder' in config and os.path.exists(config['rl_folder']):
+                        self.folder = config['rl_folder']
+            except: pass
+        self.output_dir = self.app_dir  
+        
+        self.folder = r'C:\Program Files\Epic Games\rocketleague\TAGame\CookedPCConsole'
         
         try:
             self.items = load_items(Path(get_resource_path('items.json')))
@@ -254,6 +266,36 @@ class RLSwapperApp(ctk.CTk):
             search_var.trace_add("write", filter_target)
             sac_search_var.trace_add("write", filter_sac)
 
+        help_tab = self.tabview.add("HELP & INFO")
+        help_frame = ctk.CTkFrame(help_tab, fg_color=PANEL_BG)
+        help_frame.pack(fill="both", expand=True, padx=20, pady=20)
+        
+        help_txt = ctk.CTkTextbox(help_frame, fg_color="transparent", text_color="#FFF", font=ctk.CTkFont(size=16), wrap="word")
+        help_txt.pack(fill="both", expand=True, padx=20, pady=20)
+        
+        help_txt.tag_config("header", foreground=ACCENT)
+        help_txt.tag_config("important", foreground="#F59E0B")
+        help_txt.tag_config("warning", foreground=RED)
+        
+        help_txt.insert("end", "How to use RL Swapper:\n\n", "header")
+        help_txt.insert("end", "1. Set your Rocket League Folder: ", "important")
+        help_txt.insert("end", "Click 'Set RL Folder' at the top right and select your CookedPCConsole folder (usually in C:\\Program Files\\Epic Games\\rocketleague\\TAGame\\CookedPCConsole).\n\n")
+        help_txt.insert("end", "2. Choose your Items:\n", "important")
+        help_txt.insert("end", "   - Target: Select the item you WANT to have.\n")
+        help_txt.insert("end", "   - Sacrifice: Select the item you ALREADY OWN that you are willing to replace.\n\n")
+        help_txt.insert("end", "3. Click 'REPLACE IN-GAME': ", "important")
+        help_txt.insert("end", "The swapper will trick the game into loading the Target item whenever you equip the Sacrifice item.\n\n\n")
+        help_txt.insert("end", "Important Notes:\n\n", "header")
+        help_txt.insert("end", "- Client-Side Only: ", "important")
+        help_txt.insert("end", "The swapper modifies your game files locally. Other players will still see your original Sacrifice car.\n")
+        help_txt.insert("end", "- Hitbox Locks: ", "important")
+        help_txt.insert("end", "Car Bodies are strictly locked by Hitbox. You can only sacrifice a car that shares the exact same hitbox as your Target car, otherwise the game would crash.\n\n\n")
+        help_txt.insert("end", "How to Undo:\n\n", "header")
+        help_txt.insert("end", "- Click 'Settings & Logs' and click 'Revert All Swapped Items to Default'.\n\n")
+        help_txt.insert("end", "WARNING: ", "warning")
+        help_txt.insert("end", "If the revert button fails to reset your items (which can happen after a Rocket League update), you MUST completely Verify Game Files in Steam or Epic Games to repair your game files and revert everything to normal!", "warning")
+        
+        help_txt.configure(state="disabled")
         self.bot_frame = ctk.CTkFrame(self, fg_color="transparent")
         self.bot_frame.pack(fill="x", padx=20, pady=20)
         
@@ -265,8 +307,11 @@ class RLSwapperApp(ctk.CTk):
         folder = filedialog.askdirectory(initialdir=self.folder, title="Select CookedPCConsole Directory")
         if folder:
             self.folder = folder
+            try:
+                with open(self.config_file, 'w') as f:
+                    json.dump({'rl_folder': self.folder}, f)
+            except: pass
             messagebox.showinfo("RL Folder", f"Rocket League CookedPCConsole folder set to:\n{self.folder}")
-            
     def show_logs(self):
         log_win = ctk.CTkToplevel(self)
         log_win.title("Swaps Log")
@@ -285,25 +330,28 @@ class RLSwapperApp(ctk.CTk):
         textbox.configure(state="disabled")
         
         def purge_backups():
-            if messagebox.askyesno("Clear Swap History", "This will permanently delete all .bak backup files and clear your swap log so you can start completely fresh.\n\nNote: This will NOT restore swapped items. You must Verify Game Files in Steam/Epic to revert items to normal.\n\nProceed?"):
+            if messagebox.askyesno("Revert All Swaps", "This will restore your original items (using your .bak backups) and clear the swap log.\n\nProceed?"): 
                 count = 0
                 try:
                     for root, dirs, files in os.walk(self.folder):
                         for f in files:
                             if f.endswith(".bak"):
-                                os.remove(os.path.join(root, f))
-                                count += 1
+                                upk_name = f[:-4]
+                                try:
+                                    shutil.copy2(os.path.join(root, f), os.path.join(root, upk_name))
+                                    os.remove(os.path.join(root, f))
+                                    count += 1
+                                except Exception: pass
                 except Exception: pass
                 
                 textbox.configure(state="normal")
                 textbox.delete("1.0", "end")
-                textbox.insert("1.0", f"Purged {count} obsolete backups. Logs cleared.")
+                textbox.insert("1.0", f"Restored {count} items to default. Logs cleared.")
                 textbox.configure(state="disabled")
                 with open(self.swaps_log, "w", encoding="utf-8") as f:
                     f.write("# RL Swaps Log\n\n")
-                messagebox.showinfo("Success", f"Cleared swap history and deleted {count} backups.")
-        
-        btn_purge = ctk.CTkButton(log_win, text="Clear Swap History & Delete Backups", fg_color="#F59E0B", hover_color="#D97706", command=purge_backups)
+                messagebox.showinfo("Success", f"Reverted {count} items to default.")
+        btn_purge = ctk.CTkButton(log_win, text="Revert All Swapped Items to Default", fg_color="#F59E0B", hover_color="#D97706", command=purge_backups)
         btn_purge.pack(fill="x", padx=10, pady=(0, 10))
 
     def append_to_log(self, target_item, donor_item, mode="SWAPPED"):
@@ -313,6 +361,9 @@ class RLSwapperApp(ctk.CTk):
 
     def do_swap(self, in_game=True):
         current_tab_name = self.tabview.get()
+        if "HELP" in current_tab_name:
+            messagebox.showwarning("Warning", "Please select an item category tab first!")
+            return
         t_info = self.tab_data[current_tab_name]
         sel_t, sel_s = t_info["target_lb"].curselection(), t_info["sac_lb"].curselection()
         if not sel_t or not sel_s:
