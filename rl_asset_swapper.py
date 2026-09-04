@@ -448,7 +448,11 @@ def build_reencrypted_package_with_output_key(upk, original_encrypted_path: Path
     copy_len = min(len(original_plain), encrypted_plain_len)
     header_plain[:copy_len] = original_plain[:copy_len]
 
-    new_total_header_size = modified_summary.name_offset + encrypted_plain_len + meta.garbage_size
+    original_gap_start_calc = summary.name_offset + len(original_encrypted_data)
+    original_gap_end_calc = original_chunks[0].compressed_offset
+    actual_garbage_size = original_gap_end_calc - original_gap_start_calc
+
+    new_total_header_size = modified_summary.name_offset + encrypted_plain_len + actual_garbage_size
     current_compressed_offset = new_total_header_size
     for i, chunk in enumerate(original_chunks):
         start = chunk.uncompressed_offset + chunk_shift
@@ -514,8 +518,6 @@ def build_reencrypted_package_with_output_key(upk, original_encrypted_path: Path
     original_gap_start = summary.name_offset + len(original_encrypted_data)
     original_gap_end = original_chunks[0].compressed_offset
     gap_bytes = original_bytes[original_gap_start:original_gap_end]
-    if len(gap_bytes) != meta.garbage_size:
-        gap_bytes = original_bytes[original_gap_end - meta.garbage_size:original_gap_end]
     output += gap_bytes
     for payload in rebuilt_chunk_payloads:
         output += payload
@@ -863,10 +865,14 @@ def swap_one_package(
     if size_growth > 0:
         gap_start = name_off + new_enc_aligned
         del output[gap_start:gap_start + size_growth]
+    elif size_growth < 0:
+        gap_start = name_off + new_enc_aligned
+        output[gap_start:gap_start] = b'\x00' * (-size_growth)
 
     if header_delta != 0 or size_growth != 0:
         offs = _find_summary_offsets(bytes(output))
         if header_delta != 0:
+            _patch_i32(output, offs['total_header_size'], pfx.total_header_size + header_delta)
             _patch_i32(output, offs['import_offset'],  pfx.import_offset  + header_delta)
             _patch_i32(output, offs['export_offset'],  pfx.export_offset  + header_delta)
             _patch_i32(output, offs['depends_offset'], pfx.depends_offset + header_delta)
@@ -915,7 +921,21 @@ def build_output(upk, donor_path: Path, target_key_path: Path, modified, provide
                 log.append(f"WARN: output key verification failed: {exc}")
         log.append("Saved encrypted/compressed output.")
     else:
-        output_path.write_bytes(modified.file_bytes)
+        # Rocket League will refuse to load uncompressed files if the PKG_COOKED flag is missing.
+        # rl_upk_editor strips this flag when decompressing, so we MUST restore it before saving!
+        out_bytes = bytearray(modified.file_bytes)
+        try:
+            summary_offsets = upk._find_summary_offsets(out_bytes)
+            import struct
+            PKG_COOKED = 0x00000008
+            flag_offset = summary_offsets['package_flags_offset']
+            current_flags = struct.unpack_from('<I', out_bytes, flag_offset)[0]
+            struct.pack_into('<I', out_bytes, flag_offset, current_flags | PKG_COOKED)
+            log.append("Restored PKG_COOKED flag for unencrypted output.")
+        except Exception as e:
+            log.append(f"WARN: Failed to restore PKG_COOKED flag: {e}")
+            
+        output_path.write_bytes(out_bytes)
         log.append("Saved decrypted/decompressed output because input was not encrypted.")
 
 
@@ -1280,366 +1300,564 @@ def _read_upk_texture_props(pkg, serial: bytes) -> Tuple[int, int, str]:
     return width, height, fmt
 
 
-def swap_pfp_from_png(upk, png_path: Path, options: SwapOptions) -> Tuple[List[Path], List[str]]:
-    TARGET_PKG    = "AvatarBorder_Default_SF.upk"
-    TARGET_EXPORT = "AvatarBorder_Default.AvatarBorder_Default"
-    log: List[str] = []
-    log.append(f"Custom PFP from PNG: {png_path}")
 
+
+
+def _inplace_zlib_patch(upk, png_path: Path, options: SwapOptions, target_pkg: str, target_chunk_idx: int, target_width: int, target_height: int, img_size, img_offset, magic_size: int) -> Tuple[List[Path], List[str]]:
+    log: List[str] = []
+    log.append(f"Custom Image from PNG: {png_path}")
+    
     if not png_path.exists():
         raise FileNotFoundError(f"PNG not found: {png_path}")
 
-    target_path = options.output_dir / TARGET_PKG
-    key_dir = options.key_source_dir or options.donor_dir or options.output_dir
-    key_src = key_dir / TARGET_PKG
+    import shutil, struct, zlib
+    from PIL import Image
+    
+    original_img = Image.open(str(png_path)).convert("RGBA")
+    
+    def _get_bgra_bytes(im):
+        rgba = im.tobytes()
+        bgra = bytearray(len(rgba))
+        for i in range(0, len(rgba), 4):
+            bgra[i]   = rgba[i + 2]
+            bgra[i+1] = rgba[i + 1]
+            bgra[i+2] = rgba[i]
+            bgra[i+3] = rgba[i + 3]
+        return bytes(bgra)
+        
+    source_path = options.donor_dir / target_pkg
+    target_path = options.output_dir / target_pkg
 
-    if not target_path.exists():
-        raise FileNotFoundError(
-            f"Target UPK not found: {target_path}\n"
-            "Ensure the game directory points to CookedPCConsole."
-        )
+    if not source_path.exists():
+        raise FileNotFoundError(f"Source UPK not found: {source_path}")
+
+    if source_path.resolve() != target_path.resolve():
+        shutil.copy2(source_path, target_path)
+
+    original_bytes = bytearray(source_path.read_bytes())
+    
+    chunk_offsets = []
+    idx = 0
+    while True:
+        idx = original_bytes.find(b'\xc1\x83\x2a\x9e', idx)
+        if idx == -1: break
+        chunk_offsets.append(idx)
+        idx += 4
+        
+    if len(chunk_offsets) <= target_chunk_idx:
+        raise ValueError(f"Could not find enough chunks in {target_pkg}")
+        
+    start = chunk_offsets[target_chunk_idx]
+    c_magic, c_block_size, c_comp, c_uncomp = struct.unpack_from('<Iiii', original_bytes, start)
+    
+    block_offset = 16
+    blocks = []
+    while block_offset < 16 + 8 * ((c_uncomp + c_block_size - 1) // c_block_size):
+        bc, bu = struct.unpack_from('<ii', original_bytes, start + block_offset)
+        blocks.append((bc, bu))
+        block_offset += 8
+        
+    full_chunk_size = block_offset + sum(bc for bc, bu in blocks)
+    payload = original_bytes[start : start + full_chunk_size]
+    
+    uncompressed_blocks = []
+    data_offset = block_offset
+    for bc, bu in blocks:
+        uncompressed_blocks.append(bytearray(zlib.decompress(payload[data_offset : data_offset + bc])))
+        data_offset += bc
+        
+    uncompressed = bytearray()
+    for b in uncompressed_blocks: uncompressed += b
+        
+    magic_bytes = struct.pack('<II', magic_size, magic_size)
+    find_idx = uncompressed.find(magic_bytes)
+    if find_idx == -1:
+        magic_bytes = struct.pack('<I', magic_size)
+        find_idx = uncompressed.find(magic_bytes)
+        if find_idx == -1:
+            raise ValueError(f"Could not find BulkData header for {magic_size} bytes.")
+            
+    pixel_start = find_idx + 8
+    pixel_end = pixel_start + magic_size
+
+    if img_size is not None:
+        scaled = original_img.resize((img_size, img_size), Image.LANCZOS)
+        img = Image.new("RGBA", (target_width, target_height), (0, 0, 0, 0))
+        img.paste(scaled, (img_offset, img_offset))
+        
+        # Extract the original texture to use as an overlay border
+        orig_bgra = uncompressed[pixel_start : pixel_end]
+        rgba = bytearray(len(orig_bgra))
+        for i in range(0, len(orig_bgra), 4):
+            rgba[i]   = orig_bgra[i+2]
+            rgba[i+1] = orig_bgra[i+1]
+            rgba[i+2] = orig_bgra[i]
+            rgba[i+3] = orig_bgra[i+3]
+        border_img = Image.frombytes("RGBA", (target_width, target_height), bytes(rgba))
+        
+        # Paste the original border on top of the custom image
+        img.paste(border_img, (0, 0), border_img)
+    elif target_height == 100: # THIS IS A BANNER
+        # The user wants the banner to be 90 pixels high to match the "thinner" native banners like Taxi.
+        # So we scale the custom image to 420x90, and paste it on a 420x100 transparent canvas with a 5px top offset.
+        scaled = original_img.resize((target_width, 90), Image.LANCZOS)
+        img = Image.new("RGBA", (target_width, target_height), (0, 0, 0, 0))
+        img.paste(scaled, (0, 5))
+    else:
+        img = original_img.resize((target_width, target_height), Image.LANCZOS)
+
+    
+    best_bytes = _get_bgra_bytes(img)
+    
+    def try_compress(image_bytes):
+        temp_uncomp = bytearray(uncompressed)
+        temp_uncomp[pixel_start:pixel_end] = image_bytes
+        new_zlibs = []
+        offset = 0
+        data_offset = block_offset
+        for bc, bu in blocks:
+            # Check if this block's uncompressed range overlaps with the injected pixels
+            block_start = offset
+            block_end = offset + bu
+            
+            if block_end > pixel_start and block_start < pixel_end:
+                # This block was modified, we must recompress it
+                b_data = temp_uncomp[block_start : block_end]
+                nz = zlib.compress(b_data, 9)
+                if len(nz) > bc:
+                    return None
+                new_zlibs.append(nz)
+            else:
+                # This block is untouched, use the exact original compressed bytes!
+                orig_nz = payload[data_offset : data_offset + bc]
+                # Strip trailing zeros if it was padded? No, just keep it exactly as it is!
+                # Wait, orig_nz ALREADY contains any padding that was there.
+                # So we just append it. BUT our builder loop later will pad it again.
+                # To be safe, we just pass orig_nz and let the loop pad it if needed (it won't need it because it's exactly bc).
+                new_zlibs.append(orig_nz)
+                
+            offset += bu
+            data_offset += bc
+        return new_zlibs
+        
+    new_zlibs = try_compress(best_bytes)
+    
+    if new_zlibs is None:
+        log.append("Image is too complex, compressing with quantization...")
+        for colors in [256, 128, 64, 32, 16, 8, 4]:
+            q = img.quantize(colors=colors).convert("RGBA")
+            q_bytes = _get_bgra_bytes(q)
+            new_zlibs = try_compress(q_bytes)
+            if new_zlibs is not None:
+                log.append(f"Quantized to {colors} colors.")
+                break
+        else:
+            raise ValueError("Image still too large after extreme quantization!")
+            
+    # Rebuild the payload with exactly the same chunk header and block sizes
+    new_payload = bytearray(payload[:block_offset])
+    for i, nz in enumerate(new_zlibs):
+        bc, bu = blocks[i]
+        padded_nz = nz + b'\x00' * (bc - len(nz))
+        new_payload += padded_nz
+        
+    original_bytes[start : start + full_chunk_size] = new_payload
+    
+    if target_path.exists() and options.overwrite:
+        bak = target_path.with_suffix(target_path.suffix + ".bak")
+        shutil.copy2(target_path, bak)
+        
+    target_path.write_bytes(original_bytes)
+    log.append(f"Successfully patched {target_pkg} in-place!")
+    return [target_path], log
+
+def swap_asset(upk, target: Item, donor: Item, options: SwapOptions) -> Tuple[List[Path], List[str]]:
+    if target.slot != donor.slot:
+        raise ValueError(f"Slot mismatch: target={target.slot!r}, donor={donor.slot!r}")
+    key_dir = options.key_source_dir or options.donor_dir
+    all_paths: List[Path] = []
+    all_log: List[str] = []
+    all_log.append(f"Target/replaced item: {target.label}")
+    all_log.append(f"Donor/visual item:    {donor.label}")
+    main_path, main_log = swap_one_package(
+        upk,
+        options.donor_dir / donor.asset_package,
+        options.output_dir / target.asset_package,
+        key_dir / target.asset_package,
+        infer_name_pairs(target, donor),
+        options,
+    )
+    all_paths.append(main_path)
+    all_log.extend(main_log)
+
+    if options.include_thumbnails:
+        donor_thumb = options.donor_dir / donor.thumbnail_package
+        target_thumb = options.output_dir / target.thumbnail_package
+        key_thumb = key_dir / target.thumbnail_package
+        if donor_thumb.exists() and key_thumb.exists():
+            all_log.append("")
+            all_log.append("Thumbnail/_T_SF pass:")
+            thumb_path, thumb_log = swap_one_package(upk, donor_thumb, target_thumb, key_thumb, infer_thumbnail_pairs(target, donor), options)
+            all_paths.append(thumb_path)
+            all_log.extend(thumb_log)
+        else:
+            all_log.append(f"SKIP thumbnails: missing {donor_thumb if not donor_thumb.exists() else key_thumb}")
+    else:
+        all_log.append("SKIP thumbnails: disabled.")
+
+    return all_paths, all_log
+
+
+def cleanup_old_temp_files(directory: Path, logger: Optional[Callable[[str], None]] = None) -> None:
+    import time
+    if not directory.exists():
+        return
+    now = time.time()
+    cutoff = 24 * 3600
+    for file in directory.glob("*"):
+        if file.name.endswith(("_decrypted.upk", "_decompressed.upk")):
+            try:
+                mtime = file.stat().st_mtime
+                if now - mtime > cutoff:
+                    file.unlink()
+                    if logger:
+                        logger(f"CLEANUP: Removed old temp file {file.name}")
+            except Exception:
+                pass
+
+def swap_pfp(upk, pfp_upk_path: Path, options: SwapOptions) -> Tuple[List[Path], List[str]]:
+    # This assumes the user provides a donor UPK that contains the custom PFP.
+    # We'll swap it with the default avatar border or a known avatar package.
+    target_package_name = "AvatarBorder_Default_SF.upk"
+    target_export_path = "AvatarBorder_Default.AvatarBorder_Default"
+
+    log: List[str] = []
+    log.append(f"Custom PFP requested using donor: {pfp_upk_path}")
+
+    return swap_export_only_path(upk, target_package_name, target_export_path, pfp_upk_path, target_export_path, options)
+
+
+def swap_export_only_path(upk, target_pkg_name: str, target_export_path: str, donor_pkg_path: Path, donor_export_path: str, options: SwapOptions) -> Tuple[List[Path], List[str]]:
+    log: List[str] = []
+    target_pkg_path = options.output_dir / target_pkg_name
+    key_dir = options.key_source_dir or options.donor_dir
+    key_source_path = key_dir / target_pkg_name
+
+    log.append(f"Replacing export {target_export_path} in {target_pkg_name} with {donor_export_path} from {donor_pkg_path}")
 
     temp_dir = script_dir() / "AssetSwapper_Decrypted"
     temp_dir.mkdir(exist_ok=True)
 
-    _, pkg, provider, _, was_enc = resolve_with_optional_keys(upk, target_path, temp_dir, options.keys_path)
+    _, target_package, target_provider, _, target_was_encrypted = resolve_with_optional_keys(upk, target_pkg_path, temp_dir, options.keys_path)
+    _, donor_package, _, _, _ = resolve_with_optional_keys(upk, donor_pkg_path, temp_dir, options.keys_path)
 
-    # Find the main Texture2D export — look for 'StaticFrame' or the largest Texture2D
-    export = None
-    for exp in pkg.exports:
-        if pkg.export_class_name(exp) == 'Texture2D':
-            n = pkg.names[exp.object_name.name_index].name if hasattr(exp.object_name, 'name_index') else ''
-            if n == 'StaticFrame':
-                export = exp
-                break
-    if export is None:
-        # Fallback: largest Texture2D export
-        for exp in pkg.exports:
-            if pkg.export_class_name(exp) == 'Texture2D':
-                if export is None or exp.serial_size > export.serial_size:
-                    export = exp
-    if export is None:
-        raise ValueError(f"No Texture2D export found in {TARGET_PKG}")
-    serial = pkg.object_data(export)
-    if not serial:
-        raise ValueError("Empty export serial data")
+    modified = upk.replace_export_with_donor_export(target_package, donor_package, target_export_path, donor_export_path)
 
-    # Read texture dimensions and format from the property table
-    width, height, fmt = _read_upk_texture_props(pkg, serial)
-    if not width or not height:
-        raise ValueError(f"Could not read texture dimensions (got {width}×{height})")
-    log.append(f"Texture: {width}×{height} {fmt}")
+    if target_pkg_path.exists() and options.overwrite:
+        backup_path = target_pkg_path.with_suffix(target_pkg_path.suffix + ".bak")
+        shutil.copy2(target_pkg_path, backup_path)
+        log.append(f"Backup written: {backup_path}")
 
-    # Compute pixel data size and start offset
-    if fmt == 'PF_DXT5':
-        pixel_size = ((width + 3) // 4) * ((height + 3) // 4) * 16
-    elif fmt == 'PF_DXT1':
-        pixel_size = ((width + 3) // 4) * ((height + 3) // 4) * 8
-    else:
-        # PF_A8R8G8B8 and others: 4 bytes per pixel
-        pixel_size = width * height * 4
+    build_output(upk, target_pkg_path, key_source_path, modified, target_provider, target_pkg_path, target_was_encrypted, log)
+    return [target_pkg_path], log
 
-    if pixel_size > len(serial):
-        raise ValueError(f"Computed pixel size {pixel_size} exceeds serial length {len(serial)}")
 
-    pixel_start = len(serial) - pixel_size
-    log.append(f"Pixel data: offset {pixel_start}, size {pixel_size} bytes")
+def swap_export_only(upk, target_pkg_name: str, target_export_path: str, donor_pkg_name: str, donor_export_path: str, options: SwapOptions) -> Tuple[List[Path], List[str]]:
+    log: List[str] = []
+    donor_pkg_path = options.donor_dir / donor_pkg_name
+    target_pkg_path = options.output_dir / target_pkg_name
+    key_dir = options.key_source_dir or options.donor_dir
+    key_source_path = key_dir / target_pkg_name
 
-    # Load PNG, resize, convert to target format
+    log.append(f"Replacing export {target_export_path} in {target_pkg_name} with {donor_export_path} from {donor_pkg_name}")
+
+    temp_dir = script_dir() / "AssetSwapper_Decrypted"
+    temp_dir.mkdir(exist_ok=True)
+
+    _, target_package, target_provider, _, target_was_encrypted = resolve_with_optional_keys(upk, target_pkg_path, temp_dir, options.keys_path)
+    _, donor_package, _, _, _ = resolve_with_optional_keys(upk, donor_pkg_path, temp_dir, options.keys_path)
+
+    modified = upk.replace_export_with_donor_export(target_package, donor_package, target_export_path, donor_export_path)
+
+    if target_pkg_path.exists() and options.overwrite:
+        backup_path = target_pkg_path.with_suffix(target_pkg_path.suffix + ".bak")
+        shutil.copy2(target_pkg_path, backup_path)
+        log.append(f"Backup written: {backup_path}")
+
+    build_output(upk, target_pkg_path, key_source_path, modified, target_provider, target_pkg_path, target_was_encrypted, log)
+    return [target_pkg_path], log
+
+
+def revert_item(target: Item, options: SwapOptions) -> Tuple[List[Path], List[str]]:
+    src_dir = options.key_source_dir or options.donor_dir
+    paths: List[Path] = []
+    log: List[str] = []
+    pairs = [(src_dir / target.asset_package, options.output_dir / target.asset_package)]
+    if options.include_thumbnails:
+        pairs.append((src_dir / target.thumbnail_package, options.output_dir / target.thumbnail_package))
+    for src, dst in pairs:
+        if not src.exists():
+            log.append(f"MISS: revert source not found: {src}")
+            continue
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        if dst.exists() and options.overwrite:
+            backup_path = dst.with_suffix(dst.suffix + ".bak")
+            shutil.copy2(dst, backup_path)
+            log.append(f"Backup written: {backup_path}")
+        shutil.copy2(src, dst)
+        paths.append(dst)
+        log.append(f"Reverted: {src} -> {dst}")
+    return paths, log
+
+
+
+
+# ── PNG → Custom PFP pipeline ─────────────────────────────────────────────────
+
+_BULKDATA_TFC = 0x01  # stored in separate .tfc file
+
+
+def _load_png_rgba(path: Path, w: int, h: int) -> List:
     try:
         from PIL import Image
     except ImportError:
-        raise RuntimeError("Pillow required: pip install Pillow")
-
-    img = Image.open(str(png_path)).convert("RGBA").resize((width, height), Image.LANCZOS)
-
-    if fmt == 'PF_DXT5':
-        pixel_list = list(img.getdata())
-        new_pixels = _compress_dxt5(pixel_list, width, height)
-    elif fmt == 'PF_DXT1':
-        pixel_list = list(img.getdata())
-        # DXT1: same as DXT5 color block but no alpha block
-        out = bytearray()
-        pw, ph = (width + 3) & ~3, (height + 3) & ~3
-        if pw != width or ph != height:
-            pixel_list = [pixel_list[min(y, height-1)*width + min(x, width-1)]
-                          for y in range(ph) for x in range(pw)]
-        for by in range(0, ph, 4):
-            for bx in range(0, pw, 4):
-                blk = [pixel_list[(by+dy)*pw + (bx+dx)] for dy in range(4) for dx in range(4)]
-                out += _dxt1_color_block([(p[0], p[1], p[2]) for p in blk])
-        new_pixels = bytes(out)
-    else:
-        # PF_A8R8G8B8 — UE3/DX uses BGRA byte order on disk
-        rgba = img.tobytes()
-        bgra = bytearray(len(rgba))
-        for i in range(0, len(rgba), 4):
-            bgra[i]   = rgba[i + 2]  # B
-            bgra[i+1] = rgba[i + 1]  # G
-            bgra[i+2] = rgba[i]      # R
-            bgra[i+3] = rgba[i + 3]  # A
-        new_pixels = bytes(bgra)
-
-    if len(new_pixels) != pixel_size:
-        raise ValueError(f"Generated pixel data size mismatch: {len(new_pixels)} != {pixel_size}")
-
-    new_serial = serial[:pixel_start] + new_pixels
-
-    if target_path.exists() and options.overwrite:
-        bak = target_path.with_suffix(target_path.suffix + ".bak")
-        shutil.copy2(target_path, bak)
-        log.append(f"Backup: {bak}")
-
-    modified = upk.replace_export_data(pkg, export, new_serial)
-    build_output(upk, target_path, key_src, modified, provider, target_path, was_enc, log)
-    log.append("Custom PFP applied.")
-    return [target_path], log
+        raise RuntimeError("Pillow is required for PNG input. Run: pip install Pillow")
+    img = Image.open(str(path)).convert("RGBA").resize((w, h), Image.LANCZOS)
+    return list(img.getdata())
 
 
-def build_arg_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser()
-    p.add_argument("--items", type=Path, default=default_path(("items.json", "items(4).json")))
-    p.add_argument("--keys", type=Path, default=None)
-    p.add_argument("--donor-dir", "--upk-dir", "--input-dir", dest="donor_dir", type=Path, default=None)
-    p.add_argument("--output-dir", "--out-dir", dest="output_dir", type=Path, default=None)
-    p.add_argument("--key-source-dir", type=Path, default=None)
-    p.add_argument("--slot", default="")
-    p.add_argument("--target", default="")
-    p.add_argument("--donor", default="")
-    p.add_argument("--auto-swap", action="store_true")
-    p.add_argument("--no-gui", action="store_true")
-    p.add_argument("--revert", action="store_true")
-    p.add_argument("--fetch", action="store_true")
-    p.add_argument("--replace-export", action="store_true")
-    p.add_argument("--target-path", default="")
-    p.add_argument("--donor-path", default="")
-    p.add_argument("--custom-pfp", type=Path, default=None)
-    p.add_argument("--pfp-png", type=Path, default=None)
-    p.add_argument("--token", default="")
-    p.add_argument("--account", default="Unknown")
-    thumbs = p.add_mutually_exclusive_group()
-    thumbs.add_argument("--include-thumbnails", dest="include_thumbnails", action="store_true", default=False)
-    thumbs.add_argument("--no-thumbnails", dest="include_thumbnails", action="store_false")
-    preserve = p.add_mutually_exclusive_group()
-    preserve.add_argument("--preserve-header-offsets", dest="preserve_header_offsets", action="store_true", default=True)
-    preserve.add_argument("--no-preserve-header-offsets", dest="preserve_header_offsets", action="store_false")
-    overwrite = p.add_mutually_exclusive_group()
-    overwrite.add_argument("--overwrite", dest="overwrite", action="store_true", default=True)
-    overwrite.add_argument("--no-overwrite", dest="overwrite", action="store_false")
-    return p
+def _dxt5_alpha_block(alphas: List[int]) -> bytes:
+    a0, a1 = max(alphas), min(alphas)
+    if a0 == a1:
+        return bytes([a0, a1, 0, 0, 0, 0, 0, 0])
+    table = [a0, a1] + [(a0 * (7 - i) + a1 * i) // 7 for i in range(1, 7)]
+    indices = [min(range(8), key=lambda j, v=a: abs(table[j] - v)) for a in alphas]
+    bits = 0
+    for i in range(15, -1, -1):
+        bits = (bits << 3) | (indices[i] & 7)
+    return bytes([a0, a1]) + bits.to_bytes(6, 'little')
 
 
-def interactive_run(args: argparse.Namespace) -> int:
-    print("\n=== VelocityRL Interactive CLI ===")
-    
-    if not args.donor_dir:
-        val = input("Path to CookedPCConsole: ").strip().strip('"')
-        if not val: raise SystemExit("Aborted")
-        args.donor_dir = Path(val)
-        
-    if not args.output_dir:
-        val = input("Path to Output Folder (Press Enter to use CookedPCConsole): ").strip().strip('"')
-        args.output_dir = Path(val) if val else args.donor_dir
-
-    items = load_items(args.items)
-    
-    if not args.slot:
-        slots = sorted({i.slot for i in items if i.slot})
-        print("\nAvailable Slots:")
-        for idx, s in enumerate(slots):
-            print(f"  {idx+1}. {s}")
-        idx_str = input(f"Select slot (1-{len(slots)}): ").strip()
-        if not idx_str: raise SystemExit("Aborted")
-        args.slot = slots[int(idx_str)-1]
-
-    def search_item(prompt: str):
-        while True:
-            query = input(prompt).strip().lower()
-            if not query: return None
-            matches = [i for i in items if i.slot == args.slot and (query in i.product.lower() or query == str(i.id))]
-            if not matches:
-                print("No matches found in this slot. Try again.")
-                continue
-            if len(matches) == 1:
-                return matches[0]
-            print("\nMultiple matches found:")
-            for idx, m in enumerate(matches[:15]):
-                print(f"  {idx+1}. {m.product} ({m.id})")
-            if len(matches) > 15: print("  ...")
-            idx_str = input(f"Select item (1-{min(len(matches), 15)}) or press Enter to refine search: ").strip()
-            if not idx_str: continue
-            try:
-                return matches[int(idx_str)-1]
-            except (ValueError, IndexError):
-                continue
-
-    if not args.target:
-        target_item = search_item("\nSearch for target item (the one you own): ")
-        if not target_item: raise SystemExit("Aborted")
-        args.target = target_item.id
-
-    if not args.donor and not args.revert:
-        donor_item = search_item("\nSearch for donor item (the one you want): ")
-        if not donor_item: raise SystemExit("Aborted")
-        args.donor = donor_item.id
-
-    # Now that we have the args, run the normal logic
-    return cli_run(args)
+def _rgb565(r: int, g: int, b: int) -> int:
+    return ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3)
 
 
-def cli_run(args: argparse.Namespace) -> int:
-    is_pfp_mode = bool(args.custom_pfp or getattr(args, 'pfp_png', None))
+def _from565(c: int) -> Tuple[int, int, int]:
+    return (c >> 11) << 3, ((c >> 5) & 0x3F) << 2, (c & 0x1F) << 3
 
-    # If any required args are missing, try interactive mode if we're in a TTY
-    if not args.donor_dir or not args.output_dir or (
-        not is_pfp_mode and not args.revert and (not args.target or not args.donor)
-    ):
-        if sys.stdin.isatty():
-            return interactive_run(args)
 
-    if not args.donor_dir or not args.output_dir:
-        raise SystemExit("--donor-dir and --output-dir are required")
-    if args.revert and not args.target:
-        raise SystemExit("--target is required for --revert")
-    if not is_pfp_mode and not args.revert and (not args.target or not args.donor):
-        raise SystemExit("--target and --donor are required")
+def _dxt1_color_block(rgbs: List[Tuple[int, int, int]]) -> bytes:
+    c0v = _rgb565(max(p[0] for p in rgbs), max(p[1] for p in rgbs), max(p[2] for p in rgbs))
+    c1v = _rgb565(min(p[0] for p in rgbs), min(p[1] for p in rgbs), min(p[2] for p in rgbs))
+    if c0v == c1v:
+        return struct.pack('<HHI', c0v, c1v, 0)
+    if c0v < c1v:
+        c0v, c1v = c1v, c0v
+    c0, c1 = _from565(c0v), _from565(c1v)
+    pal = [c0, c1,
+           tuple((2*c0[i]+c1[i])//3 for i in range(3)),
+           tuple((c0[i]+2*c1[i])//3 for i in range(3))]
+    idx = 0
+    for i, px in enumerate(rgbs):
+        best = min(range(4), key=lambda j: sum((pal[j][k]-px[k])**2 for k in range(3)))
+        idx |= best << (i * 2)
+    return struct.pack('<HHI', c0v, c1v, idx)
 
-    upk = import_rl_upk_editor()
 
-    keys = args.keys
-    if keys is None:
-        here = script_dir()
-        candidates = [
-            here / "keys.txt",
-            here / "keys(1).txt",
-            here.parent / "python" / "keys.txt",
-            here.parent / "python" / "keys(1).txt",
-            Path.cwd() / "keys.txt",
-            Path.cwd() / "python" / "keys.txt",
-            args.donor_dir / "keys.txt" if args.donor_dir else None,
-        ]
-        for candidate in candidates:
-            if candidate is not None and candidate.exists():
-                keys = candidate
-                break
+def _compress_dxt5(pixels: List, w: int, h: int) -> bytes:
+    pw, ph = (w + 3) & ~3, (h + 3) & ~3
+    if pw != w or ph != h:
+        pixels = [pixels[min(y, h-1)*w + min(x, w-1)] for y in range(ph) for x in range(pw)]
+        w, h = pw, ph
+    out = bytearray()
+    for by in range(0, h, 4):
+        for bx in range(0, w, 4):
+            blk = [pixels[(by+dy)*w+(bx+dx)] for dy in range(4) for dx in range(4)]
+            out += _dxt5_alpha_block([p[3] for p in blk])
+            out += _dxt1_color_block([(p[0], p[1], p[2]) for p in blk])
+    return bytes(out)
 
-    options = SwapOptions(
-        items_path=args.items,
-        keys_path=keys,
-        donor_dir=args.donor_dir,
-        output_dir=args.output_dir,
-        key_source_dir=args.key_source_dir,
-        include_thumbnails=args.include_thumbnails,
-        preserve_header_offsets=args.preserve_header_offsets,
-        overwrite=args.overwrite,
+
+def _downsample(pixels: List, w: int, h: int) -> Tuple[List, int, int]:
+    nw, nh = max(1, w >> 1), max(1, h >> 1)
+    out = [tuple(sum(pixels[min(y*2+dy, h-1)*w+min(x*2+dx, w-1)][i] for dy in range(2) for dx in range(2)) // 4
+                 for i in range(4))
+           for y in range(nh) for x in range(nw)]
+    return out, nw, nh
+
+
+def _dxt5_mip_chain(pixels: List, w: int, h: int, n: int) -> List[bytes]:
+    mips, cur, cw, ch = [], pixels, w, h
+    for _ in range(n):
+        mips.append(_compress_dxt5(cur, cw, ch))
+        if cw <= 1 and ch <= 1:
+            break
+        cur, cw, ch = _downsample(cur, cw, ch)
+    while len(mips) < n:
+        mips.append(mips[-1])
+    return mips
+
+
+def _parse_texture2d_mips(serial: bytes, props_end: int) -> Tuple[int, List[dict], str]:
+    """Returns (arr_start, mips, layout) where layout is 'A' or 'B'."""
+    def is_pow2(n: int) -> bool:
+        return n > 0 and (n & (n - 1)) == 0
+
+    # Layout A: flags(4) + elem(4) + size_on_disk(4) + offset(8)
+    # Layout B: flags(4) + elem(4) + offset(8) + size_on_disk(4)  ← standard UE3 source
+    def try_at(start: int, layout: str):
+        if start + 4 > len(serial):
+            return None
+        mc = struct.unpack_from('<i', serial, start)[0]
+        if not (1 <= mc <= 16):
+            return None
+        pos = start + 4
+        mips: List[dict] = []
+        for _ in range(mc):
+            if pos + 20 > len(serial):
+                return None
+            flags = struct.unpack_from('<I', serial, pos)[0]; pos += 4
+            elem  = struct.unpack_from('<i', serial, pos)[0]; pos += 4
+            if layout == 'A':
+                disk = struct.unpack_from('<i', serial, pos)[0]; pos += 4
+                off  = struct.unpack_from('<q', serial, pos)[0]; pos += 8
+            else:
+                off  = struct.unpack_from('<q', serial, pos)[0]; pos += 8
+                disk = struct.unpack_from('<i', serial, pos)[0]; pos += 4
+            is_tfc = bool(flags & _BULKDATA_TFC)
+            data_start = pos
+            if not is_tfc:
+                read_len = disk if disk > 0 else (elem if elem > 0 else 0)
+                if read_len < 0: read_len = 0
+                if pos + read_len > len(serial): return None
+                pos += read_len
+            else:
+                read_len = 0
+            if pos + 8 > len(serial):
+                return None
+            mw = struct.unpack_from('<i', serial, pos)[0]; pos += 4
+            mh = struct.unpack_from('<i', serial, pos)[0]; pos += 4
+            if not (is_pow2(mw) and is_pow2(mh) and 0 < mw <= 4096 and 0 < mh <= 4096):
+                return None
+            mips.append(dict(flags=flags, elem_count=elem, size_on_disk=disk,
+                             bulk_offset=off, data_start=data_start,
+                             data_len=read_len, w=mw, h=mh, is_tfc=is_tfc))
+        return mips
+
+    scan_end = min(props_end + 256, len(serial) - 4)
+    for start in range(props_end, scan_end, 4):
+        for layout in ('B', 'A'):
+            result = try_at(start, layout)
+            if result:
+                return start, result, layout
+
+    raise ValueError(
+        f"Cannot locate Texture2D mip array near offset {props_end} "
+        f"(serial length {len(serial)})"
     )
 
-    if getattr(args, 'pfp_png', None):
-        _, log = swap_pfp_from_png(upk, args.pfp_png, options)
-    elif args.custom_pfp:
-        _, log = swap_pfp(upk, args.custom_pfp, options)
-    else:
-        items = load_items(args.items)
-        target = find_item(items, str(args.target), args.slot)
-        donor = find_item(items, str(args.donor), target.slot if not args.slot else args.slot) if args.donor else target
-        if args.revert:
-            _, log = revert_item(target, options)
-        elif args.replace_export:
-            _, log = swap_export_only(upk, args.target, args.target_path, args.donor, args.donor_path, options)
+
+def _rebuild_texture2d_serial(serial: bytes, arr_start: int, mips: List[dict], new_inline: List[bytes], layout: str = 'B') -> bytes:
+    prefix = serial[:arr_start + 4]  # everything up to and including mip count
+    inline_iter = iter(new_inline)
+    body = bytearray()
+    last_end = arr_start + 4
+    for mip in mips:
+        hdr_start = mip['data_start'] - 20
+        if mip['is_tfc']:
+            body += serial[hdr_start: hdr_start + 20]
         else:
-            _, log = swap_asset(upk, target, donor, options)
-
-    for line in log:
-        print(line)
-    return 0
-
-
-def fetch_catalog(args: argparse.Namespace) -> int:
-    if not args.token:
-        print("Error: --token is required for --fetch")
-        return 1
-        
-    REQUEST_KEY = bytes.fromhex("c338bd36fb8c42b1a431d30add939fc7")
-    PSYNET_RPC_URL = "https://api.rlpp.psynet.gg/rpc/"
-
-    def get_psysig(body: str, key: bytes) -> str:
-        msg = f"-{body}".encode("utf-8")
-        sig = hmac.new(key, msg, hashlib.sha256).digest()
-        return base64.b64encode(sig).decode("utf-8")
-
-    def call_rpc(service: str, body: dict, psy_token=None, session_id=None) -> dict:
-        headers = {
-            "PsyService": service,
-            "PsyEnvironment": "Prod",
-            "User-Agent": "RL Win/250811.43331.492665 gzip",
-            "Content-Type": "application/json"
-        }
-        if psy_token: headers["PsyToken"] = psy_token
-        if session_id: headers["PsySessionID"] = session_id
-        
-        json_body = json.dumps(body)
-        headers["PsySig"] = get_psysig(json_body, REQUEST_KEY)
-        
-        import requests
-        resp = requests.post(PSYNET_RPC_URL, headers=headers, data=json_body)
-        if resp.status_code != 200:
-            raise Exception(f"RPC failed: {resp.status_code} - {resp.text}")
-        return resp.json()["Result"]
-
-    try:
-        print(f"Logging in for {args.account}...")
-        login_body = {
-            "Platform": "Epic",
-            "PlayerName": args.account,
-            "PlayerID": args.account,
-            "Language": "INT",
-            "AuthTicket": args.token,
-            "FeatureSet": "PrimeUpdate55_1",
-            "Device": "PC",
-            "EpicAuthTicket": args.token,
-            "EpicAccountID": args.account
-        }
-        res = call_rpc("Auth/Login v4", login_body)
-        psy_token = res["PsyToken"]
-        session_id = res["SessionID"]
-        player_id = res["PlayerID"]
-        print("Login successful. Fetching catalog...")
-
-        catalog_body = {
-            "PlayerID": player_id,
-            "Category": "StarterPack" # Default category
-        }
-        catalog = call_rpc("Microtransaction/GetCatalog v1", catalog_body, psy_token, session_id)
-        
-        # In a real tool, we'd do more, but for now we output the catalog
-        # The user's goal is to see it's working
-        print(json.dumps(catalog, indent=4))
-        
-        # Also try to fetch shop
-        shop_res = call_rpc("Shops/GetStandardShops v1", {}, psy_token, session_id)
-        print("\n=== Available Shops ===")
-        print(json.dumps(shop_res, indent=4))
-
-        return 0
-    except Exception as e:
-        print(f"Fetch Error: {e}")
-        return 1
+            nd = next(inline_iter)
+            body += struct.pack('<I', mip['flags'])
+            body += struct.pack('<i', len(nd))
+            if layout == 'A':
+                body += struct.pack('<i', len(nd))
+                body += struct.pack('<q', mip['bulk_offset'])
+            else:
+                body += struct.pack('<q', mip['bulk_offset'])
+                body += struct.pack('<i', len(nd))
+            body += nd
+        body += struct.pack('<i', mip['w'])
+        body += struct.pack('<i', mip['h'])
+        last_end = mip['data_start'] + mip['data_len'] + 8
+    return prefix + bytes(body) + serial[last_end:]
 
 
-def main() -> int:
-    parser = build_arg_parser()
-    args = parser.parse_args()
-    
-    if args.fetch:
-        return fetch_catalog(args)
+def _read_upk_texture_props(pkg, serial: bytes) -> Tuple[int, int, str]:
+    """
+    Read SizeX, SizeY, and Format from a cooked RL Texture2D serial.
+    Properties start at byte 4 (byte 0 is a 4-byte cooked strip-flag sentinel).
+    """
+    def name_idx(name: str) -> int:
+        indices, _ = find_name_indices(pkg, name)
+        return indices[0] if indices else -1
 
-    try:
-        return cli_run(args)
-    except Exception as e:
-        print(f"FATAL ERROR: {e}")
-        traceback.print_exc()
-        return 1
+    size_x_idx   = name_idx('SizeX')
+    size_y_idx   = name_idx('SizeY')
+    int_prop_idx = name_idx('IntProperty')
+    none_idx     = name_idx('None')
+
+    width = height = 0
+    pos = 4  # skip 4-byte sentinel at offset 0
+    for _ in range(100):
+        if pos + 8 > len(serial):
+            break
+        ni = struct.unpack_from('<i', serial, pos)[0]
+        if ni == none_idx or ni < 0:
+            break
+        ti         = struct.unpack_from('<i', serial, pos + 8)[0] if pos + 12 <= len(serial) else -1
+        prop_size  = struct.unpack_from('<i', serial, pos + 16)[0] if pos + 20 <= len(serial) else -1
+        if prop_size < 0 or prop_size > 100000:
+            break
+        if ti == int_prop_idx and prop_size == 4 and pos + 28 <= len(serial):
+            value = struct.unpack_from('<i', serial, pos + 24)[0]
+            if ni == size_x_idx:
+                width = value
+            elif ni == size_y_idx:
+                height = value
+        pos += 24 + prop_size
+
+    # Detect pixel format: scan first 600 bytes for a known format name index
+    fmt = 'PF_A8R8G8B8'
+    for fmt_name in ('PF_DXT5', 'PF_DXT1'):
+        idx = name_idx(fmt_name)
+        if idx >= 0:
+            for i in range(0, min(len(serial) - 4, 600), 4):
+                if struct.unpack_from('<i', serial, i)[0] == idx:
+                    fmt = fmt_name
+                    break
+        if fmt != 'PF_A8R8G8B8':
+            break
+
+    return width, height, fmt
 
 
-if __name__ == "__main__":
-    raise SystemExit(main())
+
+
+def swap_pfp_from_png(upk, png_path: Path, target_pkg: str, options: 'SwapOptions') -> Tuple[List[Path], List[str]]:
+    return _inplace_zlib_patch(
+        upk=upk,
+        png_path=png_path,
+        options=options,
+        target_pkg=target_pkg,
+        target_chunk_idx=1,
+        target_width=120,
+        target_height=120,
+        img_size=84,
+        img_offset=18,
+        magic_size=57600
+    )
+
+def swap_banner_from_png(upk, png_path: Path, target_pkg: str, options: 'SwapOptions') -> Tuple[List[Path], List[str]]:
+    return _inplace_zlib_patch(
+        upk=upk,
+        png_path=png_path,
+        options=options,
+        target_pkg=target_pkg,
+        target_chunk_idx=1,
+        target_width=420,
+        target_height=100,
+        img_size=None,
+        img_offset=0,
+        magic_size=168000
+    )

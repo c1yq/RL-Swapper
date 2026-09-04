@@ -814,7 +814,11 @@ def build_reencrypted_package(original_encrypted_path: Path, modified_decrypted_
     copy_len = min(len(original_plain), encrypted_plain_len)
     header_plain[:copy_len] = original_plain[:copy_len]
 
-    new_total_header_size = modified_summary.name_offset + encrypted_plain_len + meta.garbage_size
+    original_gap_start_calc = summary.name_offset + len(original_encrypted_data)
+    original_gap_end_calc = original_chunks[0].compressed_offset
+    actual_garbage_size = original_gap_end_calc - original_gap_start_calc
+    
+    new_total_header_size = modified_summary.name_offset + encrypted_plain_len + actual_garbage_size
     current_compressed_offset = new_total_header_size
     for i, chunk in enumerate(original_chunks):
         start = chunk.uncompressed_offset + chunk_shift
@@ -876,8 +880,6 @@ def build_reencrypted_package(original_encrypted_path: Path, modified_decrypted_
     original_gap_start = summary.name_offset + len(original_encrypted_data)
     original_gap_end = original_chunks[0].compressed_offset
     gap_bytes = original_bytes[original_gap_start:original_gap_end]
-    if len(gap_bytes) != meta.garbage_size:
-        gap_bytes = original_bytes[original_gap_end - meta.garbage_size:original_gap_end]
     output += gap_bytes
     for payload in rebuilt_chunk_payloads:
         output += payload

@@ -1,24 +1,33 @@
-# RL Swapper
+﻿# Rocket League Asset Swapper
 
-A fast and safe in-game item swapper for Rocket League.
+A powerful, easy-to-use tool to inject custom images and textures directly into Rocket League's game files. Swap out in-game Profile Pictures, Player Banners, Decals, and more with your own custom images (PNG, JPG, WEBP, etc.)!
 
-## How to get Painted (Colored) Items
-If you want an item in a specific paint color (like Titanium White or Crimson), **your Sacrifice item MUST be that color.** 
-The Visual item you choose will adopt whatever color your Sacrifice item has equipped in-game.
+## Features & Tools
 
-## False Positives (Antivirus Warnings)
-The .exe provided in the Releases tab is compiled using **PyInstaller**. Windows Defender often flags PyInstaller executables as a false positive because the app isn't digitally signed with an expensive developer certificate.
+### 1. Profile Picture Swapper
+Inject your own custom avatar directly into the game's UI.
+* **Recommended In-Game Border to Equip:** XP Level 25 *(Note: The true "Default" border does not properly display the modded texture).*
+* **Optimal Image Size:** 84x84 pixels.
+* **How it works:** The tool automatically extracts the game's native silver border, shrinks your custom image to perfectly fit the frame, and composites the native border back over your image so it looks completely natural in the Rocket League menus.
 
-If you don't feel comfortable running the .exe, the entire source code is provided here so you can run it directly yourself.
+### 2. Player Banner Swapper
+Replace an existing Rocket League player banner with any image of your choice.
+* **Recommended In-Game Banner to Equip:** Topographic.
+* **Optimal Image Size:** 420x90 pixels.
+* **How it works:** Rocket League banners natively render at 420x100. Our built-in cropping tool locks you into a flawless 420x90 aspect ratio, and the swapper automatically pads the remaining 10 pixels with transparency. This perfectly counteracts the game's UI stretching, making your banner look exactly as slim and sleek as the native Taxi banner.
 
-## How to run from source code
-1. Install Python 3.10 or newer from [python.org](https://www.python.org).
-2. Download or clone this repository.
-3. Open a terminal or command prompt in the folder.
-4. Install the required UI library:
-   \pip install customtkinter\
-5. Run the script:
-   \python SwapperGUI.py\
+### 3. Decal / General Asset Swapper
+Swap car decals, ball textures, and other standard textures.
+* **How it works:** Select the original texture you want to replace, choose your custom image, and the tool will handle the decompression, format conversion, and byte-injection necessary to bypass Rocket League's file verification.
 
-## Notes on Swapping
-To perfectly preserve the original file structure and prevent the game from crashing, you cannot swap a long Sacrifice item into a short Visual item. The GUI automatically handles this for you by filtering the "Sacrifice" list to only show items that are safe to use!
+### 4. Backup & Restore
+* **Restore All Backups:** Bypassing the game's file verification requires modifying the raw .upk files in your Rocket League installation. The swapper automatically creates .bak backups of every file it touches. If your game crashes or you want to revert to the original textures, simply click "Restore All Backups".
+
+## Installation & Usage
+
+1. Download the latest release .exe.
+2. Run the program as Administrator (required for modifying files in Program Files).
+3. Follow the on-screen prompts to select your custom images and inject them.
+4. Launch Rocket League!
+
+*Disclaimer: Modifying game files is done at your own risk. This tool modifies UI textures locally. Other players will not see your custom textures.*
