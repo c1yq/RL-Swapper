@@ -1,5 +1,5 @@
 ﻿# Rocket League Asset Swapper
-![Total Downloads](https://img.shields.io/github/downloads/YOUR_USERNAME/YOUR_REPOSITORY_NAME/total.svg?style=for-the-badge&color=blue)
+![Total Downloads](https://img.shields.io/github/[downloads/c1yq/RL-Swapper/total.svg?style=for-the-badge&color=blue)
 
 *(Note to Dev: To make the download counter work, replace YOUR_USERNAME and YOUR_REPOSITORY_NAME in the link above with your actual GitHub username and repository name once you publish it!)*
 
