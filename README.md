@@ -1,7 +1,7 @@
 ﻿# Rocket League Asset Swapper
 ![Total Downloads](https://img.shields.io/github/downloads/c1yq/RL-Swapper/total.svg?style=for-the-badge&color=blue)
 
-The ultimate tool to use any item in Rocket League (just like old BakkesMod plugins), plus advanced tools to inject your own custom images directly into the game!
+The ultimate tool to use any item in Rocket League (just like Bakkesmod), plus advanced tools to inject your own custom images directly into the game!
 
 ## 🚀 Main Features
 
@@ -18,6 +18,8 @@ Inject your own custom images (PNG, JPG) directly into the UI!
 
 ### 3. Bulk Randomizer (Troll Your Opponents!)
 Select a folder of funny pictures on your PC and click Bulk Randomize. The tool will inject a random picture into **EVERY SINGLE BORDER (348+) AND BANNER (1400+)** in the game. When an opponent scores, they'll show up with your custom picture regardless of what item they have equipped!
+> 💡 **Need pictures to use?**  
+> Check out our [Bulk Downloader](https://github.com/c1yq/Pinterest-bulk-downloader) to bulk download pictures!
 
 ### 4. Safe & Easy Backups
 * **Auto-Restore Engine:** The tool silently manages pristine backups behind the scenes, so you can overwrite items as many times as you want without corrupting your game.
