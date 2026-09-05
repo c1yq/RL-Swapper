@@ -1,39 +1,33 @@
 ﻿# Rocket League Asset Swapper
 ![Total Downloads](https://img.shields.io/github/downloads/c1yq/RL-Swapper/total.svg?style=for-the-badge&color=blue)
 
+The ultimate tool to use any item in Rocket League (just like old BakkesMod plugins), plus advanced tools to inject your own custom images directly into the game!
 
-A powerful, easy-to-use tool to inject custom images and textures directly into Rocket League's game files. Swap out in-game Profile Pictures, Player Banners, Decals, and more with your own custom images (PNG, JPG, WEBP, BMP)!
+## 🚀 Main Features
 
-## Features & Tools
+### 1. The Item Swapper (Get Any Item)
+Equip any Decal, Wheels, Goal Explosion, Boost, or Car Body you want!
+* **How it works:** Pick the item you *want* (Target), and the item you currently have equipped (Sacrifice). The tool swaps them in the game files so you see the item you want!
+* **Smart Filtering:** The tool automatically hides sacrifice items that are mathematically impossible to swap, guaranteeing your game won't crash.
+* **Hitbox Matching:** When swapping car bodies, it automatically filters out cars with different hitboxes, so your gameplay and car feel remain perfectly identical.
 
-### 1. Profile Picture Swapper
-Inject your own custom avatar directly into the game's UI.
-* **How it works:** The tool automatically extracts the game's native silver border, shrinks your custom image to perfectly fit the frame, and composites the native border back over your image so it looks completely natural in the Rocket League menus.
-* **Recommended In-Game Border to Equip:** XP Level 25 *(Note: The true Level 1 "Default" border does not have a texture frame, so you cannot inject into it. Pick a real border!)*
-* **Optimal Image Size:** 84x84 pixels.
-
-### 2. Player Banner Swapper
-Replace an existing Rocket League player banner with any image of your choice.
-* **How it works:** Rocket League banners natively render at 420x100. Our built-in cropping tool locks you into a flawless 14:3 aspect ratio, and the swapper automatically pads the remaining pixels with transparency. This makes your banner look exactly as slim and sleek as the native banners without getting vertically stretched!
-* **Recommended In-Game Banner to Equip:** Topographic (can even change colors)
-* **Optimal Image Size:** 420x90 pixels.
+### 2. Custom Profile Pictures & Banners
+Inject your own custom images (PNG, JPG) directly into the UI!
+* **Profile Pictures:** Automatically crops and blends your picture into the native silver frame (Recommended: XP Level 25 border).
+* **Player Banners:** Automatically crops your image to 14:3 without any ugly vertical stretching (Recommended: Topographic, which lets you change colors).
 
 ### 3. Bulk Randomizer (Troll Your Opponents!)
-Want to see funny pictures every time the opponent scores? 
-* **How it works:** Instead of replacing just one border or banner, the Bulk Randomizer lets you select an entire folder of pictures from your PC. It will scan the game files and automatically inject a randomly chosen picture into **EVERY SINGLE BORDER** (348+ files) and **EVERY SINGLE BANNER** (1400+ files) in the game! 
-* No matter what rank the opponent is, or what item they have equipped, they will show up with one of your custom pictures! 
+Select a folder of funny pictures on your PC and click Bulk Randomize. The tool will inject a random picture into **EVERY SINGLE BORDER (348+) AND BANNER (1400+)** in the game. When an opponent scores, they'll show up with your custom picture regardless of what item they have equipped!
 
-### 4. Smart Auto-Restore Engine
-* **How it works:** You never have to worry about breaking or corrupting your game files. If you try to swap an item that you've already modded, the tool will silently restore the pristine original backup file behind the scenes *before* applying your new swap. 
+### 4. Safe & Easy Backups
+* **Auto-Restore Engine:** The tool silently manages pristine backups behind the scenes, so you can overwrite items as many times as you want without corrupting your game.
+* **Restore Menu:** A dedicated menu lets you selectively undo specific mods, or revert everything back to normal with one click.
 
-### 5. Dedicated Restore Menu
-* **How it works:** If you want to undo a swap, click "Restore Items" in the top left. Instead of deleting all your mods at once, a brand new menu will pop up letting you check off *exactly* which files you want to revert to normal!
-
-## Installation & Usage
+## 📥 Installation & Usage
 
 1. Download the latest release .exe (or run SwapperGUI.py if you have Python installed).
 2. Run the program (Administrator rights may be required depending on where your game is installed).
 3. The tool will automatically locate your Rocket League installation.
-4. Select your custom images, hit Inject, and Launch Rocket League!
+4. Select your items/images, hit Inject, and launch the game!
 
-*Disclaimer: Modifying game files is done at your own risk. This tool modifies UI textures locally. Only you will see the custom textures.*
+*Disclaimer: Modifying game files is at your own risk. These are local visual mods, meaning only you will see the changes in-game.*
