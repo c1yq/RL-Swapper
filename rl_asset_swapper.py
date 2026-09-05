@@ -23,6 +23,12 @@ if False:
     import ctypes
     import hashlib
     import zlib
+
+def _ensure_pristine_target(target_path: Path):
+    bak = target_path.with_suffix(target_path.suffix + ".bak")
+    if bak.exists():
+        import shutil
+        shutil.copy2(bak, target_path)
     import re
     import zipfile
     from cryptography.hazmat.backends import default_backend
@@ -803,6 +809,8 @@ def swap_one_package(
     if not source_path.exists():
         raise FileNotFoundError(f"Source package not found: {source_path}")
 
+    _ensure_pristine_target(output_path)
+
     backup_path = output_path.with_suffix(output_path.suffix + ".bak")
     if backup_path.exists():
         if output_path.exists() and output_path.stat().st_mtime > backup_path.stat().st_mtime:
@@ -1334,6 +1342,7 @@ def _inplace_zlib_patch(upk, png_path: Path, options: SwapOptions, target_pkg: s
     if source_path.resolve() != target_path.resolve():
         shutil.copy2(source_path, target_path)
 
+    _ensure_pristine_target(source_path)
     original_bytes = bytearray(source_path.read_bytes())
     
     chunk_offsets = []
@@ -1465,7 +1474,8 @@ def _inplace_zlib_patch(upk, png_path: Path, options: SwapOptions, target_pkg: s
     
     if target_path.exists() and options.overwrite:
         bak = target_path.with_suffix(target_path.suffix + ".bak")
-        shutil.copy2(target_path, bak)
+        if not bak.exists():
+            shutil.copy2(target_path, bak)
         
     target_path.write_bytes(original_bytes)
     log.append(f"Successfully patched {target_pkg} in-place!")

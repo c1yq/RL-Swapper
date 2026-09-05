@@ -251,9 +251,7 @@ class RLSwapperApp(ctk.CTk):
         except:
             pass
 
-        if not os.path.exists(self.swaps_log):
-            with open(self.swaps_log, "w", encoding="utf-8") as f:
-                f.write("# RL Swaps Log\n\n")
+        pass
 
         self.categorized_items = {}
         ignored_slots = {'Currency', 'Crate', 'Blueprint', 'Player Title', 'Player Anthem', 'Esports Team'}
@@ -312,13 +310,13 @@ class RLSwapperApp(ctk.CTk):
         self.title_label = ctk.CTkLabel(self.header_frame, text="RL SWAPPER", text_color="#E0E0E0", font=ctk.CTkFont(family="Segoe UI", size=28, weight="bold"))
         self.title_label.pack(side="left", expand=True)
         
-        self.logs_btn = ctk.CTkButton(self.header_frame, text="Logs", fg_color=PANEL_BG, text_color="#E0E0E0", hover_color="#333333", border_width=1, border_color="#555", command=self.show_logs)
-        self.logs_btn.pack(side="right")
+        
+        
         
         popular_order = ["Body", "Decal", "Wheels", "Rocket Boost", "Goal Explosion", "Trail", "Antenna", "Topper"]
         sorted_slots = [s for s in popular_order if s in self.categorized_items] + [s for s in self.categorized_items if s not in popular_order]
         
-        self.main_tabview = ctk.CTkTabview(self, fg_color=PANEL_BG, segmented_button_fg_color=DARK_BG, segmented_button_selected_color=ACCENT, segmented_button_selected_hover_color="#2563EB")
+        self.main_tabview = ctk.CTkTabview(self, command=self.on_main_tab_change, fg_color=PANEL_BG, segmented_button_fg_color=DARK_BG, segmented_button_selected_color=ACCENT, segmented_button_selected_hover_color="#2563EB")
         self.main_tabview.pack(fill="both", expand=True, padx=20, pady=0)
         self.tab_items = self.main_tabview.add("Items")
         self.tab_custom = self.main_tabview.add("Custom Items")
@@ -416,6 +414,12 @@ class RLSwapperApp(ctk.CTk):
         self.btn_generate = ctk.CTkButton(self.bot_frame, text="GENERATE FILE ONLY", text_color="#FFF", fg_color="#10B981", hover_color="#059669", font=ctk.CTkFont(size=18, weight="bold"), height=50, command=lambda: self.do_swap(in_game=False))
         self.btn_generate.pack(side="right", fill="x", expand=True, padx=(10, 0))
         self.build_custom_items_tab()
+    def on_main_tab_change(self):
+        if self.main_tabview.get() == "Items":
+            self.bot_frame.pack(fill="x", padx=20, pady=20)
+        else:
+            self.bot_frame.pack_forget()
+            
     def clear_rl_cache(self):
         """Clear the Rocket League texture/shader cache so the game re-reads our modified files."""
         import os, shutil
@@ -444,32 +448,68 @@ class RLSwapperApp(ctk.CTk):
         if not bak_files:
             messagebox.showinfo("Restore Backups", "No .bak backup files found.\nNothing to restore.")
             return
-        restored = 0
-        failed = 0
+            
+        restore_win = ctk.CTkToplevel(self)
+        restore_win.title("Restore Backups")
+        restore_win.geometry("500x600")
+        restore_win.configure(fg_color="#1E1E1E")
+        restore_win.grab_set()
+        
+        ctk.CTkLabel(restore_win, text="Select Files to Restore", font=ctk.CTkFont(size=20, weight="bold"), text_color="#FFF").pack(pady=(20, 10))
+        
+        scroll_frame = ctk.CTkScrollableFrame(restore_win, fg_color="#2D2D2D")
+        scroll_frame.pack(fill="both", expand=True, padx=20, pady=10)
+        
+        check_vars = []
         for bak in bak_files:
-            upk_path = bak.with_suffix("")
-            try:
-                shutil.copy2(bak, upk_path)
-                bak.unlink()
-                restored += 1
-            except Exception as e:
-                failed += 1
-        # Also clean up AssetSwapper_Decrypted temp folder
-        if getattr(sys, 'frozen', False):
-            script_d = Path(sys.executable).parent
-        else:
-            script_d = Path(__file__).parent
-        temp_dir = script_d / "AssetSwapper_Decrypted"
-        if temp_dir.exists():
-            shutil.rmtree(temp_dir, ignore_errors=True)
-        cache_cleared = self.clear_rl_cache()
-        msg = f"✅ Restored {restored} file(s) from backup."
-        if failed:
-            msg += f"\n⚠️ {failed} file(s) failed to restore."
-        msg += "\n\nYour game files are back to normal!"
-        if cache_cleared:
-            msg += "\n✅ Game cache cleared automatically."
-        messagebox.showinfo("Restore Complete", msg)
+            var = tk.BooleanVar(value=False)
+            chk = ctk.CTkCheckBox(scroll_frame, text=bak.name.replace(".bak", ""), variable=var, text_color="#E0E0E0", font=ctk.CTkFont(size=14))
+            chk.pack(anchor="w", pady=5)
+            check_vars.append((bak, var))
+            
+        def do_restore(files_to_restore):
+            if not files_to_restore:
+                messagebox.showwarning("Warning", "No files selected.")
+                return
+            restored = 0
+            failed = 0
+            for bak in files_to_restore:
+                upk_path = bak.with_suffix("")
+                try:
+                    import shutil
+                    shutil.copy2(bak, upk_path)
+                    bak.unlink()
+                    restored += 1
+                except Exception as e:
+                    failed += 1
+            if getattr(sys, 'frozen', False):
+                script_d = Path(sys.executable).parent
+            else:
+                script_d = Path(__file__).parent
+            temp_dir = script_d / "AssetSwapper_Decrypted"
+            if temp_dir.exists():
+                import shutil
+                shutil.rmtree(temp_dir, ignore_errors=True)
+            cache_cleared = self.clear_rl_cache()
+            
+            msg = f"Restored {restored} file(s)."
+            if failed: msg += f"\n{failed} failed."
+            messagebox.showinfo("Restore Complete", msg)
+            restore_win.destroy()
+            
+        def restore_selected():
+            selected = [bak for bak, var in check_vars if var.get()]
+            do_restore(selected)
+            
+        def restore_all():
+            all_baks = [bak for bak, var in check_vars]
+            do_restore(all_baks)
+            
+        btn_frame = ctk.CTkFrame(restore_win, fg_color="transparent")
+        btn_frame.pack(fill="x", padx=20, pady=20)
+        
+        ctk.CTkButton(btn_frame, text="Restore Selected", fg_color="#3B82F6", hover_color="#2563EB", command=restore_selected).pack(side="left", fill="x", expand=True, padx=(0, 10))
+        ctk.CTkButton(btn_frame, text="Restore All Items", fg_color="#C0392B", hover_color="#922B21", command=restore_all).pack(side="right", fill="x", expand=True, padx=(10, 0))
 
     def set_in_dir(self):
         folder = filedialog.askdirectory(initialdir=self.folder, title="Select CookedPCConsole Directory")
@@ -477,24 +517,7 @@ class RLSwapperApp(ctk.CTk):
             self.folder = folder
             messagebox.showinfo("RL Folder", f"Rocket League CookedPCConsole folder set to:\n{self.folder}")
             
-    def show_logs(self):
-        log_win = ctk.CTkToplevel(self)
-        log_win.title("Swaps Log")
-        log_win.geometry("600x400")
-        log_win.configure(fg_color=DARK_BG)
-        
-        textbox = ctk.CTkTextbox(log_win, fg_color=PANEL_BG, text_color="#FFF", font=("Consolas", 12))
-        textbox.pack(fill="both", expand=True, padx=10, pady=10)
-        
-        if os.path.exists(self.swaps_log):
-            with open(self.swaps_log, "r", encoding="utf-8") as f:
-                textbox.insert("1.0", f.read())
-        else:
-            textbox.insert("1.0", "No logs found.")
-            
-        textbox.configure(state="disabled")
-        
-        def purge_backups():
+    def purge_backups():
             if messagebox.askyesno("Clear Swap History", "This will permanently delete all .bak backup files and clear your swap log so you can start completely fresh.\n\nNote: This will NOT restore swapped items. You must Verify Game Files in Steam/Epic to revert items to normal.\n\nProceed?"):
                 count = 0
                 try:
@@ -508,13 +531,7 @@ class RLSwapperApp(ctk.CTk):
                 textbox.configure(state="normal")
                 textbox.delete("1.0", "end")
                 textbox.insert("1.0", f"Purged {count} obsolete backups. Logs cleared.")
-                textbox.configure(state="disabled")
-                with open(self.swaps_log, "w", encoding="utf-8") as f:
-                    f.write("# RL Swaps Log\n\n")
-                messagebox.showinfo("Success", f"Cleared swap history and deleted {count} backups.")
         
-        btn_purge = ctk.CTkButton(log_win, text="Clear Swap History & Delete Backups", fg_color="#F59E0B", hover_color="#D97706", command=purge_backups)
-        btn_purge.pack(fill="x", padx=10, pady=(0, 10))
 
     def append_to_log(self, target_item, donor_item, mode="SWAPPED"):
         upk_name = f"{target_item.asset_package}"
@@ -683,6 +700,91 @@ class RLSwapperApp(ctk.CTk):
         self.btn_apply_pfp = ctk.CTkButton(pfp_right, text="APPLY PROFILE PICTURE", text_color="#FFF", fg_color=ACCENT, hover_color="#2563EB", font=ctk.CTkFont(size=18, weight="bold"), height=50, command=apply_pfp)
         self.btn_apply_pfp.pack(pady=(20, 10))
 
+        def bulk_pfp():
+            folder = filedialog.askdirectory(title="Select Folder with Profile Pictures")
+            if not folder: return
+            folder_path = Path(folder)
+            images = []
+            for ext in ['.png', '.jpg', '.jpeg', '.bmp', '.webp']:
+                images.extend(list(folder_path.glob(f"*{ext}")))
+                images.extend(list(folder_path.glob(f"*{ext.upper()}")))
+            if not images:
+                messagebox.showwarning("Warning", "No images found in the selected folder!")
+                return
+            
+            btn_bulk = self.btn_bulk_pfp
+            btn_bulk.configure(text="PROCESSING...", fg_color="#D84315", state="disabled")
+            
+            progress_win = ctk.CTkToplevel(self)
+            progress_win.title("Bulk Injecting...")
+            progress_win.geometry("400x150")
+            progress_win.attributes("-topmost", True)
+            progress_win.grab_set()
+            
+            lbl = ctk.CTkLabel(progress_win, text="Starting...", font=ctk.CTkFont(size=14))
+            lbl.pack(pady=20)
+            pb = ctk.CTkProgressBar(progress_win, width=300)
+            pb.pack(pady=10)
+            pb.set(0)
+
+            def run_bulk():
+                import rl_asset_swapper, rl_upk_editor, random
+                from PIL import Image
+                from rl_asset_swapper import SwapOptions
+                opts = SwapOptions(
+                    items_path=Path(get_resource_path('items.json')),
+                    keys_path=self.keys_path,
+                    donor_dir=Path(self.folder),
+                    output_dir=Path(self.folder),
+                    key_source_dir=Path(self.folder),
+                    include_thumbnails=False,
+                    preserve_header_offsets=True,
+                    overwrite=True
+                )
+                
+                borders = [b.name for b in Path(self.folder).glob('AvatarBorder_*_SF.upk') if b.name.lower() != 'avatarborder_default_sf.upk']
+                total = len(borders)
+                success = 0
+                temp_path = Path("temp_bulk_pfp.png")
+                
+                for idx, b in enumerate(borders):
+                    pkg = b
+                    def update_ui(i=idx, text_val=f"Injecting {idx+1}/{total}: {pkg}"):
+                        lbl.configure(text=text_val)
+                        pb.set(i/total)
+                    self.after(0, update_ui)
+                    
+                    try:
+                        img_path = random.choice(images)
+                        img = Image.open(str(img_path)).convert("RGBA")
+                        w, h = img.size
+                        min_dim = min(w, h)
+                        left = (w - min_dim) // 2
+                        top = (h - min_dim) // 2
+                        img = img.crop((left, top, left + min_dim, top + min_dim))
+                        img.save(temp_path)
+                        
+                        rl_asset_swapper.swap_pfp_from_png(rl_upk_editor, temp_path, pkg, opts)
+                        success += 1
+                        with open(self.swaps_log, "a", encoding="utf-8") as f:
+                            f.write(f"[SWAPPED] Bulk PFP -> {pkg}\n")
+                    except Exception as e:
+                        pass
+                        
+                if temp_path.exists():
+                    try: temp_path.unlink()
+                    except: pass
+                
+                self.after(0, progress_win.destroy)
+                self.after(0, lambda: btn_bulk.configure(text="BULK RANDOMIZE ALL BORDERS", fg_color="#8B5CF6", state="normal"))
+                self.after(0, lambda: messagebox.showinfo("Success", f"Successfully randomized {success} out of {total} borders!\n\nNote: They will look normal to you in the main menu if you have a different border equipped, but opponents will see them in-game!"))
+                
+            import threading
+            threading.Thread(target=run_bulk, daemon=True).start()
+
+        self.btn_bulk_pfp = ctk.CTkButton(pfp_right, text="BULK RANDOMIZE ALL BORDERS", text_color="#FFF", fg_color="#8B5CF6", hover_color="#7C3AED", font=ctk.CTkFont(size=14, weight="bold"), height=40, command=bulk_pfp)
+        self.btn_bulk_pfp.pack(pady=(0, 20))
+
         # Custom Banner Subtab
         banner_sub = self.custom_tabview.add("Custom Banner")
         banner_paned = ctk.CTkFrame(banner_sub, fg_color="transparent")
@@ -710,8 +812,8 @@ class RLSwapperApp(ctk.CTk):
         
         ctk.CTkLabel(banner_right, text="Custom Player Banner", text_color=ACCENT, font=ctk.CTkFont(size=20, weight="bold")).pack(pady=(20, 10))
         
-        self.banner_target_var = ctk.StringVar(value="PlayerBanner_Default_SF.upk")
-        self.banner_name_lbl = ctk.CTkLabel(banner_right, text="Selected: Default Banner", font=ctk.CTkFont(size=14, weight="bold"), text_color="#10B981")
+        self.banner_target_var = ctk.StringVar(value="playerBanner_RLShield_SF.upk")
+        self.banner_name_lbl = ctk.CTkLabel(banner_right, text="Selected: Standard (Default)", font=ctk.CTkFont(size=14, weight="bold"), text_color="#10B981")
         self.banner_name_lbl.pack(pady=(0, 10))
         
         self.lbl_banner_preview = tk.Label(banner_right, bg="#2D2D2D")
@@ -734,6 +836,101 @@ class RLSwapperApp(ctk.CTk):
         
         self.btn_apply_banner = ctk.CTkButton(banner_right, text="STEP 2: INJECT", font=ctk.CTkFont(size=18, weight="bold"), height=50, fg_color="#10B981", hover_color="#059669", state="disabled", command=self.apply_banner)
         self.btn_apply_banner.pack(pady=20)
+
+        def bulk_banner():
+            folder = filedialog.askdirectory(title="Select Folder with Player Banners")
+            if not folder: return
+            folder_path = Path(folder)
+            images = []
+            for ext in ['.png', '.jpg', '.jpeg', '.bmp', '.webp']:
+                images.extend(list(folder_path.glob(f"*{ext}")))
+                images.extend(list(folder_path.glob(f"*{ext.upper()}")))
+            if not images:
+                messagebox.showwarning("Warning", "No images found in the selected folder!")
+                return
+            
+            btn_bulk = self.btn_bulk_banner
+            btn_bulk.configure(text="PROCESSING...", fg_color="#D84315", state="disabled")
+            
+            progress_win = ctk.CTkToplevel(self)
+            progress_win.title("Bulk Injecting Banners...")
+            progress_win.geometry("400x150")
+            progress_win.attributes("-topmost", True)
+            progress_win.grab_set()
+            
+            lbl = ctk.CTkLabel(progress_win, text="Scanning game files...", font=ctk.CTkFont(size=14))
+            lbl.pack(pady=20)
+            pb = ctk.CTkProgressBar(progress_win, width=300)
+            pb.pack(pady=10)
+            pb.set(0)
+
+            def run_bulk():
+                import rl_asset_swapper, rl_upk_editor, random
+                from PIL import Image
+                from rl_asset_swapper import SwapOptions
+                opts = SwapOptions(
+                    items_path=Path(get_resource_path('items.json')),
+                    keys_path=self.keys_path,
+                    donor_dir=Path(self.folder),
+                    output_dir=Path(self.folder),
+                    key_source_dir=Path(self.folder),
+                    include_thumbnails=False,
+                    preserve_header_offsets=True,
+                    overwrite=True
+                )
+                
+                # Directly scan CookedPCConsole for ANY banner package
+                banners = [b.name for b in Path(self.folder).glob('*Banner*_SF.upk')]
+                total = len(banners)
+                success = 0
+                temp_path = Path("temp_bulk_banner.png")
+                
+                for idx, pkg in enumerate(banners):
+                    def update_ui(i=idx, text_val=f"Injecting {idx+1}/{total}: {pkg}"):
+                        lbl.configure(text=text_val)
+                        pb.set(i/total)
+                    self.after(0, update_ui)
+                    
+                    try:
+                        img_path = random.choice(images)
+                        img = Image.open(str(img_path)).convert("RGBA")
+                        w, h = img.size
+                        
+                        # Crop logic: Target ratio is 14:3
+                        target_ratio = 14 / 3
+                        img_ratio = w / h
+                        
+                        if img_ratio > target_ratio:
+                            new_w = int(h * target_ratio)
+                            left = (w - new_w) // 2
+                            img = img.crop((left, 0, left + new_w, h))
+                        elif img_ratio < target_ratio:
+                            new_h = int(w / target_ratio)
+                            top = (h - new_h) // 2
+                            img = img.crop((0, top, w, top + new_h))
+                            
+                        img.save(temp_path)
+                        
+                        rl_asset_swapper.swap_banner_from_png(rl_upk_editor, temp_path, pkg, opts)
+                        success += 1
+                        with open(self.swaps_log, "a", encoding="utf-8") as f:
+                            f.write(f"[SWAPPED] Bulk Banner -> {pkg}\n")
+                    except Exception as e:
+                        pass # Many banners (animated etc) might not have the 168000 byte standard block
+                        
+                if temp_path.exists():
+                    try: temp_path.unlink()
+                    except: pass
+                
+                self.after(0, progress_win.destroy)
+                self.after(0, lambda: btn_bulk.configure(text="BULK RANDOMIZE ALL BANNERS", fg_color="#8B5CF6", state="normal"))
+                self.after(0, lambda: messagebox.showinfo("Success", f"Successfully randomized {success} out of {total} banners!\n\nNote: Animated banners are ignored automatically."))
+                
+            import threading
+            threading.Thread(target=run_bulk, daemon=True).start()
+
+        self.btn_bulk_banner = ctk.CTkButton(banner_right, text="BULK RANDOMIZE ALL BANNERS", text_color="#FFF", fg_color="#8B5CF6", hover_color="#7C3AED", font=ctk.CTkFont(size=14, weight="bold"), height=40, command=bulk_banner)
+        self.btn_bulk_banner.pack(pady=(0, 20))
         
         self.cropped_banner_path = None
         
