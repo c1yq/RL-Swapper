@@ -1,7 +1,6 @@
 ﻿# Rocket League Asset Swapper
 ![Total Downloads](https://img.shields.io/github/downloads/c1yq/RL-Swapper/total.svg?style=for-the-badge&color=blue)
 
-*(Note to Dev: To make the download counter work, replace YOUR_USERNAME and YOUR_REPOSITORY_NAME in the link above with your actual GitHub username and repository name once you publish it!)*
 
 A powerful, easy-to-use tool to inject custom images and textures directly into Rocket League's game files. Swap out in-game Profile Pictures, Player Banners, Decals, and more with your own custom images (PNG, JPG, WEBP, BMP)!
 
