@@ -15,7 +15,7 @@ Inject your own custom avatar directly into the game's UI.
 ### 2. Player Banner Swapper
 Replace an existing Rocket League player banner with any image of your choice.
 * **How it works:** Rocket League banners natively render at 420x100. Our built-in cropping tool locks you into a flawless 14:3 aspect ratio, and the swapper automatically pads the remaining pixels with transparency. This makes your banner look exactly as slim and sleek as the native banners without getting vertically stretched!
-* **Recommended In-Game Banner to Equip:** Topographic or Standard.
+* **Recommended In-Game Banner to Equip:** Topographic (can even change colors)
 * **Optimal Image Size:** 420x90 pixels.
 
 ### 3. Bulk Randomizer (Troll Your Opponents!)
