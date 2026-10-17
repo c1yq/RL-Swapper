@@ -46,27 +46,8 @@ def get_resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 def can_fit(visual_dict, sacrifice_dict):
-    v_parts = visual_dict["parts"]
-    s_parts = sacrifice_dict["parts"]
-    
-    is_body = (visual_dict["item"].slot == "Body" and sacrifice_dict["item"].slot == "Body")
-    if is_body:
-        if visual_dict.get("hitbox") != sacrifice_dict.get("hitbox"):
-            return False
-            
-    # STRIKEST RESTRICTIONS FOR ALL ITEMS (INCLUDING BODIES)
-    if len(sacrifice_dict["stem"]) > len(visual_dict["stem"]): return False
-    if len(s_parts) == len(v_parts):
-        for s, v in zip(s_parts, v_parts):
-            if len(s) > len(v): return False
-    else:
-        if s_parts and v_parts:
-            if len(s_parts[0]) > len(v_parts[0]): return False
-            if len(s_parts[-1]) > len(v_parts[-1]): return False
-        for s, v in zip(s_parts, v_parts):
-            if len(s) > len(v): return False
-            
     return True
+
 
 
 class CropWindow(ctk.CTkToplevel):
@@ -254,8 +235,9 @@ class RLSwapperApp(ctk.CTk):
         pass
 
         self.categorized_items = {}
-        ignored_slots = {'Currency', 'Crate', 'Blueprint', 'Player Title', 'Player Anthem', 'Esports Team'}
+        ignored_slots = {'Currency', 'Crate', 'Crates', 'Blueprint', 'Player Title', 'Player Anthem', 'Esports Team', 'Bot'}
         seen_keys = {}
+        seen_stems = {}
         
         for itm in self.items:
             if not itm.slot or itm.slot in ignored_slots: continue
@@ -265,20 +247,23 @@ class RLSwapperApp(ctk.CTk):
                 continue
                 
             prod_name = str(itm.product)
-            if "Team " in prod_name or "Esports" in prod_name or re.search(r'\b20\d\d\b', prod_name):
-                continue
+            parts = [p for p in str(itm.asset_path).split(".") if p]
+            stem_bare = itm.asset_package.lower().replace("_sf.upk", "").replace(".upk", "")
             
             if itm.slot not in self.categorized_items: 
                 self.categorized_items[itm.slot] = []
                 seen_keys[itm.slot] = set()
+                seen_stems[itm.slot] = set()
                 
+            if stem_bare in seen_stems[itm.slot]:
+                continue
+            seen_stems[itm.slot].add(stem_bare)
+            
             dedup_key = (prod_name, itm.slot)
             if dedup_key in seen_keys[itm.slot]:
-                continue
+                prod_name = f"{prod_name} ({stem_bare})"
+                dedup_key = (prod_name, itm.slot)
             seen_keys[itm.slot].add(dedup_key)
-            
-            parts = [p for p in str(itm.asset_path).split(".") if p]
-            stem_bare = itm.asset_package.lower().replace("_sf.upk", "").replace(".upk", "")
             
             hitbox = None
             display_name = prod_name

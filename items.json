@@ -80276,7 +80276,7 @@
             "AssetPackage": "body_condormotor_SF.upk",
             "AssetPath": "body_condormotor.body_condormotor",
             "ID": 12324,
-            "Product": "?INT?Products.body_condormotor.Label?",
+            "Product": "GMC Sierra 2500 AT4X",
             "Quality": "Exotic",
             "Slot": "Body",
             "UnlockMethod": "UnlockMethod_Online"
@@ -81317,7 +81317,7 @@
             "AssetPackage": "wheel_bluetorque02_SF.upk",
             "AssetPath": "wheel_bluetorque02.wheel_bluetorque02",
             "ID": 12469,
-            "Product": "?INT?Products.wheel_bluetorque02.Label?",
+            "Product": "Shimada Spinners",
             "Quality": "Import",
             "Slot": "Wheels",
             "UnlockMethod": "UnlockMethod_Online"
@@ -81701,7 +81701,7 @@
             "AssetPackage": "body_bluetorque_SF.upk",
             "AssetPath": "body_bluetorque.body_bluetorque",
             "ID": 12532,
-            "Product": "?INT?Products.body_bluetorque.Label?",
+            "Product": "Porsche Cayenne Turbo Electric",
             "Quality": "Exotic",
             "Slot": "Body",
             "UnlockMethod": "UnlockMethod_Online"
@@ -81881,7 +81881,7 @@
             "AssetPackage": "skin_condormotor_livery01_SF.upk",
             "AssetPath": "skin_condormotor_livery01.skin_condormotor_livery01",
             "ID": 12556,
-            "Product": "?INT?Products.body_condormotor.Label?: ?INT?Products.skin_condormotor_livery01.Label?",
+            "Product": "GMC Sierra 2500 AT4X: Professional Gray",
             "Quality": "Import",
             "Slot": "Decal",
             "UnlockMethod": "UnlockMethod_Online"
@@ -81890,7 +81890,7 @@
             "AssetPackage": "skin_condormotor_livery03_SF.upk",
             "AssetPath": "skin_condormotor_livery03.skin_condormotor_livery03",
             "ID": 12557,
-            "Product": "?INT?Products.body_condormotor.Label?: ?INT?Products.skin_condormotor_livery03.Label?",
+            "Product": "GMC Sierra 2500 AT4X: Urban Camo",
             "Quality": "Import",
             "Slot": "Decal",
             "UnlockMethod": "UnlockMethod_Online"
@@ -82052,7 +82052,7 @@
             "AssetPackage": "skin_bluetorque01_SF.upk",
             "AssetPath": "skin_bluetorque01.skin_bluetorque01",
             "ID": 12578,
-            "Product": "?INT?Products.body_bluetorque.Label?: ?INT?Products.skin_bluetorque01.Label?",
+            "Product": "Porsche Cayenne Turbo Electric: Tracer",
             "Quality": "Import",
             "Slot": "Decal",
             "UnlockMethod": "UnlockMethod_Online"
@@ -82070,7 +82070,7 @@
             "AssetPackage": "wheel_bluetorque01_SF.upk",
             "AssetPath": "wheel_bluetorque01.wheel_bluetorque01",
             "ID": 12580,
-            "Product": "?INT?Products.wheel_bluetorque01.Label?",
+            "Product": "Porsche Cayenne Turbo Electric",
             "Quality": "Import",
             "Slot": "Wheels",
             "UnlockMethod": "UnlockMethod_Online"
@@ -82079,7 +82079,7 @@
             "AssetPackage": "skin_bluetorque03_SF.upk",
             "AssetPath": "skin_bluetorque03.skin_bluetorque03",
             "ID": 12581,
-            "Product": "?INT?Products.body_bluetorque.Label?: ?INT?Products.skin_bluetorque03.Label?",
+            "Product": "Porsche Cayenne Turbo Electric: D.Va",
             "Quality": "Import",
             "Slot": "Decal",
             "UnlockMethod": "UnlockMethod_Online"
@@ -82088,7 +82088,7 @@
             "AssetPackage": "skin_bluetorque02_SF.upk",
             "AssetPath": "skin_bluetorque02.skin_bluetorque02",
             "ID": 12582,
-            "Product": "?INT?Products.body_bluetorque.Label?: ?INT?Products.skin_bluetorque02.Label?",
+            "Product": "Porsche Cayenne Turbo Electric: Mercy",
             "Quality": "Import",
             "Slot": "Decal",
             "UnlockMethod": "UnlockMethod_Online"
@@ -82097,7 +82097,7 @@
             "AssetPackage": "skin_bluetorque04_SF.upk",
             "AssetPath": "skin_bluetorque04.skin_bluetorque04",
             "ID": 12583,
-            "Product": "?INT?Products.body_bluetorque.Label?: ?INT?Products.skin_bluetorque04.Label?",
+            "Product": "Porsche Cayenne Turbo Electric: Genji",
             "Quality": "Import",
             "Slot": "Decal",
             "UnlockMethod": "UnlockMethod_Online"
@@ -82508,7 +82508,7 @@
             "AssetPackage": "Skin_scar_b_014_SF.upk",
             "AssetPath": "Skin_scar_b_014.Skin_scar_b_014",
             "ID": 12635,
-            "Product": "NASCAR Next Gen Chevrolet Camaro: ?INT?Products.Skin_scar_b_014.Label?",
+            "Product": "NASCAR Next Gen Chevrolet Camaro: RL Classic",
             "Quality": "Import",
             "Slot": "Decal",
             "UnlockMethod": "UnlockMethod_Online"
@@ -82553,7 +82553,7 @@
             "AssetPackage": "Skin_ScarB_Ramuh01_SF.upk",
             "AssetPath": "Skin_ScarB_Ramuh01.Skin_ScarB_Ramuh01",
             "ID": 12644,
-            "Product": "NASCAR Next Gen Chevrolet Camaro: ?INT?Products.Skin_ScarB_Ramuh01.Label?",
+            "Product": "NASCAR Next Gen Chevrolet Camaro: Haas",
             "Quality": "Import",
             "Slot": "Decal",
             "UnlockMethod": "UnlockMethod_Online"
@@ -82562,7 +82562,7 @@
             "AssetPackage": "Skin_ScarB_Ramuh02_SF.upk",
             "AssetPath": "Skin_ScarB_Ramuh02.Skin_ScarB_Ramuh02",
             "ID": 12645,
-            "Product": "NASCAR Next Gen Chevrolet Camaro: ?INT?Products.Skin_ScarB_Ramuh02.Label?",
+            "Product": "NASCAR Next Gen Chevrolet Camaro: Trackhouse Racing",
             "Quality": "Import",
             "Slot": "Decal",
             "UnlockMethod": "UnlockMethod_Online"
@@ -82571,7 +82571,7 @@
             "AssetPackage": "Skin_ScarB_Ramuh03_SF.upk",
             "AssetPath": "Skin_ScarB_Ramuh03.Skin_ScarB_Ramuh03",
             "ID": 12646,
-            "Product": "NASCAR Next Gen Chevrolet Camaro: ?INT?Products.Skin_ScarB_Ramuh03.Label?",
+            "Product": "NASCAR Next Gen Chevrolet Camaro: Hyak Motorsports",
             "Quality": "Import",
             "Slot": "Decal",
             "UnlockMethod": "UnlockMethod_Online"
@@ -82580,7 +82580,7 @@
             "AssetPackage": "Skin_ScarB_Ramuh04_SF.upk",
             "AssetPath": "Skin_ScarB_Ramuh04.Skin_ScarB_Ramuh04",
             "ID": 12647,
-            "Product": "NASCAR Next Gen Chevrolet Camaro: ?INT?Products.Skin_ScarB_Ramuh04.Label?",
+            "Product": "NASCAR Next Gen Chevrolet Camaro: JR Motorsports",
             "Quality": "Import",
             "Slot": "Decal",
             "UnlockMethod": "UnlockMethod_Online"
@@ -82589,7 +82589,7 @@
             "AssetPackage": "Skin_ScarB_Ramuh05_SF.upk",
             "AssetPath": "Skin_ScarB_Ramuh05.Skin_ScarB_Ramuh05",
             "ID": 12648,
-            "Product": "NASCAR Next Gen Chevrolet Camaro: ?INT?Products.Skin_ScarB_Ramuh05.Label?",
+            "Product": "NASCAR Next Gen Chevrolet Camaro: Hendrick Motorsport",
             "Quality": "Import",
             "Slot": "Decal",
             "UnlockMethod": "UnlockMethod_Online"
@@ -82598,7 +82598,7 @@
             "AssetPackage": "Skin_ScarB_Ramuh06_SF.upk",
             "AssetPath": "Skin_ScarB_Ramuh06.Skin_ScarB_Ramuh06",
             "ID": 12649,
-            "Product": "NASCAR Next Gen Chevrolet Camaro: ?INT?Products.Skin_ScarB_Ramuh06.Label?",
+            "Product": "NASCAR Next Gen Chevrolet Camaro: AmeriVet",
             "Quality": "Import",
             "Slot": "Decal",
             "UnlockMethod": "UnlockMethod_Online"
@@ -82607,7 +82607,7 @@
             "AssetPackage": "Skin_ScarB_Ramuh07_SF.upk",
             "AssetPath": "Skin_ScarB_Ramuh07.Skin_ScarB_Ramuh07",
             "ID": 12650,
-            "Product": "NASCAR Next Gen Chevrolet Camaro: ?INT?Products.Skin_ScarB_Ramuh07.Label?",
+            "Product": "NASCAR Next Gen Chevrolet Camaro: Richard Childress Racing",
             "Quality": "Import",
             "Slot": "Decal",
             "UnlockMethod": "UnlockMethod_Online"
@@ -82616,7 +82616,7 @@
             "AssetPackage": "Skin_ScarB_Ramuh08_SF.upk",
             "AssetPath": "Skin_ScarB_Ramuh08.Skin_ScarB_Ramuh08",
             "ID": 12651,
-            "Product": "NASCAR Next Gen Chevrolet Camaro: ?INT?Products.Skin_ScarB_Ramuh08.Label?",
+            "Product": "NASCAR Next Gen Chevrolet Camaro: Joey Gase Motorsports",
             "Quality": "Import",
             "Slot": "Decal",
             "UnlockMethod": "UnlockMethod_Online"
@@ -82625,7 +82625,7 @@
             "AssetPackage": "body_tagtiger_SF.upk",
             "AssetPath": "body_tagtiger.body_tagtiger",
             "ID": 12652,
-            "Product": "?INT?Products.body_tagtiger.Label?",
+            "Product": "Chrysler Pacifica",
             "Quality": "Exotic",
             "Slot": "Body",
             "UnlockMethod": "UnlockMethod_Online"
@@ -82634,7 +82634,7 @@
             "AssetPackage": "skin_bluetorque_livery01_SF.upk",
             "AssetPath": "skin_bluetorque_livery01.skin_bluetorque_livery01",
             "ID": 12653,
-            "Product": "?INT?Products.body_bluetorque.Label?: ?INT?Products.skin_bluetorque_livery01.Label?",
+            "Product": "Porsche Cayenne Turbo Electric: Psych Wave",
             "Quality": "Import",
             "Slot": "Decal",
             "UnlockMethod": "UnlockMethod_Online"
@@ -82643,7 +82643,7 @@
             "AssetPackage": "engineaudio_condormotor_SF.upk",
             "AssetPath": "engineaudio_condormotor.engineaudio_condormotor",
             "ID": 12661,
-            "Product": "?INT?Products.engineaudio_condormotor.Label?",
+            "Product": "GMC Sierra 2500 AT4X",
             "Quality": "Common",
             "Slot": "Engine Audio",
             "UnlockMethod": "UnlockMethod_Default"
@@ -82688,7 +82688,7 @@
             "AssetPackage": "skin_tagtigerflames_SF.upk",
             "AssetPath": "skin_tagtigerflames.skin_tagtigerflames",
             "ID": 12674,
-            "Product": "?INT?Products.body_tagtiger.Label?: ?INT?Products.skin_tagtigerflames.Label?",
+            "Product": "Chrysler Pacifica: Flames",
             "Quality": "Common",
             "Slot": "Decal",
             "UnlockMethod": "UnlockMethod_Default"
@@ -82751,7 +82751,7 @@
             "AssetPackage": "wheel_tagtiger01_SF.upk",
             "AssetPath": "wheel_tagtiger01.wheel_tagtiger01",
             "ID": 12686,
-            "Product": "?INT?Products.wheel_tagtiger01.Label?",
+            "Product": "Chrysler Pacifica",
             "Quality": "Import",
             "Slot": "Wheels",
             "UnlockMethod": "UnlockMethod_Online"
@@ -82760,7 +82760,7 @@
             "AssetPackage": "wheel_condormotor01_SF.upk",
             "AssetPath": "wheel_condormotor01.wheel_condormotor01",
             "ID": 12690,
-            "Product": "?INT?Products.wheel_condormotor01.Label?",
+            "Product": "GMC Sierra 2500 AT4X",
             "Quality": "Import",
             "Slot": "Wheels",
             "UnlockMethod": "UnlockMethod_Online"
@@ -82769,7 +82769,7 @@
             "AssetPackage": "engineaudio_tagtiger_SF.upk",
             "AssetPath": "engineaudio_tagtiger.engineaudio_tagtiger",
             "ID": 12705,
-            "Product": "?INT?Products.engineaudio_tagtiger.Label?",
+            "Product": "Chrysler Pacifica",
             "Quality": "Common",
             "Slot": "Engine Audio",
             "UnlockMethod": "UnlockMethod_Default"
@@ -82778,7 +82778,7 @@
             "AssetPackage": "EngineAudio_BlueTorque_SF.upk",
             "AssetPath": "EngineAudio_BlueTorque.EngineAudio_BlueTorque",
             "ID": 12721,
-            "Product": "?INT?Products.EngineAudio_BlueTorque.Label?",
+            "Product": "Porsche Cayenne Turbo Electric",
             "Quality": "Common",
             "Slot": "Engine Audio",
             "UnlockMethod": "UnlockMethod_Default"
@@ -82796,7 +82796,7 @@
             "AssetPackage": "skin_tagtiger01_SF.upk",
             "AssetPath": "skin_tagtiger01.skin_tagtiger01",
             "ID": 12734,
-            "Product": "?INT?Products.body_tagtiger.Label?: ?INT?Products.skin_tagtiger01.Label?",
+            "Product": "Chrysler Pacifica: Diamond Black Crystal",
             "Quality": "Import",
             "Slot": "Decal",
             "UnlockMethod": "UnlockMethod_Online"
@@ -82805,7 +82805,7 @@
             "AssetPackage": "skin_tagtiger02_SF.upk",
             "AssetPath": "skin_tagtiger02.skin_tagtiger02",
             "ID": 12735,
-            "Product": "?INT?Products.body_tagtiger.Label?: ?INT?Products.skin_tagtiger02.Label?",
+            "Product": "Chrysler Pacifica: Family Van",
             "Quality": "Import",
             "Slot": "Decal",
             "UnlockMethod": "UnlockMethod_Online"
@@ -82814,7 +82814,7 @@
             "AssetPackage": "skin_condormotor_livery02_SF.upk",
             "AssetPath": "skin_condormotor_livery02.skin_condormotor_livery02",
             "ID": 12739,
-            "Product": "?INT?Products.body_condormotor.Label?: ?INT?Products.skin_condormotor_livery02.Label?",
+            "Product": "GMC Sierra 2500 AT4X: Off-Road",
             "Quality": "Import",
             "Slot": "Decal",
             "UnlockMethod": "UnlockMethod_Online"
@@ -82823,7 +82823,7 @@
             "AssetPackage": "wheel_condormotor02_SF.upk",
             "AssetPath": "wheel_condormotor02.wheel_condormotor02",
             "ID": 12740,
-            "Product": "?INT?Products.wheel_condormotor02.Label?",
+            "Product": "GMC Sierra 2500 AT4X (Off-Road)",
             "Quality": "Import",
             "Slot": "Wheels",
             "UnlockMethod": "UnlockMethod_Online"
@@ -82832,7 +82832,7 @@
             "AssetPackage": "skin_tagtiger03_SF.upk",
             "AssetPath": "skin_tagtiger03.skin_tagtiger03",
             "ID": 12744,
-            "Product": "?INT?Products.body_tagtiger.Label?: ?INT?Products.skin_tagtiger03.Label?",
+            "Product": "Chrysler Pacifica: Road Ready",
             "Quality": "Import",
             "Slot": "Decal",
             "UnlockMethod": "UnlockMethod_Online"
@@ -82841,10 +82841,4006 @@
             "AssetPackage": "skin_tagtigerwings_SF.upk",
             "AssetPath": "skin_tagtigerwings.skin_tagtigerwings",
             "ID": 12751,
-            "Product": "?INT?Products.body_tagtiger.Label?: ?INT?Products.skin_tagtigerwings.Label?",
+            "Product": "Chrysler Pacifica: Wings",
             "Quality": "Common",
             "Slot": "Decal",
             "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "skin_musclecar_shogun_SF.upk",
+            "AssetPath": "skin_musclecar_shogun.skin_musclecar_shogun",
+            "ID": 2343,
+            "Product": "Shogun",
+            "Quality": "Uncommon",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "avatarborder_ink_green_SF.upk",
+            "AssetPath": "avatarborder_ink_green.avatarborder_ink_green",
+            "ID": 3346,
+            "Product": "Eerie Ink",
+            "Quality": "Limited",
+            "Slot": "PlayerAvatarBorder",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_halloweenscream_SF.upk",
+            "AssetPath": "skin_octane_halloweenscream.skin_octane_halloweenscream",
+            "ID": 3606,
+            "Product": "The Shrieker",
+            "Quality": "Rare",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_mystic_SF.upk",
+            "AssetPath": "skin_mystic.skin_mystic",
+            "ID": 4449,
+            "Product": "Mystic Mist",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "AvatarBorder_2019ChineseValentinesDay_SF.upk",
+            "AssetPath": "AvatarBorder_2019ChineseValentinesDay.AvatarBorder_2019ChineseValentinesDay",
+            "ID": 4723,
+            "Product": "Azumaya",
+            "Quality": "Limited",
+            "Slot": "PlayerAvatarBorder",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "PlayerBanner_2019ChineseValentinesDay_SF.upk",
+            "AssetPath": "PlayerBanner_2019ChineseValentinesDay.PlayerBanner_2019ChineseValentinesDay",
+            "ID": 4724,
+            "Product": "Peaceful Birds",
+            "Quality": "Limited",
+            "Slot": "Player Banner",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_phantoom_SF.upk",
+            "AssetPath": "wheel_phantoom.wheel_phantoom",
+            "ID": 5900,
+            "Product": "Crypt-id",
+            "Quality": "Uncommon",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_thattamari_SF.upk",
+            "AssetPath": "skin_thattamari.skin_thattamari",
+            "ID": 5954,
+            "Product": "Tiger Torrent",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_vanquish_frosted_SF.upk",
+            "AssetPath": "skin_vanquish_frosted.skin_vanquish_frosted",
+            "ID": 7566,
+            "Product": "Frosty",
+            "Quality": "Rare",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "boost_ghosthand_SF.upk",
+            "AssetPath": "boost_ghosthand.boost_ghosthand",
+            "ID": 7739,
+            "Product": "Reaper Hand",
+            "Quality": "Import",
+            "Slot": "Rocket Boost",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "ss_ghosthand_SF.upk",
+            "AssetPath": "ss_ghosthand.ss_ghosthand",
+            "ID": 8112,
+            "Product": "Reaper Hand",
+            "Quality": "VeryRare",
+            "Slot": "Trail",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "hat_cakeslice_SF.upk",
+            "AssetPath": "hat_cakeslice.hat_cakeslice",
+            "ID": 8793,
+            "Product": "Birthday Cake",
+            "Quality": "Limited",
+            "Slot": "Topper",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "Boost_Rainbow23_SF.upk",
+            "AssetPath": "Boost_Rainbow23.FX.Boost_Rainbow23",
+            "ID": 9047,
+            "Product": "Toon Rainbow",
+            "Quality": "Limited",
+            "Slot": "Rocket Boost",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "playerbanner_bunnyg_SF.upk",
+            "AssetPath": "playerbanner_bunnyg.playerbanner_bunnyg",
+            "ID": 9068,
+            "Product": "Buffy Sugo",
+            "Quality": "Limited",
+            "Slot": "Player Banner",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "antenna_messagebottle_SF.upk",
+            "AssetPath": "antenna_messagebottle.antenna_messagebottle",
+            "ID": 9229,
+            "Product": "Bottle Message",
+            "Quality": "Uncommon",
+            "Slot": "Antenna",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_rl68_booster_SF.upk",
+            "AssetPath": "wheel_rl68_booster.wheel_rl68_booster",
+            "ID": 9387,
+            "Product": "Slotted",
+            "Quality": "Limited",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_torment_beholder_SF.upk",
+            "AssetPath": "skin_torment_beholder.skin_torment_beholder",
+            "ID": 9637,
+            "Product": "Beholder",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "Boost_RageUnleashed_SF.upk",
+            "AssetPath": "Boost_RageUnleashed.FX.Boost_RageUnleashed",
+            "ID": 9848,
+            "Product": "Spiritus",
+            "Quality": "Import",
+            "Slot": "Rocket Boost",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "SS_RageUnleashed_SF.upk",
+            "AssetPath": "SS_RageUnleashed.FX.SS_RageUnleashed",
+            "ID": 10091,
+            "Product": "Spiritus",
+            "Quality": "VeryRare",
+            "Slot": "Trail",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_rl03_SF.upk",
+            "AssetPath": "wheel_rl03.wheel_rl03",
+            "ID": 10220,
+            "Product": "Furnacer",
+            "Quality": "Limited",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "Explosion_MoonSword_SF.upk",
+            "AssetPath": "Explosion_MoonSword.Explosion_MoonSword",
+            "ID": 10415,
+            "Product": "Divine Intervention",
+            "Quality": "Limited",
+            "Slot": "Goal Explosion",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_aw_SF.upk",
+            "AssetPath": "skin_octane_aw.skin_octane_aw",
+            "ID": 10529,
+            "Product": "Shattered Fractal",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "playerbanner_9thbirthday_SF.upk",
+            "AssetPath": "playerbanner_9thbirthday.playerbanner_9thbirthday",
+            "ID": 10544,
+            "Product": "Birthday Cake",
+            "Quality": "Limited",
+            "Slot": "Player Banner",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "antenna_birthday_SF.upk",
+            "AssetPath": "antenna_birthday.antenna_birthday",
+            "ID": 10609,
+            "Product": "Happy Birthday",
+            "Quality": "Limited",
+            "Slot": "Antenna",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "hat_headinbowl_SF.upk",
+            "AssetPath": "hat_headinbowl.hat_headinbowl",
+            "ID": 10651,
+            "Product": "Bowl Head",
+            "Quality": "Rare",
+            "Slot": "Topper",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "playerbanner_rainbow_SF.upk",
+            "AssetPath": "playerbanner_rainbow.playerbanner_rainbow",
+            "ID": 10799,
+            "Product": "Rainbow Flyer",
+            "Quality": "Limited",
+            "Slot": "Player Banner",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "hat_heartbeating_rainbow_SF.upk",
+            "AssetPath": "hat_heartbeating_rainbow.hat_heartbeating_rainbow",
+            "ID": 10902,
+            "Product": "Rainbow Flyer",
+            "Quality": "Limited",
+            "Slot": "Topper",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "explosion_rip_SF.upk",
+            "AssetPath": "explosion_rip.explosion_rip",
+            "ID": 11062,
+            "Product": "R.I.P.",
+            "Quality": "BlackMarket",
+            "Slot": "Goal Explosion",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_radiation_01_SF.upk",
+            "AssetPath": "skin_radiation_01.skin_radiation_01",
+            "ID": 11065,
+            "Product": "Radioactive",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_autogoo_SF.upk",
+            "AssetPath": "skin_autogoo.skin_autogoo",
+            "ID": 11116,
+            "Product": "autogoo",
+            "Quality": "Exotic",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "playerbanner_fishkite_SF.upk",
+            "AssetPath": "playerbanner_fishkite.playerbanner_fishkite",
+            "ID": 11417,
+            "Product": "Flying Fish",
+            "Quality": "Uncommon",
+            "Slot": "Player Banner",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "hat_bonsai_SF.upk",
+            "AssetPath": "hat_bonsai.hat_bonsai",
+            "ID": 11490,
+            "Product": "Bonsai Tree",
+            "Quality": "Rare",
+            "Slot": "Topper",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_rl199_SF.upk",
+            "AssetPath": "wheel_rl199.wheel_rl199",
+            "ID": 11550,
+            "Product": "Landing Gear",
+            "Quality": "Limited",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_rl198_SF.upk",
+            "AssetPath": "wheel_rl198.wheel_rl198",
+            "ID": 11572,
+            "Product": "Jet Engine",
+            "Quality": "Limited",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "antenna_turnip_SF.upk",
+            "AssetPath": "antenna_turnip.antenna_turnip",
+            "ID": 11604,
+            "Product": "Turnip",
+            "Quality": "Limited",
+            "Slot": "Antenna",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_rl197_SF.upk",
+            "AssetPath": "wheel_rl197.wheel_rl197",
+            "ID": 11644,
+            "Product": "Mk Muscle",
+            "Quality": "Limited",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_valentinebox_SF.upk",
+            "AssetPath": "wheel_valentinebox.wheel_valentinebox",
+            "ID": 11670,
+            "Product": "Candy Box",
+            "Quality": "Limited",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "antenna_lantern_SF.upk",
+            "AssetPath": "antenna_lantern.antenna_lantern",
+            "ID": 11672,
+            "Product": "Lantern",
+            "Quality": "Uncommon",
+            "Slot": "Antenna",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_pointy_SF.upk",
+            "AssetPath": "wheel_pointy.wheel_pointy",
+            "ID": 11681,
+            "Product": "Shuriken",
+            "Quality": "Uncommon",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "hat_takoocto_SF.upk",
+            "AssetPath": "hat_takoocto.hat_takoocto",
+            "ID": 11711,
+            "Product": "Tako",
+            "Quality": "VeryRare",
+            "Slot": "Topper",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "boost_retrostrips_SF.upk",
+            "AssetPath": "boost_retrostrips.boost_retrostrips",
+            "ID": 11776,
+            "Product": "Throwback",
+            "Quality": "Limited",
+            "Slot": "Rocket Boost",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_rl206_steely_SF.upk",
+            "AssetPath": "wheel_rl206_steely.wheel_rl206_steely",
+            "ID": 11830,
+            "Product": "Classic",
+            "Quality": "Limited",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "paintfinish_crystalclearwater_SF.upk",
+            "AssetPath": "paintfinish_crystalclearwater.paintfinish_crystalclearwater",
+            "ID": 11965,
+            "Product": "Foamy",
+            "Quality": "Limited",
+            "Slot": "Paint Finish",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "antenna_cheesecan_SF.upk",
+            "AssetPath": "antenna_cheesecan.antenna_cheesecan",
+            "ID": 11990,
+            "Product": "Cheese Can",
+            "Quality": "Limited",
+            "Slot": "Antenna",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_rl1993_SF.upk",
+            "AssetPath": "wheel_rl1993.wheel_rl1993",
+            "ID": 12011,
+            "Product": "Turbind",
+            "Quality": "Limited",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_rl1991_SF.upk",
+            "AssetPath": "wheel_rl1991.wheel_rl1991",
+            "ID": 12012,
+            "Product": "Tread Runner",
+            "Quality": "Limited",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "paintfinish_gothcloth_SF.upk",
+            "AssetPath": "paintfinish_gothcloth.paintfinish_gothclothb",
+            "ID": 12022,
+            "Product": "Ripped Denim",
+            "Quality": "Limited",
+            "Slot": "Paint Finish",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "paintfinish_artdecolux_SF.upk",
+            "AssetPath": "paintfinish_artdecolux.paintfinish_artdecolux",
+            "ID": 12041,
+            "Product": "Fanciful",
+            "Quality": "Limited",
+            "Slot": "Paint Finish",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "paintfinish_cubes_SF.upk",
+            "AssetPath": "paintfinish_cubes.paintfinish_cubes",
+            "ID": 12045,
+            "Product": "Cubic",
+            "Quality": "Limited",
+            "Slot": "Paint Finish",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_rl217_SF.upk",
+            "AssetPath": "wheel_rl217.wheel_rl217",
+            "ID": 12052,
+            "Product": "Tread Cast",
+            "Quality": "Limited",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_rl238_SF.upk",
+            "AssetPath": "wheel_rl238.wheel_rl238",
+            "ID": 12102,
+            "Product": "Temple",
+            "Quality": "Limited",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_rl249_SF.upk",
+            "AssetPath": "wheel_rl249.wheel_rl249",
+            "ID": 12124,
+            "Product": "rl249",
+            "Quality": "Import",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "pack_spheregulp_SF.upk",
+            "AssetPath": "pack_spheregulp.pack_rlcs2026",
+            "ID": 12141,
+            "Product": "RLCS '26",
+            "Quality": "VeryRare",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "antenna_seagull_SF.upk",
+            "AssetPath": "antenna_seagull.antenna_seagull",
+            "ID": 12156,
+            "Product": "Seagull",
+            "Quality": "Limited",
+            "Slot": "Antenna",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_rl240_SF.upk",
+            "AssetPath": "wheel_rl240.wheel_rl240",
+            "ID": 12162,
+            "Product": "CR24",
+            "Quality": "Import",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_rl232_SF.upk",
+            "AssetPath": "wheel_rl232.wheel_rl232",
+            "ID": 12166,
+            "Product": "No Cap",
+            "Quality": "Limited",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "hat_chessqueen_SF.upk",
+            "AssetPath": "hat_chessqueen.hat_chessqueen",
+            "ID": 12374,
+            "Product": "Chess Queen",
+            "Quality": "Limited",
+            "Slot": "Topper",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_shatter_SF.upk",
+            "AssetPath": "wheel_shatter.wheel_shatter",
+            "ID": 12385,
+            "Product": "Tri-mangle",
+            "Quality": "Limited",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "Boost_Trippy_SF.upk",
+            "AssetPath": "Boost_Trippy.Boost_Trippy",
+            "ID": 12397,
+            "Product": "Lava Lamp",
+            "Quality": "Limited",
+            "Slot": "Rocket Boost",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "Wheel_RL253_SF.upk",
+            "AssetPath": "Wheel_RL253.Wheel_RL253",
+            "ID": 12415,
+            "Product": "Disc Drive",
+            "Quality": "Limited",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_rl260_SF.upk",
+            "AssetPath": "wheel_rl260.wheel_rl260",
+            "ID": 12421,
+            "Product": "Stinger",
+            "Quality": "Import",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_rl232_se_SF.upk",
+            "AssetPath": "wheel_rl232_se.wheel_rl232_se",
+            "ID": 12424,
+            "Product": "No Cap: Inverted",
+            "Quality": "Limited",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_sport67_SF.upk",
+            "AssetPath": "wheel_sport67.wheel_sport67",
+            "ID": 12425,
+            "Product": "Primetime",
+            "Quality": "Import",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_rl259_SF.upk",
+            "AssetPath": "wheel_rl259.wheel_rl259",
+            "ID": 12426,
+            "Product": "Kick",
+            "Quality": "Limited",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_autounirainbowtext_SF.upk",
+            "AssetPath": "skin_autounirainbowtext.skin_autounirainbowtext",
+            "ID": 12430,
+            "Product": "Craynbow",
+            "Quality": "Import",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_musclecar_nekopile_SF.upk",
+            "AssetPath": "skin_musclecar_nekopile.skin_musclecar_nekopile",
+            "ID": 12432,
+            "Product": "Kitty Litter",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_force_tropical_SF.upk",
+            "AssetPath": "skin_force_tropical.skin_force_tropical",
+            "ID": 12436,
+            "Product": "Loud Lizard",
+            "Quality": "Uncommon",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_shogun_SF.upk",
+            "AssetPath": "wheel_shogun.wheel_shogun",
+            "ID": 12458,
+            "Product": "Shogun",
+            "Quality": "VeryRare",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_musclecar_electricaltribal_SF.upk",
+            "AssetPath": "skin_musclecar_electricaltribal.skin_musclecar_electricaltribal",
+            "ID": 12471,
+            "Product": "Ziggify",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_venom_tornhalftone_SF.upk",
+            "AssetPath": "skin_venom_tornhalftone.skin_venom_tornhalftone",
+            "ID": 12477,
+            "Product": "Cutcorner",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "hat_tech_SF.upk",
+            "AssetPath": "hat_tech.hat_tech",
+            "ID": 12479,
+            "Product": "Hologram",
+            "Quality": "Limited",
+            "Slot": "Topper",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "antenna_stickyhand_SF.upk",
+            "AssetPath": "antenna_stickyhand.antenna_stickyhand",
+            "ID": 12482,
+            "Product": "Sticky Fingers",
+            "Quality": "Limited",
+            "Slot": "Antenna",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "hat_dronemoji_SF.upk",
+            "AssetPath": "hat_dronemoji.hat_dronemoji",
+            "ID": 12487,
+            "Product": "Dronemoji",
+            "Quality": "Limited",
+            "Slot": "Topper",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "boost_lifeline_SF.upk",
+            "AssetPath": "boost_lifeline.boost_lifeline",
+            "ID": 12522,
+            "Product": "Lifeline",
+            "Quality": "Import",
+            "Slot": "Rocket Boost",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "boost_redplasma_SF.upk",
+            "AssetPath": "boost_redplasma.boost_redplasma",
+            "ID": 12524,
+            "Product": "redplasma",
+            "Quality": "Exotic",
+            "Slot": "Rocket Boost",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_sport76_SF.upk",
+            "AssetPath": "wheel_sport76.wheel_sport76",
+            "ID": 12616,
+            "Product": "Forewarned",
+            "Quality": "Limited",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_sport80_SF.upk",
+            "AssetPath": "wheel_sport80.wheel_sport80",
+            "ID": 12625,
+            "Product": "Scepter",
+            "Quality": "Limited",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_ivorycascade01_SF.upk",
+            "AssetPath": "wheel_ivorycascade01.wheel_ivorycascade01",
+            "ID": 12637,
+            "Product": "Lamborghini Temerario GT3",
+            "Quality": "Import",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "body_ivorycascade_SF.upk",
+            "AssetPath": "body_ivorycascade.body_ivorycascade",
+            "ID": 12638,
+            "Product": "Lamborghini Temerario GT3",
+            "Quality": "Exotic",
+            "Slot": "Body",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_rl275_SF.upk",
+            "AssetPath": "wheel_rl275.wheel_rl275",
+            "ID": 12655,
+            "Product": "Art Wrecko",
+            "Quality": "Import",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "body_ryzat2_SF.upk",
+            "AssetPath": "body_ryzat2.body_ryzat2",
+            "ID": 12657,
+            "Product": "Ryza T60",
+            "Quality": "Limited",
+            "Slot": "Body",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "body_turtlemodem_SF.upk",
+            "AssetPath": "body_turtlemodem.body_turtlemodem",
+            "ID": 12658,
+            "Product": "Hyundai Ioniq 6",
+            "Quality": "Limited",
+            "Slot": "Body",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "antenna_skyscraper_SF.upk",
+            "AssetPath": "antenna_skyscraper.antenna_skyscraper",
+            "ID": 12659,
+            "Product": "Sci-Scraper",
+            "Quality": "Limited",
+            "Slot": "Antenna",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "explosion_s23catportal_SF.upk",
+            "AssetPath": "explosion_s23catportal.explosion_s23catportal",
+            "ID": 12660,
+            "Product": "Kitty Up",
+            "Quality": "Limited",
+            "Slot": "Goal Explosion",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_dreamdust_SF.upk",
+            "AssetPath": "skin_dreamdust.skin_dreamdust",
+            "ID": 12671,
+            "Product": "Borealis",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "boost_umbragenesis_SF.upk",
+            "AssetPath": "boost_umbragenesis.boost_umbragenesis",
+            "ID": 12681,
+            "Product": "umbragenesis",
+            "Quality": "Limited",
+            "Slot": "Rocket Boost",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "boost_lightsheen_SF.upk",
+            "AssetPath": "boost_lightsheen.boost_lightsheen",
+            "ID": 12682,
+            "Product": "Glare",
+            "Quality": "Import",
+            "Slot": "Rocket Boost",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "explosion_opticorange01_SF.upk",
+            "AssetPath": "explosion_opticorange01.explosion_opticorange01",
+            "ID": 12687,
+            "Product": "Keyblade Master",
+            "Quality": "Exotic",
+            "Slot": "Goal Explosion",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "ItemContainer_SF.upk",
+            "AssetPath": "ItemContainer.crateunlocked_AT23",
+            "ID": 12688,
+            "Product": "Accolade XXIII",
+            "Quality": "Rare",
+            "Slot": "PremiumInventory",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "ItemContainer_SF.upk",
+            "AssetPath": "ItemContainer.crateunlocked_spheregulp",
+            "ID": 12689,
+            "Product": "FIFA 2026",
+            "Quality": "Rare",
+            "Slot": "PremiumInventory",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_rl278_SF.upk",
+            "AssetPath": "wheel_rl278.wheel_rl278",
+            "ID": 12691,
+            "Product": "Chief",
+            "Quality": "Limited",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_turtlemodem01_SF.upk",
+            "AssetPath": "wheel_turtlemodem01.wheel_turtlemodem01",
+            "ID": 12692,
+            "Product": "Hyundai Ioniq 6",
+            "Quality": "Limited",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_grain_esportsmancity_SF.upk",
+            "AssetPath": "skin_grain_esportsmancity.skin_grain_esportsmancity",
+            "ID": 12693,
+            "Product": "Manchester City",
+            "Quality": "Import",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "hat_cosmickitty_SF.upk",
+            "AssetPath": "hat_cosmickitty.hat_cosmickitty",
+            "ID": 12697,
+            "Product": "Cosmic Kitty",
+            "Quality": "Limited",
+            "Slot": "Topper",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_grain_esportsgeng_SF.upk",
+            "AssetPath": "skin_grain_esportsgeng.skin_grain_esportsgeng",
+            "ID": 12698,
+            "Product": "Gen.G",
+            "Quality": "Import",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "hat_rooster_psp_SF.upk",
+            "AssetPath": "hat_rooster_psp.hat_rooster_psp",
+            "ID": 12700,
+            "Product": "Rooster Comb PW",
+            "Quality": "Premium",
+            "Slot": "Topper",
+            "UnlockMethod": "UnlockMethod_DLC"
+        },
+        {
+            "AssetPackage": "skin_octane_heatwave_psp_SF.upk",
+            "AssetPath": "skin_octane_heatwave_psp.skin_octane_heatwave_psp",
+            "ID": 12701,
+            "Product": "Heatwave PW",
+            "Quality": "Premium",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_DLC"
+        },
+        {
+            "AssetPackage": "wheel_soccerball_psp_SF.upk",
+            "AssetPath": "wheel_soccerball_psp.wheel_soccerball_psp",
+            "ID": 12702,
+            "Product": "Cristiano PW",
+            "Quality": "Premium",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_DLC"
+        },
+        {
+            "AssetPackage": "skin_grain_esportsfuria_SF.upk",
+            "AssetPath": "skin_grain_esportsfuria.skin_grain_esportsfuria",
+            "ID": 12703,
+            "Product": "Furia",
+            "Quality": "Import",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_grain_esportsvitality_SF.upk",
+            "AssetPath": "skin_grain_esportsvitality.skin_grain_esportsvitality",
+            "ID": 12704,
+            "Product": "Vitality",
+            "Quality": "Import",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_grain_esportspwr_SF.upk",
+            "AssetPath": "skin_grain_esportspwr.skin_grain_esportspwr",
+            "ID": 12708,
+            "Product": "PWR",
+            "Quality": "Import",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_grain_esportskcp_SF.upk",
+            "AssetPath": "skin_grain_esportskcp.skin_grain_esportskcp",
+            "ID": 12709,
+            "Product": "Kansas City Pioneers",
+            "Quality": "Import",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_grain_esports_gentlemates_SF.upk",
+            "AssetPath": "skin_grain_esports_gentlemates.skin_grain_esports_gentlemates",
+            "ID": 12710,
+            "Product": "Gentle Mates",
+            "Quality": "Import",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_grain_esportsm80_SF.upk",
+            "AssetPath": "skin_grain_esportsm80.skin_grain_esportsm80",
+            "ID": 12711,
+            "Product": "M80",
+            "Quality": "Import",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "explosion_lotusdrone_SF.upk",
+            "AssetPath": "explosion_lotusdrone.explosion_lotusdrone",
+            "ID": 12712,
+            "Product": "Drone Dome",
+            "Quality": "Limited",
+            "Slot": "Goal Explosion",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "explosion_bigbang_SF.upk",
+            "AssetPath": "explosion_bigbang.explosion_bigbang",
+            "ID": 12714,
+            "Product": "Big Bang",
+            "Quality": "Limited",
+            "Slot": "Goal Explosion",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "boost_blackflame_SF.upk",
+            "AssetPath": "boost_blackflame.Actors.boost_blackflame",
+            "ID": 12715,
+            "Product": "Dark Flame",
+            "Quality": "Limited",
+            "Slot": "Rocket Boost",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "boost_infraredglow_SF.upk",
+            "AssetPath": "boost_infraredglow.boost_infraredglow",
+            "ID": 12716,
+            "Product": "Infrared",
+            "Quality": "Limited",
+            "Slot": "Rocket Boost",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_grain_esportsmibr_SF.upk",
+            "AssetPath": "skin_grain_esportsmibr.skin_grain_esportsmibr",
+            "ID": 12718,
+            "Product": "MIBR",
+            "Quality": "Import",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_grain_esportsspacestation_SF.upk",
+            "AssetPath": "skin_grain_esportsspacestation.skin_grain_esportsspacestation",
+            "ID": 12719,
+            "Product": "Spacestation Gaming",
+            "Quality": "Import",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_grain_esportsfalcons_SF.upk",
+            "AssetPath": "skin_grain_esportsfalcons.skin_grain_esportsfalcons",
+            "ID": 12720,
+            "Product": "Team Falcons",
+            "Quality": "Import",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "hat_storm_SF.upk",
+            "AssetPath": "hat_storm.hat_storm",
+            "ID": 12726,
+            "Product": "Storm System",
+            "Quality": "VeryRare",
+            "Slot": "Topper",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_grain_esportsshopifyrebellion_SF.upk",
+            "AssetPath": "skin_grain_esportsshopifyrebellion.skin_grain_esportsshopifyrebellion",
+            "ID": 12727,
+            "Product": "Shopify Rebellion",
+            "Quality": "Import",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_grain_esportsgeekay_SF.upk",
+            "AssetPath": "skin_grain_esportsgeekay.skin_grain_esportsgeekay",
+            "ID": 12728,
+            "Product": "Geekay Esports",
+            "Quality": "Import",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "ss_inkyoil_SF.upk",
+            "AssetPath": "ss_inkyoil.ss_inkyoil",
+            "ID": 12729,
+            "Product": "Plasma",
+            "Quality": "Limited",
+            "Slot": "Trail",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_grain_esports_nrg_SF.upk",
+            "AssetPath": "skin_grain_esports_nrg.skin_grain_esports_nrg",
+            "ID": 12731,
+            "Product": "NRG",
+            "Quality": "Import",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "boost_abstractfire_psplus_SF.upk",
+            "AssetPath": "boost_abstractfire_psplus.boost_abstractfire_psplus",
+            "ID": 12736,
+            "Product": "Fractal Fire PW",
+            "Quality": "Premium",
+            "Slot": "Rocket Boost",
+            "UnlockMethod": "UnlockMethod_DLC"
+        },
+        {
+            "AssetPackage": "skin_grain_esportsfut_SF.upk",
+            "AssetPath": "skin_grain_esportsfut.skin_grain_esportsfut",
+            "ID": 12737,
+            "Product": "FUT Esports",
+            "Quality": "Import",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_grain_esportsnip_SF.upk",
+            "AssetPath": "skin_grain_esportsnip.skin_grain_esportsnip",
+            "ID": 12741,
+            "Product": "Ninjas In Pyjamas",
+            "Quality": "Import",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "hat_moon_SF.upk",
+            "AssetPath": "hat_moon.hat_moon",
+            "ID": 12743,
+            "Product": "Crescent Moon",
+            "Quality": "Limited",
+            "Slot": "Topper",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_goldline_SF.upk",
+            "AssetPath": "wheel_goldline.wheel_goldline",
+            "ID": 12745,
+            "Product": "Goldline",
+            "Quality": "Limited",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_latch_SF.upk",
+            "AssetPath": "wheel_latch.wheel_latch",
+            "ID": 12746,
+            "Product": "Industrial",
+            "Quality": "Limited",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_grain_esportskarminecorp_SF.upk",
+            "AssetPath": "skin_grain_esportskarminecorp.skin_grain_esportskarminecorp",
+            "ID": 12747,
+            "Product": "Karmine Corp",
+            "Quality": "Import",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_Jimbo_SF.upk",
+            "AssetPath": "skin_Jimbo.skin_Jimbo",
+            "ID": 12748,
+            "Product": "Omen",
+            "Quality": "Exotic",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_grain_esportsdignitas_SF.upk",
+            "AssetPath": "skin_grain_esportsdignitas.skin_grain_esportsdignitas",
+            "ID": 12749,
+            "Product": "Dignitas",
+            "Quality": "Import",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_grain_esportswilcard_SF.upk",
+            "AssetPath": "skin_grain_esportswilcard.skin_grain_esportswilcard",
+            "ID": 12752,
+            "Product": "Fennec: Wildcard",
+            "Quality": "Import",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "explosion_s23autotournament_SF.upk",
+            "AssetPath": "explosion_s23autotournament.explosion_s23autotournament",
+            "ID": 12753,
+            "Product": "Starmax",
+            "Quality": "BlackMarket",
+            "Slot": "Goal Explosion",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_grain_esportstwistedminds_SF.upk",
+            "AssetPath": "skin_grain_esportstwistedminds.skin_grain_esportstwistedminds",
+            "ID": 12756,
+            "Product": "Fennec: Twisted Minds",
+            "Quality": "Import",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_opticorange02_SF.upk",
+            "AssetPath": "wheel_opticorange02.wheel_opticorange02",
+            "ID": 12757,
+            "Product": "Heartless",
+            "Quality": "Import",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "explosion_lightsheen_SF.upk",
+            "AssetPath": "explosion_lightsheen.explosion_lightsheen",
+            "ID": 12758,
+            "Product": "Lit Up",
+            "Quality": "Exotic",
+            "Slot": "Goal Explosion",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_latch_se_SF.upk",
+            "AssetPath": "wheel_latch_se.wheel_latch_se",
+            "ID": 12759,
+            "Product": "Industrial: Radiant",
+            "Quality": "Limited",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "explosion_chomp_SF.upk",
+            "AssetPath": "explosion_chomp.explosion_chomp",
+            "ID": 12760,
+            "Product": "Chomp Champ",
+            "Quality": "Limited",
+            "Slot": "Goal Explosion",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_goldline_se_SF.upk",
+            "AssetPath": "wheel_goldline_se.wheel_goldline_se",
+            "ID": 12761,
+            "Product": "Goldline: Inverted",
+            "Quality": "Limited",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "boost_spheregulp01_SF.upk",
+            "AssetPath": "boost_spheregulp01.boost_spheregulp01",
+            "ID": 12762,
+            "Product": "FIFA 2026",
+            "Quality": "Limited",
+            "Slot": "Rocket Boost",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "boost_opticorangelte01_SF.upk",
+            "AssetPath": "boost_opticorangelte01.boost_opticorangelte01",
+            "ID": 12764,
+            "Product": "Starlight",
+            "Quality": "Limited",
+            "Slot": "Rocket Boost",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_rl278_se_SF.upk",
+            "AssetPath": "wheel_rl278_se.wheel_rl278_se",
+            "ID": 12765,
+            "Product": "Chief: Frosted",
+            "Quality": "Limited",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_hardpoint_SF.upk",
+            "AssetPath": "wheel_hardpoint.wheel_hardpoint",
+            "ID": 12767,
+            "Product": "Drillbit",
+            "Quality": "Limited",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "ss_blackflame_SF.upk",
+            "AssetPath": "ss_blackflame.ss_blackflame",
+            "ID": 12768,
+            "Product": "Dark Flame",
+            "Quality": "Limited",
+            "Slot": "Trail",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_musclecar_s23rocketpass_SF.upk",
+            "AssetPath": "skin_musclecar_s23rocketpass.skin_musclecar_s23rocketpass",
+            "ID": 12769,
+            "Product": "Dominus: Timeline",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_spheregulp32_SF.upk",
+            "AssetPath": "skin_octane_spheregulp32.skin_octane_spheregulp32",
+            "ID": 12770,
+            "Product": "Octane: Uruguay",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_opticorangelte01_SF.upk",
+            "AssetPath": "wheel_opticorangelte01.wheel_opticorangelte01",
+            "ID": 12771,
+            "Product": "Lucky Emblem",
+            "Quality": "Limited",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_force_s23rocketpass_SF.upk",
+            "AssetPath": "skin_force_s23rocketpass.skin_force_s23rocketpass",
+            "ID": 12772,
+            "Product": "Breakout: Exo-Suit",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "explosion_spheregulp01_SF.upk",
+            "AssetPath": "explosion_spheregulp01.explosion_spheregulp01",
+            "ID": 12773,
+            "Product": "FIFA 2026",
+            "Quality": "Limited",
+            "Slot": "Goal Explosion",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_spheregulp20_SF.upk",
+            "AssetPath": "skin_octane_spheregulp20.skin_octane_spheregulp20",
+            "ID": 12774,
+            "Product": "Octane: Ecuador",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_spheregulp44_SF.upk",
+            "AssetPath": "skin_octane_spheregulp44.skin_octane_spheregulp44",
+            "ID": 12776,
+            "Product": "Octane: Colombia",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_grain_esports20tsm_SF.upk",
+            "AssetPath": "skin_grain_esports20tsm.skin_grain_esports20tsm",
+            "ID": 12777,
+            "Product": "Fennec: TSM",
+            "Quality": "Import",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "pack_S23SphereGulp_SF.upk",
+            "AssetPath": "pack_S23SphereGulp.pack_S23SphereGulp",
+            "ID": 12778,
+            "Product": "FIFA World Cup 2026",
+            "Quality": "Common",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "body_sandscreen_SF.upk",
+            "AssetPath": "body_sandscreen.body_sandscreen",
+            "ID": 12779,
+            "Product": "Jeep Wrangler",
+            "Quality": "Exotic",
+            "Slot": "Body",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_flair_SF.upk",
+            "AssetPath": "skin_octane_flair.skin_octane_flair",
+            "ID": 12780,
+            "Product": "Octane: Flair",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "body_fancyflake_SF.upk",
+            "AssetPath": "body_fancyflake.body_fancyflake",
+            "ID": 12781,
+            "Product": "Dodge Viper",
+            "Quality": "Exotic",
+            "Slot": "Body",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "ss_infraredglow_SF.upk",
+            "AssetPath": "ss_infraredglow.ss_infraredglow",
+            "ID": 12782,
+            "Product": "Infrared",
+            "Quality": "Limited",
+            "Slot": "Trail",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_spheregulp48_SF.upk",
+            "AssetPath": "skin_octane_spheregulp48.skin_octane_spheregulp48",
+            "ID": 12783,
+            "Product": "Octane: Panama",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_spheregulp36_SF.upk",
+            "AssetPath": "skin_octane_spheregulp36.skin_octane_spheregulp36",
+            "ID": 12784,
+            "Product": "Octane: Norway",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "hat_3dbenchy_SF.upk",
+            "AssetPath": "hat_3dbenchy.hat_3dbenchy",
+            "ID": 12785,
+            "Product": "Lil Boat",
+            "Quality": "Limited",
+            "Slot": "Topper",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_spheregulp34_SF.upk",
+            "AssetPath": "skin_octane_spheregulp34.skin_octane_spheregulp34",
+            "ID": 12786,
+            "Product": "Octane: France",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_spheregulp07_SF.upk",
+            "AssetPath": "skin_octane_spheregulp07.skin_octane_spheregulp07",
+            "ID": 12787,
+            "Product": "Octane: Switzerland",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_spheregulp45_SF.upk",
+            "AssetPath": "skin_octane_spheregulp45.skin_octane_spheregulp45",
+            "ID": 12788,
+            "Product": "Octane: England",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_spheregulp14_SF.upk",
+            "AssetPath": "skin_octane_spheregulp14.skin_octane_spheregulp14",
+            "ID": 12789,
+            "Product": "Octane: Paraguay",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "ItemContainer_SF.upk",
+            "AssetPath": "ItemContainer.crateunlocked_S23MusicalLTE",
+            "ID": 12790,
+            "Product": "Unity 2026",
+            "Quality": "Rare",
+            "Slot": "PremiumInventory",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "hat_ferrofluid_SF.upk",
+            "AssetPath": "hat_ferrofluid.hat_ferrofluid",
+            "ID": 12791,
+            "Product": "Spiky Fluid",
+            "Quality": "Limited",
+            "Slot": "Topper",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_spheregulp18_SF.upk",
+            "AssetPath": "skin_octane_spheregulp18.skin_octane_spheregulp18",
+            "ID": 12792,
+            "Product": "Octane: Curaçao",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "ItemContainer_SF.upk",
+            "AssetPath": "ItemContainer.crateunlocked_OpticOrange",
+            "ID": 12793,
+            "Product": "Treasure Chest",
+            "Quality": "Rare",
+            "Slot": "PremiumInventory",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_heaven_livery01_SF.upk",
+            "AssetPath": "skin_heaven_livery01.skin_heaven_livery01",
+            "ID": 12794,
+            "Product": "007's Aston Martin Valhalla: Solid Gold",
+            "Quality": "Exotic",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "flag_mc_01nxsty_SF.upk",
+            "AssetPath": "flag_mc_01nxsty.flag_mc_01nxsty",
+            "ID": 12795,
+            "Product": "NXSTY",
+            "Quality": "Common",
+            "Slot": "Antenna",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "flag_mc_02rya_SF.upk",
+            "AssetPath": "flag_mc_02rya.flag_mc_02rya",
+            "ID": 12796,
+            "Product": "RYA",
+            "Quality": "Common",
+            "Slot": "Antenna",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "skin_octane_spheregulp01_SF.upk",
+            "AssetPath": "skin_octane_spheregulp01.skin_octane_spheregulp01",
+            "ID": 12797,
+            "Product": "Octane: Mexico",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "engineaudio_ryzarevt1_SF.upk",
+            "AssetPath": "engineaudio_ryzarevt1.engineaudio_ryzarevt1",
+            "ID": 12798,
+            "Product": "Ryza Trophy",
+            "Quality": "Common",
+            "Slot": "Engine Audio",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "skin_octane_spheregulp12_SF.upk",
+            "AssetPath": "skin_octane_spheregulp12.skin_octane_spheregulp12",
+            "ID": 12799,
+            "Product": "Octane: Scotland",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_spheregulp37_SF.upk",
+            "AssetPath": "skin_octane_spheregulp37.skin_octane_spheregulp37",
+            "ID": 12800,
+            "Product": "Octane: Argentina",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_crookedf_SF.upk",
+            "AssetPath": "skin_crookedf.skin_crookedf",
+            "ID": 12801,
+            "Product": "Tripped Up",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "boost_glitchybit_SF.upk",
+            "AssetPath": "boost_glitchybit.boost_glitchybit",
+            "ID": 12802,
+            "Product": "Bitcrush",
+            "Quality": "Limited",
+            "Slot": "Rocket Boost",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "explosion_umbragenesis01_SF.upk",
+            "AssetPath": "explosion_umbragenesis01.explosion_umbragenesis01",
+            "ID": 12803,
+            "Product": "umbragenesis01",
+            "Quality": "BlackMarket",
+            "Slot": "Goal Explosion",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_spheregulp22_SF.upk",
+            "AssetPath": "skin_octane_spheregulp22.skin_octane_spheregulp22",
+            "ID": 12804,
+            "Product": "Octane: Japan",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_spheregulp29_SF.upk",
+            "AssetPath": "skin_octane_spheregulp29.skin_octane_spheregulp29",
+            "ID": 12805,
+            "Product": "Octane: Spain",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "Skin_elevatormusic_SF.upk",
+            "AssetPath": "Skin_elevatormusic.Skin_elevatormusic",
+            "ID": 12806,
+            "Product": "Vistatic",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_spheregulp09_SF.upk",
+            "AssetPath": "skin_octane_spheregulp09.skin_octane_spheregulp09",
+            "ID": 12807,
+            "Product": "Octane: Brazil",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "explosion_sphere_SF.upk",
+            "AssetPath": "explosion_sphere.explosion_sphere",
+            "ID": 12808,
+            "Product": "Phantom Ooze",
+            "Quality": "Limited",
+            "Slot": "Goal Explosion",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_sandscreen01_SF.upk",
+            "AssetPath": "wheel_sandscreen01.wheel_sandscreen01",
+            "ID": 12809,
+            "Product": "Jeep Wrangler",
+            "Quality": "Import",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "explosion_esports_v4_SF.upk",
+            "AssetPath": "explosion_esports_v4.Product.Explosion_M80_V4",
+            "ID": 12810,
+            "Product": "M80",
+            "Quality": "Import",
+            "Slot": "Goal Explosion",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "hat_opticorangelte01_SF.upk",
+            "AssetPath": "hat_opticorangelte01.hat_opticorangelte01",
+            "ID": 12811,
+            "Product": "Keyblade",
+            "Quality": "Limited",
+            "Slot": "Topper",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_spheregulp28_SF.upk",
+            "AssetPath": "skin_octane_spheregulp28.skin_octane_spheregulp28",
+            "ID": 12812,
+            "Product": "Octane: New Zealand",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_spheregulp39_SF.upk",
+            "AssetPath": "skin_octane_spheregulp39.skin_octane_spheregulp39",
+            "ID": 12813,
+            "Product": "Octane: Austria",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "body_ryzarevt1_SF.upk",
+            "AssetPath": "body_ryzarevt1.body_ryzarevt1",
+            "ID": 12814,
+            "Product": "Ryza Trophy",
+            "Quality": "Limited",
+            "Slot": "Body",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_spheregulp05_SF.upk",
+            "AssetPath": "skin_octane_spheregulp05.skin_octane_spheregulp05",
+            "ID": 12815,
+            "Product": "Octane: Canada",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_spheregulp46_SF.upk",
+            "AssetPath": "skin_octane_spheregulp46.skin_octane_spheregulp46",
+            "ID": 12816,
+            "Product": "Octane: Croatia",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_spheregulp13_SF.upk",
+            "AssetPath": "skin_octane_spheregulp13.skin_octane_spheregulp13",
+            "ID": 12817,
+            "Product": "Octane: USA",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_spheregulp42_SF.upk",
+            "AssetPath": "skin_octane_spheregulp42.skin_octane_spheregulp42",
+            "ID": 12818,
+            "Product": "Octane: Portugal",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_spheregulp23_SF.upk",
+            "AssetPath": "skin_octane_spheregulp23.skin_octane_spheregulp23",
+            "ID": 12819,
+            "Product": "Octane: Tunisia",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_spheregulp43_SF.upk",
+            "AssetPath": "skin_octane_spheregulp43.skin_octane_spheregulp43",
+            "ID": 12820,
+            "Product": "Octane: Uzbekistan",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_EQWeather_SF.upk",
+            "AssetPath": "skin_EQWeather.skin_EQWeather",
+            "ID": 12821,
+            "Product": "Aquariel",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "explosion_luckyonyx01_SF.upk",
+            "AssetPath": "explosion_luckyonyx01.explosion_luckyonyx01",
+            "ID": 12822,
+            "Product": "luckyonyx01",
+            "Quality": "BlackMarket",
+            "Slot": "Goal Explosion",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_spheregulp02_SF.upk",
+            "AssetPath": "skin_octane_spheregulp02.skin_octane_spheregulp02",
+            "ID": 12823,
+            "Product": "Octane: South Africa",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "ss_opticorangelte01_SF.upk",
+            "AssetPath": "ss_opticorangelte01.ss_opticorangelte01",
+            "ID": 12824,
+            "Product": "Starlight",
+            "Quality": "Limited",
+            "Slot": "Trail",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_sinew_SF.upk",
+            "AssetPath": "wheel_sinew.wheel_sinew",
+            "ID": 12825,
+            "Product": "Sinew",
+            "Quality": "Limited",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_spheregulp08_SF.upk",
+            "AssetPath": "skin_octane_spheregulp08.skin_octane_spheregulp08",
+            "ID": 12826,
+            "Product": "Octane: Bosnia and Herzegovina",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_spheregulp27_SF.upk",
+            "AssetPath": "skin_octane_spheregulp27.skin_octane_spheregulp27",
+            "ID": 12827,
+            "Product": "Octane: Iran",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "engineaudio_fancyflake_SF.upk",
+            "AssetPath": "engineaudio_fancyflake.engineaudio_fancyflake",
+            "ID": 12828,
+            "Product": "Dodge Viper",
+            "Quality": "Common",
+            "Slot": "Engine Audio",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "skin_opticorangelte01_SF.upk",
+            "AssetPath": "skin_opticorangelte01.skin_opticorangelte01",
+            "ID": 12829,
+            "Product": "Full Hearted",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_fancyflake01_SF.upk",
+            "AssetPath": "wheel_fancyflake01.wheel_fancyflake01",
+            "ID": 12830,
+            "Product": "Dodge Viper",
+            "Quality": "Import",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_grain_benchriver02_SF.upk",
+            "AssetPath": "skin_grain_benchriver02.skin_grain_benchriver02",
+            "ID": 12831,
+            "Product": "MOGGER",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "AvatarBorder_Goallll_SF.upk",
+            "AssetPath": "AvatarBorder_Goallll.AvatarBorder_Goallll",
+            "ID": 12832,
+            "Product": "Hard Metal",
+            "Quality": "Limited",
+            "Slot": "PlayerAvatarBorder",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "PlayerBanner_Goallll_SF.upk",
+            "AssetPath": "PlayerBanner_Goallll.PlayerBanner_Goallll",
+            "ID": 12834,
+            "Product": "Kick It",
+            "Quality": "Limited",
+            "Slot": "Player Banner",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_umbragenesislte01_SF.upk",
+            "AssetPath": "wheel_umbragenesislte01.wheel_umbragenesislte01",
+            "ID": 12837,
+            "Product": "umbragenesislte01",
+            "Quality": "Limited",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_ryzarevt1livery01_SF.upk",
+            "AssetPath": "skin_ryzarevt1livery01.skin_ryzarevt1livery01",
+            "ID": 12838,
+            "Product": "Ryza Trophy: Victor",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_ryzarevt1livery02_SF.upk",
+            "AssetPath": "skin_ryzarevt1livery02.skin_ryzarevt1livery02",
+            "ID": 12839,
+            "Product": "Ryza Trophy: Pit Box",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_spheregulp10_SF.upk",
+            "AssetPath": "skin_octane_spheregulp10.skin_octane_spheregulp10",
+            "ID": 12840,
+            "Product": "Octane: Morocco",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "engineaudio_ivorycascade_SF.upk",
+            "AssetPath": "engineaudio_ivorycascade.engineaudio_ivorycascade",
+            "ID": 12841,
+            "Product": "Lamborghini Temerario GT3",
+            "Quality": "Common",
+            "Slot": "Engine Audio",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "body_neptuneshell_SF.upk",
+            "AssetPath": "body_neptuneshell.body_neptuneshell",
+            "ID": 12842,
+            "Product": "Maserati Stradale",
+            "Quality": "Exotic",
+            "Slot": "Body",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_autobenchriver01_SF.upk",
+            "AssetPath": "skin_autobenchriver01.skin_autobenchriver01",
+            "ID": 12843,
+            "Product": "BAZALRIGHT",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "engineaudio_neptuneshell_SF.upk",
+            "AssetPath": "engineaudio_neptuneshell.engineaudio_neptuneshell",
+            "ID": 12844,
+            "Product": "Maserati Stradale",
+            "Quality": "Common",
+            "Slot": "Engine Audio",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "Anthem_Wuki_Rainbow_SF.upk",
+            "AssetPath": "Anthem_Wuki_Rainbow.Anthem_Wuki_Rainbow",
+            "ID": 12845,
+            "Product": "Rainbow",
+            "Quality": "Limited",
+            "Slot": "Player Anthem",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_fancyflakeflames_SF.upk",
+            "AssetPath": "skin_fancyflakeflames.skin_fancyflakeflames",
+            "ID": 12846,
+            "Product": "Dodge Viper: Flames",
+            "Quality": "Common",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "skin_fancyflakelivery02_SF.upk",
+            "AssetPath": "skin_fancyflakelivery02.skin_fancyflakelivery02",
+            "ID": 12847,
+            "Product": "Dodge Viper: Track Ready",
+            "Quality": "Import",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_fancyflakelivery03_SF.upk",
+            "AssetPath": "skin_fancyflakelivery03.skin_fancyflakelivery03",
+            "ID": 12848,
+            "Product": "Dodge Viper: Stripes",
+            "Quality": "Import",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_fancyflakewings_SF.upk",
+            "AssetPath": "skin_fancyflakewings.skin_fancyflakewings",
+            "ID": 12849,
+            "Product": "Dodge Viper: Wings",
+            "Quality": "Common",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "skin_neptuneshell_flames_SF.upk",
+            "AssetPath": "skin_neptuneshell_flames.skin_neptuneshell_flames",
+            "ID": 12850,
+            "Product": "Maserati Stradale: Flames",
+            "Quality": "Common",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "skin_neptuneshell_lightning_SF.upk",
+            "AssetPath": "skin_neptuneshell_lightning.skin_neptuneshell_lightning",
+            "ID": 12851,
+            "Product": "Maserati Stradale: Lightning",
+            "Quality": "Common",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "skin_neptuneshell_livery01_SF.upk",
+            "AssetPath": "skin_neptuneshell_livery01.skin_neptuneshell_livery01",
+            "ID": 12852,
+            "Product": "Maserati Stradale: Blu Emozione",
+            "Quality": "Import",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_spheregulp03_SF.upk",
+            "AssetPath": "skin_octane_spheregulp03.skin_octane_spheregulp03",
+            "ID": 12853,
+            "Product": "Octane: Korea Republic",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_spheregulp06_SF.upk",
+            "AssetPath": "skin_octane_spheregulp06.skin_octane_spheregulp06",
+            "ID": 12854,
+            "Product": "Octane: Qatar",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_spheregulp11_SF.upk",
+            "AssetPath": "skin_octane_spheregulp11.skin_octane_spheregulp11",
+            "ID": 12855,
+            "Product": "Octane: Haiti",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_ryzarevt1_flames_SF.upk",
+            "AssetPath": "skin_ryzarevt1_flames.skin_ryzarevt1_flames",
+            "ID": 12856,
+            "Product": "Ryza Trophy: Flames",
+            "Quality": "Common",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "skin_ryzarevt1_lightning_SF.upk",
+            "AssetPath": "skin_ryzarevt1_lightning.skin_ryzarevt1_lightning",
+            "ID": 12857,
+            "Product": "Ryza Trophy: Lightning",
+            "Quality": "Common",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "skin_ryzarevt1_stripes_SF.upk",
+            "AssetPath": "skin_ryzarevt1_stripes.skin_ryzarevt1_stripes",
+            "ID": 12858,
+            "Product": "Ryza Trophy: Stripes",
+            "Quality": "Common",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "skin_ryzarevt1_wings_SF.upk",
+            "AssetPath": "skin_ryzarevt1_wings.skin_ryzarevt1_wings",
+            "ID": 12859,
+            "Product": "Ryza Trophy: Wings",
+            "Quality": "Common",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "skin_sandscreen02_SF.upk",
+            "AssetPath": "skin_sandscreen02.skin_sandscreen02",
+            "ID": 12860,
+            "Product": "Jeep Wrangler: Rubber Duck",
+            "Quality": "Import",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_sandscreen03_SF.upk",
+            "AssetPath": "skin_sandscreen03.skin_sandscreen03",
+            "ID": 12861,
+            "Product": "Jeep Wrangler: StoneBlue",
+            "Quality": "Import",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_sandscreen04_SF.upk",
+            "AssetPath": "skin_sandscreen04.skin_sandscreen04",
+            "ID": 12862,
+            "Product": "Jeep Wrangler: Rad Racer",
+            "Quality": "Import",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_ivorycascade05_SF.upk",
+            "AssetPath": "skin_ivorycascade05.skin_ivorycascade05",
+            "ID": 12863,
+            "Product": "Lamborghini Temerario GT3: Il Vanto",
+            "Quality": "Import",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_spheregulp26_SF.upk",
+            "AssetPath": "skin_octane_spheregulp26.skin_octane_spheregulp26",
+            "ID": 12864,
+            "Product": "Octane: Egypt",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_spheregulp24_SF.upk",
+            "AssetPath": "skin_octane_spheregulp24.skin_octane_spheregulp24",
+            "ID": 12866,
+            "Product": "Octane: Sweden",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "engineaudio_turtlemodem_SF.upk",
+            "AssetPath": "engineaudio_turtlemodem.engineaudio_turtlemodem",
+            "ID": 12867,
+            "Product": "Hyundai Ioniq 6",
+            "Quality": "Common",
+            "Slot": "Engine Audio",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "Skin_AutoSphereGulp01_SF.upk",
+            "AssetPath": "Skin_AutoSphereGulp01.Skin_AutoSphereGulp01",
+            "ID": 12868,
+            "Product": "FIFA 2026",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "Wheel_SandScreen02_SF.upk",
+            "AssetPath": "Wheel_SandScreen02.Wheel_SandScreen02",
+            "ID": 12870,
+            "Product": "Jeep Wrangler Off-Road",
+            "Quality": "Import",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_spheregulp15_SF.upk",
+            "AssetPath": "skin_octane_spheregulp15.skin_octane_spheregulp15",
+            "ID": 12871,
+            "Product": "Octane: Australia",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_spheregulp16_SF.upk",
+            "AssetPath": "skin_octane_spheregulp16.skin_octane_spheregulp16",
+            "ID": 12872,
+            "Product": "Octane: Türkiye",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_spheregulp38_SF.upk",
+            "AssetPath": "skin_octane_spheregulp38.skin_octane_spheregulp38",
+            "ID": 12873,
+            "Product": "Octane: Algeria",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "hat_benchriver01_SF.upk",
+            "AssetPath": "hat_benchriver01.hat_benchriver01",
+            "ID": 12874,
+            "Product": "Jynxzi’s OG Chair",
+            "Quality": "Limited",
+            "Slot": "Topper",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "hat_benchriver02_SF.upk",
+            "AssetPath": "hat_benchriver02.hat_benchriver02",
+            "ID": 12875,
+            "Product": "Dad's Reinforced Chair",
+            "Quality": "Limited",
+            "Slot": "Topper",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "anthem_ehok_wearmyflag_SF.upk",
+            "AssetPath": "anthem_ehok_wearmyflag.anthem_ehok_wearmyflag",
+            "ID": 12876,
+            "Product": "Wear My Flag",
+            "Quality": "Limited",
+            "Slot": "Player Anthem",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_chrisp_livery3_SF.upk",
+            "AssetPath": "skin_chrisp_livery3.skin_chrisp_livery3",
+            "ID": 12877,
+            "Product": "Brick Body",
+            "Quality": "Import",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "anthem_nostalgixkiesza_dancingthroughitall_SF.upk",
+            "AssetPath": "anthem_nostalgixkiesza_dancingthroughitall.anthem_nostalgixkiesza_dancingthroughitall",
+            "ID": 12878,
+            "Product": "Dancing Through It All",
+            "Quality": "Limited",
+            "Slot": "Player Anthem",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_heaven_flames_SF.upk",
+            "AssetPath": "skin_heaven_flames.skin_heaven_flames",
+            "ID": 12879,
+            "Product": "007's Aston Martin Valhalla: Flames",
+            "Quality": "Common",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "skin_heaven_stripes_SF.upk",
+            "AssetPath": "skin_heaven_stripes.skin_heaven_stripes",
+            "ID": 12880,
+            "Product": "007's Aston Martin Valhalla: Stripes",
+            "Quality": "Common",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "Skin_neptuneshell_Livery02_SF.upk",
+            "AssetPath": "Skin_neptuneshell_Livery02.Skin_neptuneshell_Livery02",
+            "ID": 12882,
+            "Product": "Maserati Stradale: Neon Stream",
+            "Quality": "Exotic",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_ivorycascade06_SF.upk",
+            "AssetPath": "skin_ivorycascade06.skin_ivorycascade06",
+            "ID": 12883,
+            "Product": "Lamborghini Temerario GT3: Neochrome",
+            "Quality": "Import",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "boost_luckyonyx_SF.upk",
+            "AssetPath": "boost_luckyonyx.boost_luckyonyx",
+            "ID": 12884,
+            "Product": "luckyonyx",
+            "Quality": "Import",
+            "Slot": "Rocket Boost",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_spheregulp04_SF.upk",
+            "AssetPath": "skin_octane_spheregulp04.skin_octane_spheregulp04",
+            "ID": 12885,
+            "Product": "Octane: Czechia",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_spheregulp17_SF.upk",
+            "AssetPath": "skin_octane_spheregulp17.skin_octane_spheregulp17",
+            "ID": 12886,
+            "Product": "Octane: Germany",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "engineaudio_ryzarevt2_SF.upk",
+            "AssetPath": "engineaudio_ryzarevt2.engineaudio_ryzarevt2",
+            "ID": 12887,
+            "Product": "Ryza T60",
+            "Quality": "Common",
+            "Slot": "Engine Audio",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "body_opticorange_SF.upk",
+            "AssetPath": "body_opticorange.body_opticorange",
+            "ID": 12888,
+            "Product": "Gummi Ship",
+            "Quality": "Exotic",
+            "Slot": "Body",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "anthem_kimpetras_dtla_SF.upk",
+            "AssetPath": "anthem_kimpetras_dtla.anthem_kimpetras_dtla",
+            "ID": 12889,
+            "Product": "DTLA",
+            "Quality": "Limited",
+            "Slot": "Player Anthem",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_spheregulp31_SF.upk",
+            "AssetPath": "skin_octane_spheregulp31.skin_octane_spheregulp31",
+            "ID": 12890,
+            "Product": "Octane: Saudi Arabia",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "anthem_hayve_whatitfeelslike_SF.upk",
+            "AssetPath": "anthem_hayve_whatitfeelslike.anthem_hayve_whatitfeelslike",
+            "ID": 12891,
+            "Product": "What it feels like",
+            "Quality": "Limited",
+            "Slot": "Player Anthem",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_spheregulp25_SF.upk",
+            "AssetPath": "skin_octane_spheregulp25.skin_octane_spheregulp25",
+            "ID": 12892,
+            "Product": "Octane: Belgium",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "Skin_NeptuneShell_Livery03_SF.upk",
+            "AssetPath": "Skin_NeptuneShell_Livery03.Skin_NeptuneShell_Livery03",
+            "ID": 12893,
+            "Product": "Maserati Stradale: Sporty Spots",
+            "Quality": "Exotic",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "engineaudio_sandscreen_SF.upk",
+            "AssetPath": "engineaudio_sandscreen.engineaudio_sandscreen",
+            "ID": 12894,
+            "Product": "Jeep Wrangler",
+            "Quality": "Common",
+            "Slot": "Engine Audio",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "skin_turtlemodem_flames_SF.upk",
+            "AssetPath": "skin_turtlemodem_flames.skin_turtlemodem_flames",
+            "ID": 12895,
+            "Product": "Hyundai Ioniq 6: Flames",
+            "Quality": "Common",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "skin_turtlemodem_lightning_SF.upk",
+            "AssetPath": "skin_turtlemodem_lightning.skin_turtlemodem_lightning",
+            "ID": 12896,
+            "Product": "Hyundai Ioniq 6: Lightning",
+            "Quality": "Common",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "skin_turtlemodem_livery01_SF.upk",
+            "AssetPath": "skin_turtlemodem_livery01.skin_turtlemodem_livery01",
+            "ID": 12897,
+            "Product": "Hyundai Ioniq 6: La Mode",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_turtlemodem_stripes_SF.upk",
+            "AssetPath": "skin_turtlemodem_stripes.skin_turtlemodem_stripes",
+            "ID": 12898,
+            "Product": "Hyundai Ioniq 6: Stripes",
+            "Quality": "Common",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "skin_turtlemodem_wings_SF.upk",
+            "AssetPath": "skin_turtlemodem_wings.skin_turtlemodem_wings",
+            "ID": 12899,
+            "Product": "Hyundai Ioniq 6: Wings",
+            "Quality": "Common",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "skin_fancyflakelivery01_SF.upk",
+            "AssetPath": "skin_fancyflakelivery01.skin_fancyflakelivery01",
+            "ID": 12900,
+            "Product": "Dodge Viper: American Made",
+            "Quality": "Import",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "Skin_SandScreen01_SF.upk",
+            "AssetPath": "Skin_SandScreen01.Skin_SandScreen01",
+            "ID": 12901,
+            "Product": "Jeep Wrangler: Jeep Wrangler Willys",
+            "Quality": "Import",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_spheregulp19_SF.upk",
+            "AssetPath": "skin_octane_spheregulp19.skin_octane_spheregulp19",
+            "ID": 12902,
+            "Product": "Octane: Côte d'Ivoire",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_spheregulp40_SF.upk",
+            "AssetPath": "skin_octane_spheregulp40.skin_octane_spheregulp40",
+            "ID": 12903,
+            "Product": "Octane: Jordan",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_spheregulp33_SF.upk",
+            "AssetPath": "skin_octane_spheregulp33.skin_octane_spheregulp33",
+            "ID": 12904,
+            "Product": "Octane: Iraq",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_neptuneshell01_SF.upk",
+            "AssetPath": "wheel_neptuneshell01.wheel_neptuneshell01",
+            "ID": 12905,
+            "Product": "Maserati Stradale",
+            "Quality": "Import",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_tomb_b_SF.upk",
+            "AssetPath": "skin_tomb_b.skin_tomb_b",
+            "ID": 12907,
+            "Product": "Batmobile (2022): Reel Life (Custom)",
+            "Quality": "Import",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_spheregulp21_SF.upk",
+            "AssetPath": "skin_octane_spheregulp21.skin_octane_spheregulp21",
+            "ID": 12908,
+            "Product": "Octane: Netherlands",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_spheregulp35_SF.upk",
+            "AssetPath": "skin_octane_spheregulp35.skin_octane_spheregulp35",
+            "ID": 12909,
+            "Product": "Octane: Senegal",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_spheregulp41_SF.upk",
+            "AssetPath": "skin_octane_spheregulp41.skin_octane_spheregulp41",
+            "ID": 12910,
+            "Product": "Octane: Congo DR",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_spheregulp47_SF.upk",
+            "AssetPath": "skin_octane_spheregulp47.skin_octane_spheregulp47",
+            "ID": 12911,
+            "Product": "Octane: Ghana",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_spheregulp30_SF.upk",
+            "AssetPath": "skin_octane_spheregulp30.skin_octane_spheregulp30",
+            "ID": 12912,
+            "Product": "Octane: Cabo Verde",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "Anthem_S23ItemShop_SF.upk",
+            "AssetPath": "Anthem_S23ItemShop.Anthem_S23ItemShop",
+            "ID": 12913,
+            "Product": "Blast Away! - Gummi Ship II",
+            "Quality": "Import",
+            "Slot": "Player Anthem",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "anthem_tiffanyday_pretty4U_SF.upk",
+            "AssetPath": "anthem_tiffanyday_pretty4U.anthem_tiffanyday_pretty4U",
+            "ID": 12914,
+            "Product": "PRETTY4U",
+            "Quality": "Limited",
+            "Slot": "Player Anthem",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "ItemContainer_SF.upk",
+            "AssetPath": "ItemContainer.crateunlocked_AT24",
+            "ID": 12915,
+            "Product": "Accolade XXIV",
+            "Quality": "Rare",
+            "Slot": "PremiumInventory",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "crateunlocked_UmbraGenesis_SF.upk",
+            "AssetPath": "crateunlocked_UmbraGenesis.crateunlocked_UmbraGenesis",
+            "ID": 12917,
+            "Product": "crateunlocked_UmbraGenesis",
+            "Quality": "Limited",
+            "Slot": "PremiumInventory",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "Skin_diespitz_SF.upk",
+            "AssetPath": "Skin_diespitz.Skin_diespitz",
+            "ID": 12918,
+            "Product": "Sinew",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_shogunse_SF.upk",
+            "AssetPath": "wheel_shogunse.wheel_shogunse",
+            "ID": 12919,
+            "Product": "Shogun: Infinite",
+            "Quality": "Exotic",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_ivorycascade09_SF.upk",
+            "AssetPath": "skin_ivorycascade09.skin_ivorycascade09",
+            "ID": 12920,
+            "Product": "Lamborghini Temerario GT3: Iced Chrome",
+            "Quality": "Import",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "explosion_s23rlcs01_SF.upk",
+            "AssetPath": "explosion_s23rlcs01.explosion_s23rlcs01",
+            "ID": 12921,
+            "Product": "Blue Chip",
+            "Quality": "Limited",
+            "Slot": "Goal Explosion",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "anthem_epicaudioteam_s23autotournament_SF.upk",
+            "AssetPath": "anthem_epicaudioteam_s23autotournament.anthem_epicaudioteam_s23autotournament",
+            "ID": 12922,
+            "Product": "Show Me The Stars (Remix)",
+            "Quality": "Rare",
+            "Slot": "Player Anthem",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "anthem_epicaudioteam_s23rankrewards01_SF.upk",
+            "AssetPath": "anthem_epicaudioteam_s23rankrewards01.anthem_epicaudioteam_s23rankrewards01",
+            "ID": 12923,
+            "Product": "S22 Bronze",
+            "Quality": "Limited",
+            "Slot": "Player Anthem",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_ivorycascade08_SF.upk",
+            "AssetPath": "skin_ivorycascade08.skin_ivorycascade08",
+            "ID": 12924,
+            "Product": "Lamborghini Temerario GT3: '96 Star",
+            "Quality": "Import",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_opticorange01_SF.upk",
+            "AssetPath": "wheel_opticorange01.wheel_opticorange01",
+            "ID": 12925,
+            "Product": "Gummi Ship",
+            "Quality": "Import",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_opticorange01_SF.upk",
+            "AssetPath": "skin_opticorange01.skin_opticorange01",
+            "ID": 12926,
+            "Product": "Gummi Ship: Classic Gummi",
+            "Quality": "Import",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_opticorange02_SF.upk",
+            "AssetPath": "skin_opticorange02.skin_opticorange02",
+            "ID": 12927,
+            "Product": "Gummi Ship: Pure Magic",
+            "Quality": "Exotic",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_opticorange03_SF.upk",
+            "AssetPath": "skin_opticorange03.skin_opticorange03",
+            "ID": 12928,
+            "Product": "Gummi Ship: Heartless",
+            "Quality": "Import",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "boost_s23rlcs01_SF.upk",
+            "AssetPath": "boost_s23rlcs01.Actors.boost_s23rlcs01",
+            "ID": 12930,
+            "Product": "Blue Chip",
+            "Quality": "Import",
+            "Slot": "Rocket Boost",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_IvoryCascade07_SF.upk",
+            "AssetPath": "skin_IvoryCascade07.skin_IvoryCascade07",
+            "ID": 12931,
+            "Product": "Lamborghini Temerario GT3: Limitless",
+            "Quality": "Import",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_ryzarevt2livery01_SF.upk",
+            "AssetPath": "skin_ryzarevt2livery01.skin_ryzarevt2livery01",
+            "ID": 12932,
+            "Product": "Ryza T60: Victor",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "flag_bakkesmod_SF.upk",
+            "AssetPath": "flag_bakkesmod.flag_bakkesmod",
+            "ID": 12933,
+            "Product": "BakkesMod",
+            "Quality": "Common",
+            "Slot": "Antenna",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "skin_ryzarevt2_flames_SF.upk",
+            "AssetPath": "skin_ryzarevt2_flames.skin_ryzarevt2_flames",
+            "ID": 12934,
+            "Product": "Ryza T60: Flames",
+            "Quality": "Common",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "skin_ryzarevt2_lightning_SF.upk",
+            "AssetPath": "skin_ryzarevt2_lightning.skin_ryzarevt2_lightning",
+            "ID": 12935,
+            "Product": "Ryza T60: Lightning",
+            "Quality": "Common",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "skin_ryzarevt2_stripes_SF.upk",
+            "AssetPath": "skin_ryzarevt2_stripes.skin_ryzarevt2_stripes",
+            "ID": 12936,
+            "Product": "Ryza T60: Stripes",
+            "Quality": "Common",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "skin_ryzarevt2_wings_SF.upk",
+            "AssetPath": "skin_ryzarevt2_wings.skin_ryzarevt2_wings",
+            "ID": 12937,
+            "Product": "Ryza T60: Wings",
+            "Quality": "Common",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "skin_ryzarevt2livery02_SF.upk",
+            "AssetPath": "skin_ryzarevt2livery02.skin_ryzarevt2livery02",
+            "ID": 12938,
+            "Product": "Ryza T60: Pit Box",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "anthem_epicaudioteam_s23rankrewards02_SF.upk",
+            "AssetPath": "anthem_epicaudioteam_s23rankrewards02.anthem_epicaudioteam_s23rankrewards02",
+            "ID": 12941,
+            "Product": "S22 Silver",
+            "Quality": "Limited",
+            "Slot": "Player Anthem",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "anthem_epicaudioteam_s23rankrewards03_SF.upk",
+            "AssetPath": "anthem_epicaudioteam_s23rankrewards03.anthem_epicaudioteam_s23rankrewards03",
+            "ID": 12942,
+            "Product": "S22 Gold",
+            "Quality": "Limited",
+            "Slot": "Player Anthem",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "anthem_epicaudioteam_s23rankrewards04_SF.upk",
+            "AssetPath": "anthem_epicaudioteam_s23rankrewards04.anthem_epicaudioteam_s23rankrewards04",
+            "ID": 12943,
+            "Product": "S22 Platinum",
+            "Quality": "Limited",
+            "Slot": "Player Anthem",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "anthem_epicaudioteam_s23rankrewards05_SF.upk",
+            "AssetPath": "anthem_epicaudioteam_s23rankrewards05.anthem_epicaudioteam_s23rankrewards05",
+            "ID": 12944,
+            "Product": "S22 Diamond",
+            "Quality": "Limited",
+            "Slot": "Player Anthem",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "anthem_epicaudioteam_s23rankrewards06_SF.upk",
+            "AssetPath": "anthem_epicaudioteam_s23rankrewards06.anthem_epicaudioteam_s23rankrewards06",
+            "ID": 12945,
+            "Product": "S22 Champion",
+            "Quality": "Limited",
+            "Slot": "Player Anthem",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "anthem_epicaudioteam_s23rankrewards07_SF.upk",
+            "AssetPath": "anthem_epicaudioteam_s23rankrewards07.anthem_epicaudioteam_s23rankrewards07",
+            "ID": 12946,
+            "Product": "S22 Grand Champion",
+            "Quality": "Limited",
+            "Slot": "Player Anthem",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "anthem_epicaudioteam_s23rankrewards08_SF.upk",
+            "AssetPath": "anthem_epicaudioteam_s23rankrewards08.anthem_epicaudioteam_s23rankrewards08",
+            "ID": 12947,
+            "Product": "S22 Supersonic Legend",
+            "Quality": "Limited",
+            "Slot": "Player Anthem",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_nopilgrim_SF.upk",
+            "AssetPath": "skin_nopilgrim.skin_nopilgrim",
+            "ID": 12950,
+            "Product": "Head Turner",
+            "Quality": "Exotic",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "body_burnishedraven_SF.upk",
+            "AssetPath": "body_burnishedraven.body_burnishedraven",
+            "ID": 12951,
+            "Product": "Cadillac CT5-V Blackwing",
+            "Quality": "Exotic",
+            "Slot": "Body",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_rl275_se_SF.upk",
+            "AssetPath": "wheel_rl275_se.wheel_rl275_se",
+            "ID": 12953,
+            "Product": "Art Wrecko: Holographic",
+            "Quality": "Exotic",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "boost_iconcolors_SF.upk",
+            "AssetPath": "boost_iconcolors.boost_iconcolors",
+            "ID": 12956,
+            "Product": "Infraroad",
+            "Quality": "Limited",
+            "Slot": "Rocket Boost",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "boost_overdriver_SF.upk",
+            "AssetPath": "boost_overdriver.FX.boost_overdriver",
+            "ID": 12957,
+            "Product": "Synapse",
+            "Quality": "Limited",
+            "Slot": "Rocket Boost",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_sport80se_SF.upk",
+            "AssetPath": "wheel_sport80se.wheel_sport80se",
+            "ID": 12958,
+            "Product": "Scepter: Infinite",
+            "Quality": "Limited",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_opticorangelte01_SF.upk",
+            "AssetPath": "skin_octane_opticorangelte01.skin_octane_opticorangelte01",
+            "ID": 12959,
+            "Product": "Octane: Sora",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_s23rlcs01_SF.upk",
+            "AssetPath": "skin_octane_s23rlcs01.skin_octane_s23rlcs01",
+            "ID": 12960,
+            "Product": "Octane: Blue Chip",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_umbragenesis01_SF.upk",
+            "AssetPath": "wheel_umbragenesis01.wheel_umbragenesis01",
+            "ID": 12961,
+            "Product": "umbragenesis01",
+            "Quality": "Import",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "boost_chromaticaberration_SF.upk",
+            "AssetPath": "boost_chromaticaberration.FX.boost_chromaticaberration",
+            "ID": 12963,
+            "Product": "Chromatic Abberation",
+            "Quality": "Limited",
+            "Slot": "Rocket Boost",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "explosion_vspace_SF.upk",
+            "AssetPath": "explosion_vspace.explosion_vspace",
+            "ID": 12966,
+            "Product": "Anipop",
+            "Quality": "Limited",
+            "Slot": "Goal Explosion",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "ss_umbragenesislte01_SF.upk",
+            "AssetPath": "ss_umbragenesislte01.ss_umbragenesislte01",
+            "ID": 12967,
+            "Product": "umbragenesislte01",
+            "Quality": "Limited",
+            "Slot": "Trail",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "boost_alphadevreward_SF.upk",
+            "AssetPath": "boost_alphadevreward.boost_alphadevreward",
+            "ID": 12968,
+            "Product": "alphadevreward",
+            "Quality": "Limited",
+            "Slot": "Rocket Boost",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "hat_s24psplus_SF.upk",
+            "AssetPath": "hat_s24psplus.hat_s24psplus",
+            "ID": 12970,
+            "Product": "Pork Pie G+G",
+            "Quality": "Premium",
+            "Slot": "Topper",
+            "UnlockMethod": "UnlockMethod_DLC"
+        },
+        {
+            "AssetPackage": "skin_musclecar_firechicken_SF.upk",
+            "AssetPath": "skin_musclecar_firechicken.skin_musclecar_firechicken",
+            "ID": 12972,
+            "Product": "Dominus: Valiantor",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "ss_luckyonyx01_SF.upk",
+            "AssetPath": "ss_luckyonyx01.ss_luckyonyx01",
+            "ID": 12973,
+            "Product": "luckyonyx01",
+            "Quality": "Import",
+            "Slot": "Trail",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_burnishedravenflames_SF.upk",
+            "AssetPath": "skin_burnishedravenflames.skin_burnishedravenflames",
+            "ID": 12974,
+            "Product": "Cadillac CT5-V Blackwing: Flames",
+            "Quality": "Common",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "skin_burnishedravenlightning_SF.upk",
+            "AssetPath": "skin_burnishedravenlightning.skin_burnishedravenlightning",
+            "ID": 12975,
+            "Product": "Cadillac CT5-V Blackwing: Lightning",
+            "Quality": "Common",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "skin_burnishedravenwings_SF.upk",
+            "AssetPath": "skin_burnishedravenwings.skin_burnishedravenwings",
+            "ID": 12976,
+            "Product": "Cadillac CT5-V Blackwing: Wings",
+            "Quality": "Common",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "skin_octane_s24psplus_SF.upk",
+            "AssetPath": "skin_octane_s24psplus.skin_octane_s24psplus",
+            "ID": 12977,
+            "Product": "Octane: Fancy Formal G+G",
+            "Quality": "Premium",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_DLC"
+        },
+        {
+            "AssetPackage": "wheel_s24psplus_SF.upk",
+            "AssetPath": "wheel_s24psplus.wheel_s24psplus",
+            "ID": 12978,
+            "Product": "Spinner G+G",
+            "Quality": "Premium",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_DLC"
+        },
+        {
+            "AssetPackage": "avatarborder_opticorangelte01_SF.upk",
+            "AssetPath": "avatarborder_opticorangelte01.avatarborder_opticorangelte01",
+            "ID": 12979,
+            "Product": "Xehanort",
+            "Quality": "Limited",
+            "Slot": "PlayerAvatarBorder",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "playerbanner_opticorangelte01_SF.upk",
+            "AssetPath": "playerbanner_opticorangelte01.playerbanner_opticorangelte01",
+            "ID": 12980,
+            "Product": "Keyblade",
+            "Quality": "Limited",
+            "Slot": "Player Banner",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "explosion_fs_voidgaze_SF.upk",
+            "AssetPath": "explosion_fs_voidgaze.explosion_fs_voidgaze",
+            "ID": 12981,
+            "Product": "fs_voidgaze",
+            "Quality": "BlackMarket",
+            "Slot": "Goal Explosion",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "boost_paralyzingfear_psplus_SF.upk",
+            "AssetPath": "boost_paralyzingfear_psplus.boost_paralyzingfear_psplus",
+            "ID": 12982,
+            "Product": "Dark Fire G+G",
+            "Quality": "Premium",
+            "Slot": "Rocket Boost",
+            "UnlockMethod": "UnlockMethod_DLC"
+        },
+        {
+            "AssetPackage": "skin_octane_umbragenesis01_SF.upk",
+            "AssetPath": "skin_octane_umbragenesis01.skin_octane_umbragenesis01",
+            "ID": 12983,
+            "Product": "Octane: umbragenesis01",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_uniumbragenesis_SF.upk",
+            "AssetPath": "skin_uniumbragenesis.skin_uniumbragenesis",
+            "ID": 12986,
+            "Product": "uniumbragenesis",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_vanquish_buffy_SF.upk",
+            "AssetPath": "skin_vanquish_buffy.skin_vanquish_buffy",
+            "ID": 12987,
+            "Product": "Merc: Agent Sugo",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "engineaudio_burnishedraven_SF.upk",
+            "AssetPath": "engineaudio_burnishedraven.engineaudio_burnishedraven",
+            "ID": 12988,
+            "Product": "Cadillac CT5-V Blackwing",
+            "Quality": "Common",
+            "Slot": "Engine Audio",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "wheel_luckyonyx01_SF.upk",
+            "AssetPath": "wheel_luckyonyx01.wheel_luckyonyx01",
+            "ID": 12992,
+            "Product": "luckyonyx01",
+            "Quality": "Exotic",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_force_pastelgraffiti_SF.upk",
+            "AssetPath": "skin_force_pastelgraffiti.skin_force_pastelgraffiti",
+            "ID": 12993,
+            "Product": "Breakout: Techtoxic",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "ss_roadsparks_SF.upk",
+            "AssetPath": "ss_roadsparks.ss_roadsparks",
+            "ID": 12994,
+            "Product": "Treadsparks",
+            "Quality": "Limited",
+            "Slot": "Trail",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "engineaudio_trackspice_SF.upk",
+            "AssetPath": "engineaudio_trackspice.engineaudio_trackspice",
+            "ID": 12996,
+            "Product": "Mercedes-Benz 190E Evo II",
+            "Quality": "Common",
+            "Slot": "Engine Audio",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "body_trackspice_SF.upk",
+            "AssetPath": "body_trackspice.body_trackspice",
+            "ID": 12999,
+            "Product": "Mercedes-Benz 190E Evo II: Mercedes-Benz 190E Evo II",
+            "Quality": "Exotic",
+            "Slot": "Body",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "body_umbragenesis_SF.upk",
+            "AssetPath": "body_umbragenesis.body_umbragenesis",
+            "ID": 13000,
+            "Product": "umbragenesis",
+            "Quality": "Exotic",
+            "Slot": "Body",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "ss_chromaticaberration_SF.upk",
+            "AssetPath": "ss_chromaticaberration.FX.ss_chromaticaberration",
+            "ID": 13003,
+            "Product": "Chromatic Abberation",
+            "Quality": "Limited",
+            "Slot": "Trail",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "body_genericmystery_SF.upk",
+            "AssetPath": "body_genericmystery.Body_Giftbox_Mystery_Limited",
+            "ID": 13008,
+            "Product": "Luxury Drop",
+            "Quality": "Limited",
+            "Slot": "Body",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "hat_chibigrain_SF.upk",
+            "AssetPath": "hat_chibigrain.hat_chibigrain",
+            "ID": 13009,
+            "Product": "Chibi Fennec",
+            "Quality": "Limited",
+            "Slot": "Topper",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_musclecar_astroglacier_SF.upk",
+            "AssetPath": "skin_musclecar_astroglacier.skin_musclecar_astroglacier",
+            "ID": 13010,
+            "Product": "Dominus: astroglacier",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "engineaudio_OpticOrange_SF.upk",
+            "AssetPath": "engineaudio_OpticOrange.engineaudio_OpticOrange",
+            "ID": 13011,
+            "Product": "Gummi Ship",
+            "Quality": "Common",
+            "Slot": "Engine Audio",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "skin_autosplittone_SF.upk",
+            "AssetPath": "skin_autosplittone.skin_autosplittone",
+            "ID": 13012,
+            "Product": "Half-Fit",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "ss_kawaiistickers_SF.upk",
+            "AssetPath": "ss_kawaiistickers.ss_kawaiistickers",
+            "ID": 13014,
+            "Product": "Kawaii Stickers",
+            "Quality": "Limited",
+            "Slot": "Trail",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_umbragenesis02_SF.upk",
+            "AssetPath": "wheel_umbragenesis02.wheel_umbragenesis02",
+            "ID": 13015,
+            "Product": "umbragenesis02",
+            "Quality": "Import",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_burnishedravenlivery01_SF.upk",
+            "AssetPath": "skin_burnishedravenlivery01.skin_burnishedravenlivery01",
+            "ID": 13016,
+            "Product": "Cadillac CT5-V Blackwing: Absolute Blackwing",
+            "Quality": "Import",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_trackspice01_SF.upk",
+            "AssetPath": "skin_trackspice01.skin_trackspice01",
+            "ID": 13017,
+            "Product": "Mercedes-Benz 190E Evo II: Matte Black",
+            "Quality": "Import",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_trackspice02_SF.upk",
+            "AssetPath": "skin_trackspice02.skin_trackspice02",
+            "ID": 13018,
+            "Product": "Mercedes-Benz 190E Evo II: Time Trial",
+            "Quality": "Import",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_trackspice03_SF.upk",
+            "AssetPath": "skin_trackspice03.skin_trackspice03",
+            "ID": 13019,
+            "Product": "Mercedes-Benz 190E Evo II: Buffy-Sugo Track",
+            "Quality": "Import",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_trackspice04_SF.upk",
+            "AssetPath": "skin_trackspice04.skin_trackspice04",
+            "ID": 13020,
+            "Product": "Mercedes-Benz 190E Evo II: Llama Lap",
+            "Quality": "Import",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_burnishedraven01_SF.upk",
+            "AssetPath": "wheel_burnishedraven01.wheel_burnishedraven01",
+            "ID": 13021,
+            "Product": "Cadillac CT5-V Blackwing",
+            "Quality": "Import",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_trackspice01_SF.upk",
+            "AssetPath": "wheel_trackspice01.wheel_trackspice01",
+            "ID": 13022,
+            "Product": "Mercedes-Benz 190E Evo II",
+            "Quality": "Import",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_trackspice02_SF.upk",
+            "AssetPath": "wheel_trackspice02.wheel_trackspice02",
+            "ID": 13023,
+            "Product": "Mercedes-Benz 190E Evo II Redux",
+            "Quality": "Import",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_burnishedravenstripes_SF.upk",
+            "AssetPath": "skin_burnishedravenstripes.skin_burnishedravenstripes",
+            "ID": 13024,
+            "Product": "Cadillac CT5-V Blackwing: Stripes",
+            "Quality": "Common",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "explosion_waypoint_SF.upk",
+            "AssetPath": "explosion_waypoint.explosion_waypoint",
+            "ID": 13026,
+            "Product": "Street Racer",
+            "Quality": "Limited",
+            "Slot": "Goal Explosion",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "ItemContainer_SF.upk",
+            "AssetPath": "ItemContainer.crateunlocked_luxlow1",
+            "ID": 13030,
+            "Product": "Inferno Collection",
+            "Quality": "Limited",
+            "Slot": "PremiumInventory",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "ItemContainer_SF.upk",
+            "AssetPath": "ItemContainer.crateunlocked_luxmed1",
+            "ID": 13031,
+            "Product": "Nova Collection",
+            "Quality": "Limited",
+            "Slot": "PremiumInventory",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "ItemContainer_SF.upk",
+            "AssetPath": "ItemContainer.crateunlocked_luxlow2",
+            "ID": 13034,
+            "Product": "Apex Collection",
+            "Quality": "Limited",
+            "Slot": "PremiumInventory",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "avatarborder_umbragenesislte01_SF.upk",
+            "AssetPath": "avatarborder_umbragenesislte01.avatarborder_umbragenesislte01",
+            "ID": 13037,
+            "Product": "umbragenesislte01",
+            "Quality": "Limited",
+            "Slot": "PlayerAvatarBorder",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "playerbanner_umbragenesislte01_SF.upk",
+            "AssetPath": "playerbanner_umbragenesislte01.playerbanner_umbragenesislte01",
+            "ID": 13038,
+            "Product": "umbragenesislte01",
+            "Quality": "Limited",
+            "Slot": "Player Banner",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "ss_iconcolors_SF.upk",
+            "AssetPath": "ss_iconcolors.ss_iconcolors",
+            "ID": 13039,
+            "Product": "Infraroad",
+            "Quality": "Limited",
+            "Slot": "Trail",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "hat_speedometer_SF.upk",
+            "AssetPath": "hat_speedometer.hat_speedometer",
+            "ID": 13041,
+            "Product": "Speedometer",
+            "Quality": "Limited",
+            "Slot": "Topper",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "body_revivalline_SF.upk",
+            "AssetPath": "body_revivalline.body_revivalline",
+            "ID": 13042,
+            "Product": "revivalline",
+            "Quality": "Exotic",
+            "Slot": "Body",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_grain_mvp01_SF.upk",
+            "AssetPath": "skin_grain_mvp01.skin_grain_mvp01",
+            "ID": 13043,
+            "Product": "Fennec: mvp01",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_umbragenesis_umbragenesis01_SF.upk",
+            "AssetPath": "skin_umbragenesis_umbragenesis01.skin_umbragenesis_umbragenesis01",
+            "ID": 13045,
+            "Product": "umbragenesis: umbragenesis01",
+            "Quality": "Import",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_revivalline01_SF.upk",
+            "AssetPath": "wheel_revivalline01.wheel_revivalline01",
+            "ID": 13048,
+            "Product": "revivalline01",
+            "Quality": "Import",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_revivalline02_SF.upk",
+            "AssetPath": "wheel_revivalline02.wheel_revivalline02",
+            "ID": 13050,
+            "Product": "revivalline02",
+            "Quality": "Import",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "explosion_reactiveshop01_SF.upk",
+            "AssetPath": "explosion_reactiveshop01.explosion_reactiveshop01",
+            "ID": 13051,
+            "Product": "reactiveshop01",
+            "Quality": "BlackMarket",
+            "Slot": "Goal Explosion",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_revivalline_luckyonyx_01_SF.upk",
+            "AssetPath": "skin_revivalline_luckyonyx_01.skin_revivalline_luckyonyx_01",
+            "ID": 13053,
+            "Product": "revivalline: luckyonyx_01",
+            "Quality": "Exotic",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "boost_mvp01_SF.upk",
+            "AssetPath": "boost_mvp01.FX.boost_mvp01",
+            "ID": 13056,
+            "Product": "mvp01",
+            "Quality": "Limited",
+            "Slot": "Rocket Boost",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_automvp01_SF.upk",
+            "AssetPath": "skin_automvp01.skin_automvp01",
+            "ID": 13058,
+            "Product": "automvp01",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_shatterse_SF.upk",
+            "AssetPath": "wheel_shatterse.wheel_shatterse",
+            "ID": 13059,
+            "Product": "Tri-mangle: Remixed",
+            "Quality": "Limited",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_umbragenesis02_SF.upk",
+            "AssetPath": "skin_umbragenesis02.skin_umbragenesis02",
+            "ID": 13060,
+            "Product": "umbragenesis: 02",
+            "Quality": "Exotic",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_umbragenesis03_SF.upk",
+            "AssetPath": "skin_umbragenesis03.skin_umbragenesis03",
+            "ID": 13061,
+            "Product": "umbragenesis: 03",
+            "Quality": "Exotic",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_sport76se_SF.upk",
+            "AssetPath": "wheel_sport76se.wheel_sport76se",
+            "ID": 13062,
+            "Product": "Forewarned: Holographic",
+            "Quality": "Limited",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_hardpointse_SF.upk",
+            "AssetPath": "wheel_hardpointse.wheel_hardpointse",
+            "ID": 13063,
+            "Product": "Drillbit: Remix",
+            "Quality": "Limited",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_cobaltdagger01_SF.upk",
+            "AssetPath": "wheel_cobaltdagger01.wheel_cobaltdagger01",
+            "ID": 13064,
+            "Product": "Volkswagen Golf GTI Edition 50",
+            "Quality": "Limited",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "hat_umbragenesislte01_SF.upk",
+            "AssetPath": "hat_umbragenesislte01.hat_umbragenesislte01",
+            "ID": 13065,
+            "Product": "umbragenesislte01",
+            "Quality": "Limited",
+            "Slot": "Topper",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_vstaples_SF.upk",
+            "AssetPath": "skin_vstaples.skin_vstaples",
+            "ID": 13070,
+            "Product": "Vextor",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "body_neonmarmot_SF.upk",
+            "AssetPath": "body_neonmarmot.body_neonmarmot",
+            "ID": 13071,
+            "Product": "Dominus GT 76: Dominus GT 76",
+            "Quality": "Limited",
+            "Slot": "Body",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_revivalline_luckyonyx_02_SF.upk",
+            "AssetPath": "skin_revivalline_luckyonyx_02.skin_revivalline_luckyonyx_02",
+            "ID": 13072,
+            "Product": "revivalline: luckyonyx_02",
+            "Quality": "Exotic",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_revivalline_luckyonyx_03_SF.upk",
+            "AssetPath": "skin_revivalline_luckyonyx_03.skin_revivalline_luckyonyx_03",
+            "ID": 13073,
+            "Product": "revivalline: luckyonyx_03",
+            "Quality": "Exotic",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "body_cobaltdagger_SF.upk",
+            "AssetPath": "body_cobaltdagger.body_cobaltdagger",
+            "ID": 13074,
+            "Product": "Volkswagen Golf GTI Edition 50",
+            "Quality": "Limited",
+            "Slot": "Body",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "body_safari_SF.upk",
+            "AssetPath": "body_safari.body_safari",
+            "ID": 13075,
+            "Product": "Pareto 5S: Pareto 5S",
+            "Quality": "Limited",
+            "Slot": "Body",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "explosion_powerstar_SF.upk",
+            "AssetPath": "explosion_powerstar.explosion_powerstar",
+            "ID": 13077,
+            "Product": "powerstar",
+            "Quality": "Exotic",
+            "Slot": "Goal Explosion",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "engineaudio_cobaltdagger_SF.upk",
+            "AssetPath": "engineaudio_cobaltdagger.engineaudio_cobaltdagger",
+            "ID": 13080,
+            "Product": "Volkswagen Golf GTI Edition 50",
+            "Quality": "Common",
+            "Slot": "Engine Audio",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "skin_cobaltdagger_flames_SF.upk",
+            "AssetPath": "skin_cobaltdagger_flames.skin_cobaltdagger_flames",
+            "ID": 13081,
+            "Product": "Volkswagen Golf GTI Edition 50: Flames",
+            "Quality": "Common",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "skin_cobaltdagger_lightning_SF.upk",
+            "AssetPath": "skin_cobaltdagger_lightning.skin_cobaltdagger_lightning",
+            "ID": 13082,
+            "Product": "Volkswagen Golf GTI Edition 50: Lightning",
+            "Quality": "Common",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "skin_CobaltDagger_livery01_SF.upk",
+            "AssetPath": "skin_CobaltDagger_livery01.skin_CobaltDagger_livery01",
+            "ID": 13083,
+            "Product": "Volkswagen Golf GTI Edition 50: MKD Ultra",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_cobaltdagger_livery02_SF.upk",
+            "AssetPath": "skin_cobaltdagger_livery02.skin_cobaltdagger_livery02",
+            "ID": 13084,
+            "Product": "Volkswagen Golf GTI Edition 50: Pegasus Ultra",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_cobaltdagger_livery03_SF.upk",
+            "AssetPath": "skin_cobaltdagger_livery03.skin_cobaltdagger_livery03",
+            "ID": 13085,
+            "Product": "Volkswagen Golf GTI Edition 50: Tread Ultra",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_CobaltDagger_stripes_SF.upk",
+            "AssetPath": "skin_CobaltDagger_stripes.skin_CobaltDagger_stripes",
+            "ID": 13086,
+            "Product": "Volkswagen Golf GTI Edition 50: Stripes",
+            "Quality": "Common",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "skin_CobaltDagger_wings_SF.upk",
+            "AssetPath": "skin_CobaltDagger_wings.skin_CobaltDagger_wings",
+            "ID": 13087,
+            "Product": "Volkswagen Golf GTI Edition 50: Wings",
+            "Quality": "Common",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "skin_safari_flames_SF.upk",
+            "AssetPath": "skin_safari_flames.skin_safari_flames",
+            "ID": 13088,
+            "Product": "Pareto 5S: Flames",
+            "Quality": "Common",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "skin_safari_lightning_SF.upk",
+            "AssetPath": "skin_safari_lightning.skin_safari_lightning",
+            "ID": 13089,
+            "Product": "Pareto 5S: Lightning",
+            "Quality": "Common",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "skin_safari_livery01_SF.upk",
+            "AssetPath": "skin_safari_livery01.skin_safari_livery01",
+            "ID": 13090,
+            "Product": "Pareto 5S: Pareto Shock",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_safari_stripes_SF.upk",
+            "AssetPath": "skin_safari_stripes.skin_safari_stripes",
+            "ID": 13091,
+            "Product": "Pareto 5S: Stripes",
+            "Quality": "Common",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "skin_safari_wings_SF.upk",
+            "AssetPath": "skin_safari_wings.skin_safari_wings",
+            "ID": 13092,
+            "Product": "Pareto 5S: Wings",
+            "Quality": "Common",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "playerbanner_s24rocketpass_SF.upk",
+            "AssetPath": "playerbanner_s24rocketpass.playerbanner_s24rocketpass",
+            "ID": 13093,
+            "Product": "This is Rocket League",
+            "Quality": "Limited",
+            "Slot": "Player Banner",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "engineaudio_safari_SF.upk",
+            "AssetPath": "engineaudio_safari.engineaudio_safari",
+            "ID": 13094,
+            "Product": "Pareto 5S",
+            "Quality": "Common",
+            "Slot": "Engine Audio",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "engineaudio_neonmarmot_SF.upk",
+            "AssetPath": "engineaudio_neonmarmot.engineaudio_neonmarmot",
+            "ID": 13095,
+            "Product": "Dominus GT 76",
+            "Quality": "Common",
+            "Slot": "Engine Audio",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "engineaudio_umbragenesis_SF.upk",
+            "AssetPath": "engineaudio_umbragenesis.engineaudio_umbragenesis",
+            "ID": 13096,
+            "Product": "umbragenesis",
+            "Quality": "Common",
+            "Slot": "Engine Audio",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "ss_mvp01_SF.upk",
+            "AssetPath": "ss_mvp01.ss_mvp01",
+            "ID": 13097,
+            "Product": "mvp01",
+            "Quality": "Limited",
+            "Slot": "Trail",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_s24reward01_SF.upk",
+            "AssetPath": "wheel_s24reward01.wheel_s24reward01",
+            "ID": 13100,
+            "Product": "S23 - Bronze",
+            "Quality": "Limited",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "engineaudio_revivalline_SF.upk",
+            "AssetPath": "engineaudio_revivalline.engineaudio_revivalline",
+            "ID": 13103,
+            "Product": "revivalline",
+            "Quality": "Common",
+            "Slot": "Engine Audio",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "wheel_s24reward02_SF.upk",
+            "AssetPath": "wheel_s24reward02.wheel_s24reward02",
+            "ID": 13104,
+            "Product": "S23 - Gold",
+            "Quality": "Limited",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_s24reward03_SF.upk",
+            "AssetPath": "wheel_s24reward03.wheel_s24reward03",
+            "ID": 13105,
+            "Product": "S23 - Silver",
+            "Quality": "Limited",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_s24reward04_SF.upk",
+            "AssetPath": "wheel_s24reward04.wheel_s24reward04",
+            "ID": 13106,
+            "Product": "S23 - Platinum",
+            "Quality": "Limited",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_s24reward05_SF.upk",
+            "AssetPath": "wheel_s24reward05.wheel_s24reward05",
+            "ID": 13107,
+            "Product": "S23 - Diamond",
+            "Quality": "Limited",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_s24reward06_SF.upk",
+            "AssetPath": "wheel_s24reward06.wheel_s24reward06",
+            "ID": 13108,
+            "Product": "S23 - Champion",
+            "Quality": "Limited",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_s24reward07_SF.upk",
+            "AssetPath": "wheel_s24reward07.wheel_s24reward07",
+            "ID": 13109,
+            "Product": "S23 - Grand Champion",
+            "Quality": "Limited",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "wheel_s24reward08_SF.upk",
+            "AssetPath": "wheel_s24reward08.wheel_s24reward08",
+            "ID": 13110,
+            "Product": "S23 - Supersonic Legend",
+            "Quality": "Limited",
+            "Slot": "Wheels",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_wreaper_SF.upk",
+            "AssetPath": "skin_wreaper.skin_wreaper",
+            "ID": 13112,
+            "Product": "Reap-Wrap",
+            "Quality": "Exotic",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "playerbanner_s24autotournament_SF.upk",
+            "AssetPath": "playerbanner_s24autotournament.playerbanner_s24autotournament",
+            "ID": 13123,
+            "Product": "Spooky Haunts",
+            "Quality": "Uncommon",
+            "Slot": "Player Banner",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_majormuscle_SF.upk",
+            "AssetPath": "skin_majormuscle.skin_majormuscle",
+            "ID": 13126,
+            "Product": "Sidestrike",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_revivalline_livery_01_SF.upk",
+            "AssetPath": "skin_revivalline_livery_01.skin_revivalline_livery_01",
+            "ID": 13131,
+            "Product": "revivalline: livery_01",
+            "Quality": "Import",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_revivalline_livery_02_SF.upk",
+            "AssetPath": "skin_revivalline_livery_02.skin_revivalline_livery_02",
+            "ID": 13132,
+            "Product": "revivalline: livery_02",
+            "Quality": "Import",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_neonmarmot_flames_SF.upk",
+            "AssetPath": "skin_neonmarmot_flames.skin_neonmarmot_flames",
+            "ID": 13136,
+            "Product": "Dominus GT 76: Flames",
+            "Quality": "Common",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "skin_neonmarmot_lightning_SF.upk",
+            "AssetPath": "skin_neonmarmot_lightning.skin_neonmarmot_lightning",
+            "ID": 13137,
+            "Product": "Dominus GT 76: Lightning",
+            "Quality": "Common",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "skin_neonmarmot_stripes_SF.upk",
+            "AssetPath": "skin_neonmarmot_stripes.skin_neonmarmot_stripes",
+            "ID": 13138,
+            "Product": "Dominus GT 76: Stripes",
+            "Quality": "Common",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "skin_neonmarmot_wings_SF.upk",
+            "AssetPath": "skin_neonmarmot_wings.skin_neonmarmot_wings",
+            "ID": 13139,
+            "Product": "Dominus GT 76: Wings",
+            "Quality": "Common",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "hat_buffysugo_SF.upk",
+            "AssetPath": "hat_buffysugo.hat_buffysugo",
+            "ID": 13142,
+            "Product": "Buffy Sugo",
+            "Quality": "Limited",
+            "Slot": "Topper",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "album_anthem_season24_SF.upk",
+            "AssetPath": "album_anthem_season24.album_anthem_season24",
+            "ID": 13144,
+            "Product": "album_anthem_season24",
+            "Quality": "Common",
+            "Slot": "Player Anthem",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "anthem_BassVenturaLGJ_Doublin_SF.upk",
+            "AssetPath": "anthem_BassVenturaLGJ_Doublin.anthem_BassVenturaLGJ_Doublin",
+            "ID": 13145,
+            "Product": "BassVenturaLGJ_Doublin",
+            "Quality": "Import",
+            "Slot": "Player Anthem",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "anthem_mrbillvctre_absence_SF.upk",
+            "AssetPath": "anthem_mrbillvctre_absence.anthem_mrbillvctre_absence",
+            "ID": 13146,
+            "Product": "mrbillvctre_absence",
+            "Quality": "Import",
+            "Slot": "Player Anthem",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "Anthem_Primate_Booyah_SF.upk",
+            "AssetPath": "Anthem_Primate_Booyah.Anthem_Primate_Booyah",
+            "ID": 13147,
+            "Product": "Booyah",
+            "Quality": "Limited",
+            "Slot": "Player Anthem",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "anthem_seanpitaro_mirrors_SF.upk",
+            "AssetPath": "anthem_seanpitaro_mirrors.anthem_seanpitaro_mirrors",
+            "ID": 13148,
+            "Product": "mirrors",
+            "Quality": "Rare",
+            "Slot": "Player Anthem",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "anthem_sportmode_backspin_SF.upk",
+            "AssetPath": "anthem_sportmode_backspin.anthem_sportmode_backspin",
+            "ID": 13149,
+            "Product": "BACKSPIN",
+            "Quality": "Limited",
+            "Slot": "Player Anthem",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_neonmarmot_livery02_SF.upk",
+            "AssetPath": "skin_neonmarmot_livery02.skin_neonmarmot_livery02",
+            "ID": 13152,
+            "Product": "Dominus GT 76: Soar",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_safari_livery02_SF.upk",
+            "AssetPath": "skin_safari_livery02.skin_safari_livery02",
+            "ID": 13153,
+            "Product": "Pareto 5S: Soar",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_revivalline_flames_SF.upk",
+            "AssetPath": "skin_revivalline_flames.skin_revivalline_flames",
+            "ID": 13161,
+            "Product": "revivalline: flames",
+            "Quality": "Common",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Default"
+        },
+        {
+            "AssetPackage": "skin_neonmarmot_livery01_SF.upk",
+            "AssetPath": "skin_neonmarmot_livery01.skin_neonmarmot_livery01",
+            "ID": 13162,
+            "Product": "Dominus GT 76: Shock",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_bouncecube_SF.upk",
+            "AssetPath": "skin_octane_bouncecube.ProductSlots.Skin.ProductAsset_Skin_TA_0",
+            "ID": 90001,
+            "Product": "Octane: Tumbling Blocks",
+            "Quality": "Limited",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_renegades_home_SF.upk",
+            "AssetPath": "skin_octane_renegades_home.skin_octane_renegades_home",
+            "ID": 90002,
+            "Product": "Octane: Renegades (Home)",
+            "Quality": "VeryRare",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_octane_renegades_away_SF.upk",
+            "AssetPath": "skin_octane_renegades_away.skin_octane_renegades_away",
+            "ID": 90003,
+            "Product": "Octane: Renegades (Away)",
+            "Quality": "VeryRare",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_musclecar_renegades_home_SF.upk",
+            "AssetPath": "skin_musclecar_renegades_home.skin_musclecar_renegades_home",
+            "ID": 90004,
+            "Product": "Dominus: Renegades (Home)",
+            "Quality": "VeryRare",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_musclecar_renegades_away_SF.upk",
+            "AssetPath": "skin_musclecar_renegades_away.skin_musclecar_renegades_away",
+            "ID": 90005,
+            "Product": "Dominus: Renegades (Away)",
+            "Quality": "VeryRare",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_grain_renegades_home_SF.upk",
+            "AssetPath": "skin_grain_renegades_home.skin_grain_renegades_home",
+            "ID": 90006,
+            "Product": "Fennec: Renegades (Home)",
+            "Quality": "VeryRare",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "skin_grain_renegades_away_SF.upk",
+            "AssetPath": "skin_grain_renegades_away.skin_grain_renegades_away",
+            "ID": 90007,
+            "Product": "Fennec: Renegades (Away)",
+            "Quality": "VeryRare",
+            "Slot": "Decal",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "PaintFinish_Ron_Custom_SF.upk",
+            "AssetPath": "PaintFinish_Ron_Custom.PaintFinish_Ron_Custom",
+            "ID": 90008,
+            "Product": "Ron Custom",
+            "Quality": "Import",
+            "Slot": "Paint Finish",
+            "UnlockMethod": "UnlockMethod_Online"
+        },
+        {
+            "AssetPackage": "paintfinish_semi-dized_SF.upk",
+            "AssetPath": "paintfinish_semi-dized.paintfinish_semi-dized",
+            "ID": 90009,
+            "Product": "Semi-Dized",
+            "Quality": "Import",
+            "Slot": "Paint Finish",
+            "UnlockMethod": "UnlockMethod_Online"
         }
     ]
 }

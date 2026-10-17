@@ -159,6 +159,7 @@ class FCompressedChunk:
     uncompressed_size: int
     compressed_offset: int
     compressed_size: int
+    chunk_nonce: bytes = b"\x00" * 12
 
 
 @dataclass
@@ -195,6 +196,7 @@ class FileCompressionMetaData:
     garbage_size: int
     compressed_chunks_offset: int
     last_block_size: int
+    ctr_nonce: Optional[bytes] = None
 
 
 @dataclass
@@ -701,11 +703,18 @@ class DecryptionProvider:
         encryptor = cipher.encryptor()
         return encryptor.update(data) + encryptor.finalize()
 
+    @staticmethod
+    def crypt_ctr(key: bytes, nonce12: bytes, data: bytes, initial_block: int = 0) -> bytes:
+        iv = nonce12 + struct.pack(">I", initial_block)
+        cipher = Cipher(algorithms.AES(key), modes.CTR(iv), backend=default_backend())
+        encryptor = cipher.encryptor()
+        return encryptor.update(data) + encryptor.finalize()
+
 
 def find_valid_key(encrypted_path: Path, provider: DecryptionProvider) -> Tuple[FileSummary, FileCompressionMetaData, bytes, bytes]:
     with encrypted_path.open("rb") as src:
         summary = parse_file_summary(src)
-        meta = parse_file_compression_metadata(src)
+        meta = parse_file_compression_metadata(src, summary)
         encrypted_size = summary.total_header_size - meta.garbage_size - summary.name_offset
         if encrypted_size < 0:
             raise ValueError(
@@ -737,6 +746,8 @@ def serialize_rl_chunk_table(chunks: List[FCompressedChunk]) -> bytes:
         out += struct.pack("<i", chunk.uncompressed_size)
         out += struct.pack("<q", chunk.compressed_offset)
         out += struct.pack("<i", chunk.compressed_size)
+        nonce = getattr(chunk, "chunk_nonce", b"\x00" * 12) or (b"\x00" * 12)
+        out += nonce[:12].ljust(12, b"\x00")
     return bytes(out)
 
 
@@ -787,14 +798,14 @@ def find_key_for_encrypted_upk(encrypted_path: Path, provider: DecryptionProvide
 
 
 def build_reencrypted_package(original_encrypted_path: Path, modified_decrypted_bytes: bytes, provider: DecryptionProvider, output_path: Path, *, override_key: Optional[bytes] = None) -> Path:
-    summary, meta, original_encrypted_data, valid_key = find_valid_key(original_encrypted_path, provider)
-    # If the caller wants to encrypt with a different key (e.g. sourced from a
-    # donor encrypted UPK), use that key for the output instead of the key that
-    # was used to decrypt the original package.
-    if override_key is not None:
-        valid_key = override_key
+    summary, meta, original_encrypted_data, orig_key = find_valid_key(original_encrypted_path, provider)
+    valid_key = override_key if override_key is not None else orig_key
     modified_summary = parse_file_summary(io.BytesIO(modified_decrypted_bytes))
-    original_plain = bytearray(DecryptionProvider.decrypt_ecb(valid_key, original_encrypted_data))
+    is_ctr = (summary.package_flags & 0x800) != 0 and meta.ctr_nonce is not None
+    if is_ctr:
+        original_plain = bytearray(DecryptionProvider.crypt_ctr(orig_key, meta.ctr_nonce, original_encrypted_data))
+    else:
+        original_plain = bytearray(DecryptionProvider.decrypt_ecb(orig_key, original_encrypted_data))
     original_chunks = parse_rl_compressed_chunks(bytes(original_plain), meta.compressed_chunks_offset)
     if not original_chunks:
         raise ValueError("No compressed chunks were found in original encrypted header")
@@ -831,12 +842,15 @@ def build_reencrypted_package(original_encrypted_path: Path, modified_decrypted_
         if end < start:
             raise ValueError("Invalid rebuilt chunk bounds")
         payload = compress_chunk_payload(modified_decrypted_bytes[start:end])
+        if is_ctr:
+            payload = DecryptionProvider.crypt_ctr(valid_key, chunk.chunk_nonce, payload)
         rebuilt_chunk_payloads.append(payload)
         rebuilt_chunks.append(FCompressedChunk(
             uncompressed_offset=start,
             uncompressed_size=end - start,
             compressed_offset=current_compressed_offset,
             compressed_size=len(payload),
+            chunk_nonce=chunk.chunk_nonce,
         ))
         current_compressed_offset += len(payload)
 
@@ -850,7 +864,10 @@ def build_reencrypted_package(original_encrypted_path: Path, modified_decrypted_
     if table_end > len(header_plain):
         raise ValueError("Rebuilt compressed chunk table does not fit inside encrypted header")
     header_plain[new_chunk_table_offset:table_end] = chunk_table
-    encrypted_header = DecryptionProvider.encrypt_ecb(valid_key, bytes(header_plain))
+    if is_ctr:
+        encrypted_header = DecryptionProvider.crypt_ctr(valid_key, meta.ctr_nonce, bytes(header_plain))
+    else:
+        encrypted_header = DecryptionProvider.encrypt_ecb(valid_key, bytes(header_plain))
 
     original_bytes = Path(original_encrypted_path).read_bytes()
     prefix = bytearray(original_bytes[:summary.name_offset])
@@ -869,6 +886,7 @@ def build_reencrypted_package(original_encrypted_path: Path, modified_decrypted_
     _patch_generation_counts(prefix, summary_offsets, modified_summary.export_count, modified_summary.name_count)
     with original_encrypted_path.open("rb") as src:
         meta_offsets = _find_file_compression_metadata_offsets(src)
+    patch_i32_le(prefix, meta_offsets["garbage_size_offset"], new_total_header_size - modified_summary.name_offset - required_plain_len)
     patch_i32_le(prefix, meta_offsets["compressed_chunks_offset_offset"], new_chunk_table_offset)
     if rebuilt_chunks:
         patch_i32_le(prefix, meta_offsets["last_block_size_offset"], rebuilt_chunks[-1].uncompressed_size)
@@ -2044,6 +2062,7 @@ def read_compressed_chunk_64(reader: BinaryReader) -> FCompressedChunk:
         uncompressed_size=reader.read_i32(),
         compressed_offset=reader.read_i64(),
         compressed_size=reader.read_i32(),
+        chunk_nonce=reader.read_exact(12),
     )
 
 
@@ -2083,12 +2102,19 @@ def parse_file_summary(stream: BinaryIO) -> FileSummary:
     return summary
 
 
-def parse_file_compression_metadata(stream: BinaryIO) -> FileCompressionMetaData:
+def parse_file_compression_metadata(stream: BinaryIO, summary: Optional[FileSummary] = None) -> FileCompressionMetaData:
     r = BinaryReader(stream)
+    garbage_size = r.read_i32()
+    compressed_chunks_offset = r.read_i32()
+    last_block_size = r.read_i32()
+    ctr_nonce = None
+    if summary is not None and (summary.package_flags & 0x800) != 0:
+        ctr_nonce = r.read_exact(12)
     return FileCompressionMetaData(
-        garbage_size=r.read_i32(),
-        compressed_chunks_offset=r.read_i32(),
-        last_block_size=r.read_i32(),
+        garbage_size=garbage_size,
+        compressed_chunks_offset=compressed_chunks_offset,
+        last_block_size=last_block_size,
+        ctr_nonce=ctr_nonce,
     )
 
 
@@ -2098,7 +2124,10 @@ def verify_decryptor(summary: FileSummary, meta: FileCompressionMetaData, key: b
     probe = encrypted_data[block_start:block_start + 32]
     if len(probe) != 32:
         return False
-    decrypted = DecryptionProvider.decrypt_ecb(key, probe)
+    if (summary.package_flags & 0x800) != 0 and meta.ctr_nonce:
+        decrypted = DecryptionProvider.crypt_ctr(key, meta.ctr_nonce, probe, initial_block=block_start // 16)
+    else:
+        decrypted = DecryptionProvider.decrypt_ecb(key, probe)
     view = decrypted[block_offset:]
     if len(view) < 8:
         return False
@@ -2120,6 +2149,9 @@ def decrypt_data(stream: BinaryIO, summary: FileSummary, meta: FileCompressionMe
             break
     if valid_key is None:
         raise ValueError("Unknown Decryption key")
+    setattr(summary, "_valid_key", valid_key)
+    if (summary.package_flags & 0x800) != 0 and meta.ctr_nonce:
+        return DecryptionProvider.crypt_ctr(valid_key, meta.ctr_nonce, encrypted_data)
     return DecryptionProvider.decrypt_ecb(valid_key, encrypted_data)
 
 
@@ -2138,9 +2170,16 @@ def process_compressed_data(output: BinaryIO, package_stream: BinaryIO, summary:
     final_size = last_chunk.uncompressed_offset + last_chunk.uncompressed_size
     output.truncate(final_size)
     output.seek(first_uncompressed_offset)
-    r = BinaryReader(package_stream)
+    is_ctr = (summary.package_flags & 0x800) != 0 and getattr(summary, "_valid_key", None) is not None
+    r_file = BinaryReader(package_stream)
     for chunk in summary.compressed_chunks:
         package_stream.seek(chunk.compressed_offset)
+        if is_ctr:
+            raw_chunk = package_stream.read(chunk.compressed_size)
+            dec_chunk = DecryptionProvider.crypt_ctr(summary._valid_key, chunk.chunk_nonce, raw_chunk)
+            r = BinaryReader(io.BytesIO(dec_chunk))
+        else:
+            r = r_file
         r.read_i32()
         r.read_i32()
         r.read_i32()
@@ -2169,7 +2208,7 @@ def unpack_package(input_path: str, output_path: str, provider: DecryptionProvid
         summary = parse_file_summary(src)
         if (summary.compression_flags & COMPRESS_ZLIB) == 0:
             raise ValueError("Package compression type is unsupported")
-        meta = parse_file_compression_metadata(src)
+        meta = parse_file_compression_metadata(src, summary)
         src.seek(0)
         header_bytes = src.read(summary.name_offset)
         decrypted_data = decrypt_data(src, summary, meta, provider)

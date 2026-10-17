@@ -23,17 +23,16 @@ if False:
     import ctypes
     import hashlib
     import zlib
-
-def _ensure_pristine_target(target_path: Path):
-    bak = target_path.with_suffix(target_path.suffix + ".bak")
-    if bak.exists():
-        import shutil
-        shutil.copy2(bak, target_path)
     import re
     import zipfile
     from cryptography.hazmat.backends import default_backend
     from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
     from PIL import Image  # ensure Pillow is bundled
+
+def _ensure_pristine_target(target_path: Path):
+    bak = target_path.with_suffix(target_path.suffix + ".bak")
+    if bak.exists():
+        shutil.copy2(bak, target_path)
 
 
 
@@ -573,14 +572,17 @@ PACKAGE_FILE_TAG = 0x9E2A83C1
 @dataclass
 class _UPKPrefix:
     total_header_size: int
+    package_flags: int
     name_count: int
     name_offset: int
+    export_count: int
     export_offset: int
     import_offset: int
     depends_offset: int
     garbage_size: int
     compressed_chunks_offset: int
     meta_file_offset: int  # byte position of garbage_size field in raw file
+    ctr_nonce: Optional[bytes] = None
 
 
 def _read_fstring_at(data: bytes, pos: int) -> Tuple[str, int]:
@@ -600,10 +602,10 @@ def _parse_upk_prefix(data: bytes) -> _UPKPrefix:
     pos = 8  # skip tag + versions
     total_header_size = struct.unpack_from('<i', data, pos)[0]; pos += 4
     _, pos = _read_fstring_at(data, pos)          # folder_name
-    pos += 4                                       # package_flags
+    package_flags = struct.unpack_from('<I', data, pos)[0]; pos += 4
     name_count  = struct.unpack_from('<i', data, pos)[0]; pos += 4
     name_offset = struct.unpack_from('<i', data, pos)[0]; pos += 4
-    export_count = struct.unpack_from('<i', data, pos)[0]; pos += 4  # noqa: F841
+    export_count = struct.unpack_from('<i', data, pos)[0]; pos += 4
     export_offset = struct.unpack_from('<i', data, pos)[0]; pos += 4
     import_count = struct.unpack_from('<i', data, pos)[0]; pos += 4  # noqa: F841
     import_offset = struct.unpack_from('<i', data, pos)[0]; pos += 4
@@ -614,7 +616,7 @@ def _parse_upk_prefix(data: bytes) -> _UPKPrefix:
     pos += gen_count * 12                          # generations
     pos += 12                                      # engine_version, cooker_version, compression_flags
     std_chunks = struct.unpack_from('<i', data, pos)[0]; pos += 4
-    pos += std_chunks * 24
+    pos += std_chunks * 16
     pos += 4                                       # PackageSource
     add_count = struct.unpack_from('<i', data, pos)[0]; pos += 4
     for _ in range(add_count):
@@ -626,13 +628,16 @@ def _parse_upk_prefix(data: bytes) -> _UPKPrefix:
         pos += inner * 4
     meta_file_offset = pos
     garbage_size = struct.unpack_from('<i', data, pos)[0]; pos += 4
-    compressed_chunks_offset = struct.unpack_from('<i', data, pos)[0]
+    compressed_chunks_offset = struct.unpack_from('<i', data, pos)[0]; pos += 4
+    pos += 4                                       # last_block_size
+    ctr_nonce = data[pos:pos + 12] if (package_flags & 0x800) != 0 else None
     return _UPKPrefix(
-        total_header_size=total_header_size, name_count=name_count,
-        name_offset=name_offset, export_offset=export_offset,
+        total_header_size=total_header_size, package_flags=package_flags,
+        name_count=name_count, name_offset=name_offset,
+        export_count=export_count, export_offset=export_offset,
         import_offset=import_offset, depends_offset=depends_offset,
         garbage_size=garbage_size, compressed_chunks_offset=compressed_chunks_offset,
-        meta_file_offset=meta_file_offset,
+        meta_file_offset=meta_file_offset, ctr_nonce=ctr_nonce,
     )
 
 
@@ -649,13 +654,15 @@ def _find_summary_offsets(data: bytes) -> dict:
     export_off_off = pos; pos += 4
     pos += 4
     import_off_off = pos; pos += 4
-    depends_off_off = pos
+    depends_off_off = pos; pos += 4
+    guids_off_off = pos
     return {
         'total_header_size': total_off,
         'name_offset': name_off_off,
         'export_offset': export_off_off,
         'import_offset': import_off_off,
         'depends_offset': depends_off_off,
+        'import_export_guids_offset': guids_off_off,
     }
 
 
@@ -680,6 +687,15 @@ def _aes_ecb_encrypt(key: bytes, data: bytes) -> bytes:
     c = Cipher(algorithms.AES(key), modes.ECB(), backend=default_backend())
     e = c.encryptor()
     return e.update(data) + e.finalize()
+
+
+def _aes_ctr_crypt(key: bytes, nonce12: bytes, data: bytes) -> bytes:
+    from cryptography.hazmat.backends import default_backend
+    from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+    iv = nonce12 + b'\x00\x00\x00\x00'
+    c = Cipher(algorithms.AES(key), modes.CTR(iv), backend=default_backend())
+    ctx = c.encryptor()
+    return ctx.update(data) + ctx.finalize()
 
 
 def _walk_name_table(header: bytes, name_count: int) -> List[dict]:
@@ -746,6 +762,8 @@ def _apply_header_renames(
     import_off: int, export_off: int, depends_off: int,
     name_count: int,
     pairs: List[Tuple[str, str]],
+    export_count: int = 0,
+    compressed_chunks_offset: int = 0,
 ) -> Tuple[bytes, int]:
     """
     Rename name table entries in decrypted header (name table at byte 0).
@@ -785,7 +803,29 @@ def _apply_header_renames(
             cur = bytearray(new_nt) + bytearray(imp_tbl) + bytearray(exp_tbl) + bytearray(beyond)
             ci += delta; ce += delta; cd += delta
 
-    return bytes(cur), len(cur) - len(header)
+    header_delta = len(cur) - len(header)
+    if header_delta != 0:
+        epos = ce
+        for _ in range(export_count):
+            if epos + 52 > cd:
+                break
+            serial_off = struct.unpack_from('<i', cur, epos + 36)[0]
+            if serial_off > 0:
+                struct.pack_into('<i', cur, epos + 36, serial_off + header_delta)
+            net_cnt = struct.unpack_from('<i', cur, epos + 48)[0]
+            epos += 52 + net_cnt * 4 + 20
+
+        c_off = compressed_chunks_offset + header_delta
+        if 0 <= c_off and c_off + 4 <= len(cur):
+            num_chunks = struct.unpack_from('<i', cur, c_off)[0]
+            for i in range(num_chunks):
+                entry_off = c_off + 4 + i * 36
+                if entry_off + 36 > len(cur):
+                    break
+                u_off = struct.unpack_from('<q', cur, entry_off)[0]
+                struct.pack_into('<q', cur, entry_off, u_off + header_delta)
+
+    return bytes(cur), header_delta
 
 
 def swap_one_package(
@@ -797,27 +837,23 @@ def swap_one_package(
     options: SwapOptions,
 ) -> Tuple[Path, List[str]]:
     """
-    Shift-style header-only swap (matches the Rust engine exactly):
-      1. Decrypt AES header block from donor file
-      2. Rename name table entries in-place (rebuild tables if name grew)
+    Shift-style header-only swap (supports both AES-256-ECB and 0x800 AES-256-CTR packages):
+      1. Decrypt AES header block from donor file (ECB or CTR)
+      2. Rename name table entries in-place (or rebuild tables + shift offsets if name grew)
       3. Re-encrypt header with target file's key
-      4. Splice new header back — compressed body is never touched
-      5. Backup original target, write output
+      4. Splice new header back (and re-encrypt CTR compressed chunks if 0x800)
+      5. Backup original target (if not already backed up), write output
     """
     log: List[str] = []
 
     if not source_path.exists():
         raise FileNotFoundError(f"Source package not found: {source_path}")
 
-    _ensure_pristine_target(output_path)
+    _ensure_pristine_target(source_path)
 
     backup_path = output_path.with_suffix(output_path.suffix + ".bak")
     if backup_path.exists():
-        if output_path.exists() and output_path.stat().st_mtime > backup_path.stat().st_mtime:
-            backup_path.unlink()
-        else:
-            raise RuntimeError(
-                f"{output_path.name} is already swapped — restore it first before swapping again.")
+        _ensure_pristine_target(output_path)
     if output_path.exists() and not options.overwrite:
         raise FileExistsError(f"Output already exists: {output_path}")
 
@@ -840,10 +876,14 @@ def swap_one_package(
         raise ValueError(
             f"No AES key found for {source_path.name}. "
             f"Ensure keys_map.json is present next to the script.")
-    log.append(f"Donor key: found")
+    log.append("Donor key: found")
 
     # ── Decrypt, rename, re-encrypt ───────────────────────────────────────────
-    header_plain = _aes_ecb_decrypt(donor_key, enc_block)
+    if pfx.ctr_nonce is not None:
+        header_plain_full = _aes_ctr_crypt(donor_key, pfx.ctr_nonce, enc_block)
+    else:
+        header_plain_full = _aes_ecb_decrypt(donor_key, enc_block)
+    header_plain = header_plain_full[:enc_size]
 
     import_rel = pfx.import_offset - pfx.name_offset
     export_rel = pfx.export_offset - pfx.name_offset
@@ -851,7 +891,8 @@ def swap_one_package(
 
     new_header, header_delta = _apply_header_renames(
         header_plain, import_rel, export_rel, depends_rel,
-        pfx.name_count, list(pairs))
+        pfx.name_count, list(pairs),
+        pfx.export_count, pfx.compressed_chunks_offset)
 
     output_key = _get_exact_key(key_source_path) or donor_key
     log.append(f"Output key: {'target' if output_key != donor_key else 'donor (fallback)'}")
@@ -859,15 +900,18 @@ def swap_one_package(
     new_enc_aligned = (len(new_header) + 15) & ~15
     size_growth = new_enc_aligned - enc_aligned
 
-    if size_growth > pfx.garbage_size:
+    if size_growth > pfx.garbage_size or header_delta > pfx.garbage_size:
         raise ValueError(
             f"Header grew by {size_growth} bytes but only {pfx.garbage_size} bytes "
             f"of padding available. Try a visual item with a shorter name.")
 
-    new_header = new_header + b'\x00' * (new_enc_aligned - len(new_header))
-    new_enc_block = _aes_ecb_encrypt(output_key, new_header)
+    new_header_padded = new_header + b'\x00' * (new_enc_aligned - len(new_header))
+    if pfx.ctr_nonce is not None:
+        new_enc_block = _aes_ctr_crypt(output_key, pfx.ctr_nonce, new_header_padded)
+    else:
+        new_enc_block = _aes_ecb_encrypt(output_key, new_header_padded)
 
-    # ── Splice header into donor file, body untouched ─────────────────────────
+    # ── Splice header into donor file ─────────────────────────────────────────
     output = bytearray(donor_data)
     output[name_off:name_off + enc_aligned] = new_enc_block
     if size_growth > 0:
@@ -877,22 +921,34 @@ def swap_one_package(
         gap_start = name_off + new_enc_aligned
         output[gap_start:gap_start] = b'\x00' * (-size_growth)
 
-    if header_delta != 0 or size_growth != 0:
+    if header_delta != 0:
         offs = _find_summary_offsets(bytes(output))
-        if header_delta != 0:
-            _patch_i32(output, offs['total_header_size'], pfx.total_header_size + header_delta)
-            _patch_i32(output, offs['import_offset'],  pfx.import_offset  + header_delta)
-            _patch_i32(output, offs['export_offset'],  pfx.export_offset  + header_delta)
-            _patch_i32(output, offs['depends_offset'], pfx.depends_offset + header_delta)
-        if size_growth != 0:
-            _patch_i32(output, pfx.meta_file_offset, pfx.garbage_size - size_growth)
-        if header_delta != 0:
-            _patch_i32(output, pfx.meta_file_offset + 4,
-                       pfx.compressed_chunks_offset + header_delta)
+        _patch_i32(output, offs['import_offset'],  pfx.import_offset  + header_delta)
+        _patch_i32(output, offs['export_offset'],  pfx.export_offset  + header_delta)
+        _patch_i32(output, offs['depends_offset'], pfx.depends_offset + header_delta)
+        _patch_i32(output, offs['import_export_guids_offset'], pfx.depends_offset + header_delta)
+        _patch_i32(output, pfx.meta_file_offset, pfx.garbage_size - header_delta)
+        _patch_i32(output, pfx.meta_file_offset + 4, pfx.compressed_chunks_offset + header_delta)
+
+    # ── Re-encrypt CTR compressed chunks if PackageFlags & 0x800 ──────────────
+    if pfx.ctr_nonce is not None and output_key != donor_key:
+        c_off = pfx.compressed_chunks_offset + header_delta
+        if 0 <= c_off and c_off + 4 <= len(new_header):
+            num_chunks = struct.unpack_from('<i', new_header, c_off)[0]
+            for i in range(num_chunks):
+                entry_off = c_off + 4 + i * 36
+                if entry_off + 36 > len(new_header):
+                    break
+                comp_off = struct.unpack_from('<q', new_header, entry_off + 12)[0]
+                comp_size = struct.unpack_from('<i', new_header, entry_off + 20)[0]
+                chunk_nonce = new_header[entry_off + 24:entry_off + 36]
+                if 0 < comp_size and 0 <= comp_off and comp_off + comp_size <= len(output):
+                    chunk_plain = _aes_ctr_crypt(donor_key, chunk_nonce, bytes(output[comp_off:comp_off + comp_size]))
+                    output[comp_off:comp_off + comp_size] = _aes_ctr_crypt(output_key, chunk_nonce, chunk_plain)
 
     # ── Backup original target, write output ─────────────────────────────────
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    if output_path.exists() and options.overwrite:
+    if output_path.exists() and options.overwrite and not backup_path.exists():
         shutil.copy2(output_path, backup_path)
         log.append(f"Backup: {backup_path}")
     output_path.write_bytes(bytes(output))
@@ -1344,30 +1400,51 @@ def _inplace_zlib_patch(upk, png_path: Path, options: SwapOptions, target_pkg: s
 
     _ensure_pristine_target(source_path)
     original_bytes = bytearray(source_path.read_bytes())
-    
-    chunk_offsets = []
-    idx = 0
-    while True:
-        idx = original_bytes.find(b'\xc1\x83\x2a\x9e', idx)
-        if idx == -1: break
-        chunk_offsets.append(idx)
-        idx += 4
+    pfx = _parse_upk_prefix(bytes(original_bytes))
+    pkg_key = _get_exact_key(source_path) if pfx.ctr_nonce is not None else None
+    ctr_chunk_nonce = None
+
+    if pfx.ctr_nonce is not None and pkg_key is not None:
+        enc_size = pfx.total_header_size - pfx.garbage_size - pfx.name_offset
+        enc_aligned = (enc_size + 15) & ~15
+        hdr_plain = _aes_ctr_crypt(pkg_key, pfx.ctr_nonce, bytes(original_bytes[pfx.name_offset:pfx.name_offset + enc_aligned]))
+        c_idx = max(0, target_chunk_idx - 1)
+        entry_off = pfx.compressed_chunks_offset + 4 + c_idx * 36
+        start = struct.unpack_from('<q', hdr_plain, entry_off + 12)[0]
+        full_chunk_size = struct.unpack_from('<i', hdr_plain, entry_off + 20)[0]
+        ctr_chunk_nonce = hdr_plain[entry_off + 24:entry_off + 36]
+        payload = bytearray(_aes_ctr_crypt(pkg_key, ctr_chunk_nonce, bytes(original_bytes[start:start + full_chunk_size])))
+        c_magic, c_block_size, c_comp, c_uncomp = struct.unpack_from('<Iiii', payload, 0)
+        block_offset = 16
+        blocks = []
+        while block_offset < 16 + 8 * ((c_uncomp + c_block_size - 1) // c_block_size):
+            bc, bu = struct.unpack_from('<ii', payload, block_offset)
+            blocks.append((bc, bu))
+            block_offset += 8
+    else:
+        chunk_offsets = []
+        idx = 0
+        while True:
+            idx = original_bytes.find(b'\xc1\x83\x2a\x9e', idx)
+            if idx == -1: break
+            chunk_offsets.append(idx)
+            idx += 4
+            
+        if len(chunk_offsets) <= target_chunk_idx:
+            raise ValueError(f"Could not find enough chunks in {target_pkg}")
+            
+        start = chunk_offsets[target_chunk_idx]
+        c_magic, c_block_size, c_comp, c_uncomp = struct.unpack_from('<Iiii', original_bytes, start)
         
-    if len(chunk_offsets) <= target_chunk_idx:
-        raise ValueError(f"Could not find enough chunks in {target_pkg}")
-        
-    start = chunk_offsets[target_chunk_idx]
-    c_magic, c_block_size, c_comp, c_uncomp = struct.unpack_from('<Iiii', original_bytes, start)
-    
-    block_offset = 16
-    blocks = []
-    while block_offset < 16 + 8 * ((c_uncomp + c_block_size - 1) // c_block_size):
-        bc, bu = struct.unpack_from('<ii', original_bytes, start + block_offset)
-        blocks.append((bc, bu))
-        block_offset += 8
-        
-    full_chunk_size = block_offset + sum(bc for bc, bu in blocks)
-    payload = original_bytes[start : start + full_chunk_size]
+        block_offset = 16
+        blocks = []
+        while block_offset < 16 + 8 * ((c_uncomp + c_block_size - 1) // c_block_size):
+            bc, bu = struct.unpack_from('<ii', original_bytes, start + block_offset)
+            blocks.append((bc, bu))
+            block_offset += 8
+            
+        full_chunk_size = block_offset + sum(bc for bc, bu in blocks)
+        payload = original_bytes[start : start + full_chunk_size]
     
     uncompressed_blocks = []
     data_offset = block_offset
@@ -1407,15 +1484,12 @@ def _inplace_zlib_patch(upk, png_path: Path, options: SwapOptions, target_pkg: s
         # Paste the original border on top of the custom image
         img.paste(border_img, (0, 0), border_img)
     elif target_height == 100: # THIS IS A BANNER
-        # The user wants the banner to be 90 pixels high to match the "thinner" native banners like Taxi.
-        # So we scale the custom image to 420x90, and paste it on a 420x100 transparent canvas with a 5px top offset.
         scaled = original_img.resize((target_width, 90), Image.LANCZOS)
         img = Image.new("RGBA", (target_width, target_height), (0, 0, 0, 0))
         img.paste(scaled, (0, 5))
     else:
         img = original_img.resize((target_width, target_height), Image.LANCZOS)
 
-    
     best_bytes = _get_bgra_bytes(img)
     
     def try_compress(image_bytes):
@@ -1425,24 +1499,17 @@ def _inplace_zlib_patch(upk, png_path: Path, options: SwapOptions, target_pkg: s
         offset = 0
         data_offset = block_offset
         for bc, bu in blocks:
-            # Check if this block's uncompressed range overlaps with the injected pixels
             block_start = offset
             block_end = offset + bu
             
             if block_end > pixel_start and block_start < pixel_end:
-                # This block was modified, we must recompress it
                 b_data = temp_uncomp[block_start : block_end]
                 nz = zlib.compress(b_data, 9)
                 if len(nz) > bc:
                     return None
                 new_zlibs.append(nz)
             else:
-                # This block is untouched, use the exact original compressed bytes!
                 orig_nz = payload[data_offset : data_offset + bc]
-                # Strip trailing zeros if it was padded? No, just keep it exactly as it is!
-                # Wait, orig_nz ALREADY contains any padding that was there.
-                # So we just append it. BUT our builder loop later will pad it again.
-                # To be safe, we just pass orig_nz and let the loop pad it if needed (it won't need it because it's exactly bc).
                 new_zlibs.append(orig_nz)
                 
             offset += bu
@@ -1470,7 +1537,10 @@ def _inplace_zlib_patch(upk, png_path: Path, options: SwapOptions, target_pkg: s
         padded_nz = nz + b'\x00' * (bc - len(nz))
         new_payload += padded_nz
         
-    original_bytes[start : start + full_chunk_size] = new_payload
+    if ctr_chunk_nonce is not None and pkg_key is not None:
+        original_bytes[start : start + full_chunk_size] = _aes_ctr_crypt(pkg_key, ctr_chunk_nonce, bytes(new_payload))
+    else:
+        original_bytes[start : start + full_chunk_size] = new_payload
     
     if target_path.exists() and options.overwrite:
         bak = target_path.with_suffix(target_path.suffix + ".bak")
@@ -1480,368 +1550,6 @@ def _inplace_zlib_patch(upk, png_path: Path, options: SwapOptions, target_pkg: s
     target_path.write_bytes(original_bytes)
     log.append(f"Successfully patched {target_pkg} in-place!")
     return [target_path], log
-
-def swap_asset(upk, target: Item, donor: Item, options: SwapOptions) -> Tuple[List[Path], List[str]]:
-    if target.slot != donor.slot:
-        raise ValueError(f"Slot mismatch: target={target.slot!r}, donor={donor.slot!r}")
-    key_dir = options.key_source_dir or options.donor_dir
-    all_paths: List[Path] = []
-    all_log: List[str] = []
-    all_log.append(f"Target/replaced item: {target.label}")
-    all_log.append(f"Donor/visual item:    {donor.label}")
-    main_path, main_log = swap_one_package(
-        upk,
-        options.donor_dir / donor.asset_package,
-        options.output_dir / target.asset_package,
-        key_dir / target.asset_package,
-        infer_name_pairs(target, donor),
-        options,
-    )
-    all_paths.append(main_path)
-    all_log.extend(main_log)
-
-    if options.include_thumbnails:
-        donor_thumb = options.donor_dir / donor.thumbnail_package
-        target_thumb = options.output_dir / target.thumbnail_package
-        key_thumb = key_dir / target.thumbnail_package
-        if donor_thumb.exists() and key_thumb.exists():
-            all_log.append("")
-            all_log.append("Thumbnail/_T_SF pass:")
-            thumb_path, thumb_log = swap_one_package(upk, donor_thumb, target_thumb, key_thumb, infer_thumbnail_pairs(target, donor), options)
-            all_paths.append(thumb_path)
-            all_log.extend(thumb_log)
-        else:
-            all_log.append(f"SKIP thumbnails: missing {donor_thumb if not donor_thumb.exists() else key_thumb}")
-    else:
-        all_log.append("SKIP thumbnails: disabled.")
-
-    return all_paths, all_log
-
-
-def cleanup_old_temp_files(directory: Path, logger: Optional[Callable[[str], None]] = None) -> None:
-    import time
-    if not directory.exists():
-        return
-    now = time.time()
-    cutoff = 24 * 3600
-    for file in directory.glob("*"):
-        if file.name.endswith(("_decrypted.upk", "_decompressed.upk")):
-            try:
-                mtime = file.stat().st_mtime
-                if now - mtime > cutoff:
-                    file.unlink()
-                    if logger:
-                        logger(f"CLEANUP: Removed old temp file {file.name}")
-            except Exception:
-                pass
-
-def swap_pfp(upk, pfp_upk_path: Path, options: SwapOptions) -> Tuple[List[Path], List[str]]:
-    # This assumes the user provides a donor UPK that contains the custom PFP.
-    # We'll swap it with the default avatar border or a known avatar package.
-    target_package_name = "AvatarBorder_Default_SF.upk"
-    target_export_path = "AvatarBorder_Default.AvatarBorder_Default"
-
-    log: List[str] = []
-    log.append(f"Custom PFP requested using donor: {pfp_upk_path}")
-
-    return swap_export_only_path(upk, target_package_name, target_export_path, pfp_upk_path, target_export_path, options)
-
-
-def swap_export_only_path(upk, target_pkg_name: str, target_export_path: str, donor_pkg_path: Path, donor_export_path: str, options: SwapOptions) -> Tuple[List[Path], List[str]]:
-    log: List[str] = []
-    target_pkg_path = options.output_dir / target_pkg_name
-    key_dir = options.key_source_dir or options.donor_dir
-    key_source_path = key_dir / target_pkg_name
-
-    log.append(f"Replacing export {target_export_path} in {target_pkg_name} with {donor_export_path} from {donor_pkg_path}")
-
-    temp_dir = script_dir() / "AssetSwapper_Decrypted"
-    temp_dir.mkdir(exist_ok=True)
-
-    _, target_package, target_provider, _, target_was_encrypted = resolve_with_optional_keys(upk, target_pkg_path, temp_dir, options.keys_path)
-    _, donor_package, _, _, _ = resolve_with_optional_keys(upk, donor_pkg_path, temp_dir, options.keys_path)
-
-    modified = upk.replace_export_with_donor_export(target_package, donor_package, target_export_path, donor_export_path)
-
-    if target_pkg_path.exists() and options.overwrite:
-        backup_path = target_pkg_path.with_suffix(target_pkg_path.suffix + ".bak")
-        shutil.copy2(target_pkg_path, backup_path)
-        log.append(f"Backup written: {backup_path}")
-
-    build_output(upk, target_pkg_path, key_source_path, modified, target_provider, target_pkg_path, target_was_encrypted, log)
-    return [target_pkg_path], log
-
-
-def swap_export_only(upk, target_pkg_name: str, target_export_path: str, donor_pkg_name: str, donor_export_path: str, options: SwapOptions) -> Tuple[List[Path], List[str]]:
-    log: List[str] = []
-    donor_pkg_path = options.donor_dir / donor_pkg_name
-    target_pkg_path = options.output_dir / target_pkg_name
-    key_dir = options.key_source_dir or options.donor_dir
-    key_source_path = key_dir / target_pkg_name
-
-    log.append(f"Replacing export {target_export_path} in {target_pkg_name} with {donor_export_path} from {donor_pkg_name}")
-
-    temp_dir = script_dir() / "AssetSwapper_Decrypted"
-    temp_dir.mkdir(exist_ok=True)
-
-    _, target_package, target_provider, _, target_was_encrypted = resolve_with_optional_keys(upk, target_pkg_path, temp_dir, options.keys_path)
-    _, donor_package, _, _, _ = resolve_with_optional_keys(upk, donor_pkg_path, temp_dir, options.keys_path)
-
-    modified = upk.replace_export_with_donor_export(target_package, donor_package, target_export_path, donor_export_path)
-
-    if target_pkg_path.exists() and options.overwrite:
-        backup_path = target_pkg_path.with_suffix(target_pkg_path.suffix + ".bak")
-        shutil.copy2(target_pkg_path, backup_path)
-        log.append(f"Backup written: {backup_path}")
-
-    build_output(upk, target_pkg_path, key_source_path, modified, target_provider, target_pkg_path, target_was_encrypted, log)
-    return [target_pkg_path], log
-
-
-def revert_item(target: Item, options: SwapOptions) -> Tuple[List[Path], List[str]]:
-    src_dir = options.key_source_dir or options.donor_dir
-    paths: List[Path] = []
-    log: List[str] = []
-    pairs = [(src_dir / target.asset_package, options.output_dir / target.asset_package)]
-    if options.include_thumbnails:
-        pairs.append((src_dir / target.thumbnail_package, options.output_dir / target.thumbnail_package))
-    for src, dst in pairs:
-        if not src.exists():
-            log.append(f"MISS: revert source not found: {src}")
-            continue
-        dst.parent.mkdir(parents=True, exist_ok=True)
-        if dst.exists() and options.overwrite:
-            backup_path = dst.with_suffix(dst.suffix + ".bak")
-            shutil.copy2(dst, backup_path)
-            log.append(f"Backup written: {backup_path}")
-        shutil.copy2(src, dst)
-        paths.append(dst)
-        log.append(f"Reverted: {src} -> {dst}")
-    return paths, log
-
-
-
-
-# ── PNG → Custom PFP pipeline ─────────────────────────────────────────────────
-
-_BULKDATA_TFC = 0x01  # stored in separate .tfc file
-
-
-def _load_png_rgba(path: Path, w: int, h: int) -> List:
-    try:
-        from PIL import Image
-    except ImportError:
-        raise RuntimeError("Pillow is required for PNG input. Run: pip install Pillow")
-    img = Image.open(str(path)).convert("RGBA").resize((w, h), Image.LANCZOS)
-    return list(img.getdata())
-
-
-def _dxt5_alpha_block(alphas: List[int]) -> bytes:
-    a0, a1 = max(alphas), min(alphas)
-    if a0 == a1:
-        return bytes([a0, a1, 0, 0, 0, 0, 0, 0])
-    table = [a0, a1] + [(a0 * (7 - i) + a1 * i) // 7 for i in range(1, 7)]
-    indices = [min(range(8), key=lambda j, v=a: abs(table[j] - v)) for a in alphas]
-    bits = 0
-    for i in range(15, -1, -1):
-        bits = (bits << 3) | (indices[i] & 7)
-    return bytes([a0, a1]) + bits.to_bytes(6, 'little')
-
-
-def _rgb565(r: int, g: int, b: int) -> int:
-    return ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3)
-
-
-def _from565(c: int) -> Tuple[int, int, int]:
-    return (c >> 11) << 3, ((c >> 5) & 0x3F) << 2, (c & 0x1F) << 3
-
-
-def _dxt1_color_block(rgbs: List[Tuple[int, int, int]]) -> bytes:
-    c0v = _rgb565(max(p[0] for p in rgbs), max(p[1] for p in rgbs), max(p[2] for p in rgbs))
-    c1v = _rgb565(min(p[0] for p in rgbs), min(p[1] for p in rgbs), min(p[2] for p in rgbs))
-    if c0v == c1v:
-        return struct.pack('<HHI', c0v, c1v, 0)
-    if c0v < c1v:
-        c0v, c1v = c1v, c0v
-    c0, c1 = _from565(c0v), _from565(c1v)
-    pal = [c0, c1,
-           tuple((2*c0[i]+c1[i])//3 for i in range(3)),
-           tuple((c0[i]+2*c1[i])//3 for i in range(3))]
-    idx = 0
-    for i, px in enumerate(rgbs):
-        best = min(range(4), key=lambda j: sum((pal[j][k]-px[k])**2 for k in range(3)))
-        idx |= best << (i * 2)
-    return struct.pack('<HHI', c0v, c1v, idx)
-
-
-def _compress_dxt5(pixels: List, w: int, h: int) -> bytes:
-    pw, ph = (w + 3) & ~3, (h + 3) & ~3
-    if pw != w or ph != h:
-        pixels = [pixels[min(y, h-1)*w + min(x, w-1)] for y in range(ph) for x in range(pw)]
-        w, h = pw, ph
-    out = bytearray()
-    for by in range(0, h, 4):
-        for bx in range(0, w, 4):
-            blk = [pixels[(by+dy)*w+(bx+dx)] for dy in range(4) for dx in range(4)]
-            out += _dxt5_alpha_block([p[3] for p in blk])
-            out += _dxt1_color_block([(p[0], p[1], p[2]) for p in blk])
-    return bytes(out)
-
-
-def _downsample(pixels: List, w: int, h: int) -> Tuple[List, int, int]:
-    nw, nh = max(1, w >> 1), max(1, h >> 1)
-    out = [tuple(sum(pixels[min(y*2+dy, h-1)*w+min(x*2+dx, w-1)][i] for dy in range(2) for dx in range(2)) // 4
-                 for i in range(4))
-           for y in range(nh) for x in range(nw)]
-    return out, nw, nh
-
-
-def _dxt5_mip_chain(pixels: List, w: int, h: int, n: int) -> List[bytes]:
-    mips, cur, cw, ch = [], pixels, w, h
-    for _ in range(n):
-        mips.append(_compress_dxt5(cur, cw, ch))
-        if cw <= 1 and ch <= 1:
-            break
-        cur, cw, ch = _downsample(cur, cw, ch)
-    while len(mips) < n:
-        mips.append(mips[-1])
-    return mips
-
-
-def _parse_texture2d_mips(serial: bytes, props_end: int) -> Tuple[int, List[dict], str]:
-    """Returns (arr_start, mips, layout) where layout is 'A' or 'B'."""
-    def is_pow2(n: int) -> bool:
-        return n > 0 and (n & (n - 1)) == 0
-
-    # Layout A: flags(4) + elem(4) + size_on_disk(4) + offset(8)
-    # Layout B: flags(4) + elem(4) + offset(8) + size_on_disk(4)  ← standard UE3 source
-    def try_at(start: int, layout: str):
-        if start + 4 > len(serial):
-            return None
-        mc = struct.unpack_from('<i', serial, start)[0]
-        if not (1 <= mc <= 16):
-            return None
-        pos = start + 4
-        mips: List[dict] = []
-        for _ in range(mc):
-            if pos + 20 > len(serial):
-                return None
-            flags = struct.unpack_from('<I', serial, pos)[0]; pos += 4
-            elem  = struct.unpack_from('<i', serial, pos)[0]; pos += 4
-            if layout == 'A':
-                disk = struct.unpack_from('<i', serial, pos)[0]; pos += 4
-                off  = struct.unpack_from('<q', serial, pos)[0]; pos += 8
-            else:
-                off  = struct.unpack_from('<q', serial, pos)[0]; pos += 8
-                disk = struct.unpack_from('<i', serial, pos)[0]; pos += 4
-            is_tfc = bool(flags & _BULKDATA_TFC)
-            data_start = pos
-            if not is_tfc:
-                read_len = disk if disk > 0 else (elem if elem > 0 else 0)
-                if read_len < 0: read_len = 0
-                if pos + read_len > len(serial): return None
-                pos += read_len
-            else:
-                read_len = 0
-            if pos + 8 > len(serial):
-                return None
-            mw = struct.unpack_from('<i', serial, pos)[0]; pos += 4
-            mh = struct.unpack_from('<i', serial, pos)[0]; pos += 4
-            if not (is_pow2(mw) and is_pow2(mh) and 0 < mw <= 4096 and 0 < mh <= 4096):
-                return None
-            mips.append(dict(flags=flags, elem_count=elem, size_on_disk=disk,
-                             bulk_offset=off, data_start=data_start,
-                             data_len=read_len, w=mw, h=mh, is_tfc=is_tfc))
-        return mips
-
-    scan_end = min(props_end + 256, len(serial) - 4)
-    for start in range(props_end, scan_end, 4):
-        for layout in ('B', 'A'):
-            result = try_at(start, layout)
-            if result:
-                return start, result, layout
-
-    raise ValueError(
-        f"Cannot locate Texture2D mip array near offset {props_end} "
-        f"(serial length {len(serial)})"
-    )
-
-
-def _rebuild_texture2d_serial(serial: bytes, arr_start: int, mips: List[dict], new_inline: List[bytes], layout: str = 'B') -> bytes:
-    prefix = serial[:arr_start + 4]  # everything up to and including mip count
-    inline_iter = iter(new_inline)
-    body = bytearray()
-    last_end = arr_start + 4
-    for mip in mips:
-        hdr_start = mip['data_start'] - 20
-        if mip['is_tfc']:
-            body += serial[hdr_start: hdr_start + 20]
-        else:
-            nd = next(inline_iter)
-            body += struct.pack('<I', mip['flags'])
-            body += struct.pack('<i', len(nd))
-            if layout == 'A':
-                body += struct.pack('<i', len(nd))
-                body += struct.pack('<q', mip['bulk_offset'])
-            else:
-                body += struct.pack('<q', mip['bulk_offset'])
-                body += struct.pack('<i', len(nd))
-            body += nd
-        body += struct.pack('<i', mip['w'])
-        body += struct.pack('<i', mip['h'])
-        last_end = mip['data_start'] + mip['data_len'] + 8
-    return prefix + bytes(body) + serial[last_end:]
-
-
-def _read_upk_texture_props(pkg, serial: bytes) -> Tuple[int, int, str]:
-    """
-    Read SizeX, SizeY, and Format from a cooked RL Texture2D serial.
-    Properties start at byte 4 (byte 0 is a 4-byte cooked strip-flag sentinel).
-    """
-    def name_idx(name: str) -> int:
-        indices, _ = find_name_indices(pkg, name)
-        return indices[0] if indices else -1
-
-    size_x_idx   = name_idx('SizeX')
-    size_y_idx   = name_idx('SizeY')
-    int_prop_idx = name_idx('IntProperty')
-    none_idx     = name_idx('None')
-
-    width = height = 0
-    pos = 4  # skip 4-byte sentinel at offset 0
-    for _ in range(100):
-        if pos + 8 > len(serial):
-            break
-        ni = struct.unpack_from('<i', serial, pos)[0]
-        if ni == none_idx or ni < 0:
-            break
-        ti         = struct.unpack_from('<i', serial, pos + 8)[0] if pos + 12 <= len(serial) else -1
-        prop_size  = struct.unpack_from('<i', serial, pos + 16)[0] if pos + 20 <= len(serial) else -1
-        if prop_size < 0 or prop_size > 100000:
-            break
-        if ti == int_prop_idx and prop_size == 4 and pos + 28 <= len(serial):
-            value = struct.unpack_from('<i', serial, pos + 24)[0]
-            if ni == size_x_idx:
-                width = value
-            elif ni == size_y_idx:
-                height = value
-        pos += 24 + prop_size
-
-    # Detect pixel format: scan first 600 bytes for a known format name index
-    fmt = 'PF_A8R8G8B8'
-    for fmt_name in ('PF_DXT5', 'PF_DXT1'):
-        idx = name_idx(fmt_name)
-        if idx >= 0:
-            for i in range(0, min(len(serial) - 4, 600), 4):
-                if struct.unpack_from('<i', serial, i)[0] == idx:
-                    fmt = fmt_name
-                    break
-        if fmt != 'PF_A8R8G8B8':
-            break
-
-    return width, height, fmt
-
-
 
 
 def swap_pfp_from_png(upk, png_path: Path, target_pkg: str, options: 'SwapOptions') -> Tuple[List[Path], List[str]]:
