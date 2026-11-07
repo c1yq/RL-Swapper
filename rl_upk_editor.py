@@ -832,16 +832,56 @@ def build_reencrypted_package(original_encrypted_path: Path, modified_decrypted_
     
     new_total_header_size = modified_summary.name_offset + encrypted_plain_len + actual_garbage_size
     current_compressed_offset = new_total_header_size
+
+    # Map original uncompressed chunk offsets through export serial_offset/serial_size deltas
+    # so variable-size UObject edits in any chunk keep every subsequent chunk export-aligned.
+    orig_export_pairs: List[Tuple[int, int, int, int]] = []
+    try:
+        orig_header_buf = Path(original_encrypted_path).read_bytes()[:summary.name_offset] + bytes(original_plain)
+        if summary.depends_offset <= len(orig_header_buf) and summary.export_count == modified_summary.export_count:
+            r_orig = BinaryReader(io.BytesIO(orig_header_buf))
+            r_orig.seek(summary.export_offset)
+            orig_exps = [parse_export_entry(r_orig, k, len(summary.generations), summary) for k in range(summary.export_count)]
+            r_mod = BinaryReader(io.BytesIO(modified_decrypted_bytes))
+            r_mod.seek(modified_summary.export_offset)
+            mod_exps = [parse_export_entry(r_mod, k, len(modified_summary.generations), modified_summary) for k in range(modified_summary.export_count)]
+            orig_export_pairs = sorted(
+                (
+                    (oe.serial_offset, oe.serial_size, me.serial_offset, me.serial_size)
+                    for oe, me in zip(orig_exps, mod_exps)
+                    if oe.serial_size > 0 and oe.serial_offset >= summary.depends_offset
+                ),
+                key=lambda item: item[0],
+            )
+    except Exception:
+        orig_export_pairs = []
+
+    def _map_uncompressed_offset(orig_off: int) -> int:
+        if orig_off <= summary.depends_offset:
+            return modified_summary.depends_offset
+        if not orig_export_pairs or orig_off < orig_export_pairs[0][0]:
+            return orig_off + chunk_shift
+        chosen = orig_export_pairs[0]
+        for pair in orig_export_pairs:
+            if pair[0] <= orig_off:
+                chosen = pair
+            else:
+                break
+        o_off, o_sz, m_off, m_sz = chosen
+        if orig_off < o_off + o_sz:
+            return m_off + min(orig_off - o_off, m_sz)
+        return (m_off + m_sz) + (orig_off - (o_off + o_sz))
+
     for i, chunk in enumerate(original_chunks):
-        start = chunk.uncompressed_offset + chunk_shift
+        start = modified_summary.depends_offset if i == 0 else _map_uncompressed_offset(chunk.uncompressed_offset)
         if i + 1 < len(original_chunks):
-            end = original_chunks[i + 1].uncompressed_offset + chunk_shift
+            end = _map_uncompressed_offset(original_chunks[i + 1].uncompressed_offset)
             if end > len(modified_decrypted_bytes):
-                raise ValueError("Modified decrypted package changed size too early for the rebuilt chunk layout")
+                end = len(modified_decrypted_bytes)
         else:
             end = len(modified_decrypted_bytes)
         if end < start:
-            raise ValueError("Invalid rebuilt chunk bounds")
+            raise ValueError(f"Invalid rebuilt chunk bounds at chunk {i}: start={start}, end={end}")
         payload = compress_chunk_payload(modified_decrypted_bytes[start:end])
         if is_ctr:
             payload = DecryptionProvider.crypt_ctr(valid_key, chunk.chunk_nonce, payload)
@@ -1340,6 +1380,26 @@ def import_donor_names(package: ParsedPackage, donor_package: ParsedPackage, sel
     result = parse_decrypted_package(temp_path)
     setattr(result, '_merge_added_names', added)
     return result
+
+
+def ensure_package_names(package: ParsedPackage, required_names: List[str], default_flags: int = 0x0007001000000000) -> ParsedPackage:
+    """Ensure every base name in *required_names* exists in package.names (in-memory)."""
+    names = [NameEntry(index=n.index, name=n.name, flags=n.flags) for n in package.names]
+    existing_lower = {n.name.lower() for n in names}
+    added = 0
+    # Inherit standard name flags from an existing non-None entry when available
+    sample_flags = next((n.flags for n in names if n.name not in ("None", "") and n.flags != 0), default_flags)
+    for raw_name in required_names:
+        base, _ = _split_name_instance(raw_name)
+        if not base or base.lower() in existing_lower:
+            continue
+        names.append(NameEntry(index=len(names), name=base, flags=sample_flags))
+        existing_lower.add(base.lower())
+        added += 1
+    if added == 0:
+        return package
+    patched = _replace_header_tables(package, names, package.imports)
+    return parse_decrypted_package_bytes(package.file_path, patched)
 
 
 def _collect_existing_import_paths(package: ParsedPackage) -> Dict[str, int]:

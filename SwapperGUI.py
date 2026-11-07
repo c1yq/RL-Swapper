@@ -10,13 +10,14 @@ import threading
 import time
 import tkinter as tk
 from pathlib import Path
-from tkinter import filedialog, messagebox
+from tkinter import colorchooser, filedialog, messagebox
 
 import customtkinter as ctk
-from PIL import Image, ImageTk
+from PIL import Image, ImageDraw, ImageTk
 
 import rl_asset_swapper
 from rl_asset_swapper import SwapOptions, load_items
+import rl_color_injector
 import rl_upk_editor
 
 ctk.set_appearance_mode("Dark")
@@ -106,6 +107,11 @@ class CropWindow(ctk.CTkToplevel):
         self.configure(fg_color=OLED_BLACK)
         self.callback = callback
         self.after(50, lambda: apply_oled_titlebar(self))
+        if hasattr(parent, "icon_path") and os.path.exists(parent.icon_path):
+            try:
+                self.iconbitmap(parent.icon_path)
+            except Exception:
+                pass
 
         self.original_img = Image.open(image_path).convert("RGBA")
 
@@ -247,12 +253,12 @@ class RLSwapperApp(ctk.CTk):
         self.configure(fg_color=OLED_BLACK)
         self.after(60, lambda: apply_oled_titlebar(self))
 
-        icon_path = get_resource_path("icon.ico")
-        if not os.path.exists(icon_path):
-            icon_path = get_resource_path(os.path.join("assets", "icon.ico"))
-        if os.path.exists(icon_path):
+        self.icon_path = get_resource_path("icon.ico")
+        if not os.path.exists(self.icon_path):
+            self.icon_path = get_resource_path(os.path.join("assets", "icon.ico"))
+        if os.path.exists(self.icon_path):
             try:
-                self.iconbitmap(icon_path)
+                self.iconbitmap(self.icon_path)
             except Exception:
                 pass
 
@@ -300,8 +306,14 @@ class RLSwapperApp(ctk.CTk):
         self.nav_buttons = {}
         self.cropped_pfp_path = None
         self.cropped_banner_path = None
+        self.selected_color_spec = None
+        self.color_popover = None
+        self.color_popover_visible = False
+        self._swatch_icon_cache = {}
+        self.preset_color_btns = {}
 
         self._build_layout()
+        self.bind("<Escape>", lambda _e: self._hide_color_popover())
 
         # Run silent Rocket League patch/update check & sync
         undone_on_update = self.sync_game_update_silently()
@@ -703,11 +715,36 @@ class RLSwapperApp(ctk.CTk):
     def _load_custom_catalogs(self) -> None:
         try:
             disk_files = self._scan_disk_files()
-            with open(get_resource_path("items.json"), "r", encoding="utf-8") as f:
-                raw_items = json.load(f).get("Items", [])
             seen_b, seen_p = set(), set()
             self.all_banners = []
             self.all_pfps = []
+
+            # First pull from complete categorized_items (includes auto-discovered obfuscated UPKs)
+            for e in self.categorized_items.get("Player Banner", []):
+                itm = e["item"]
+                pkg_low = itm.asset_package.lower()
+                if pkg_low not in seen_b:
+                    seen_b.add(pkg_low)
+                    self.all_banners.append({"Product": e["product_name"], "AssetPackage": itm.asset_package, "Slot": "Player Banner"})
+
+            for e in self.categorized_items.get("Avatar Border", []):
+                itm = e["item"]
+                pkg_low = itm.asset_package.lower()
+                if pkg_low not in seen_p:
+                    seen_p.add(pkg_low)
+                    prod = "Default" if pkg_low == "avatarborder_default_sf.upk" else e["product_name"]
+                    self.all_pfps.append({"Product": prod, "AssetPackage": itm.asset_package, "Slot": "Avatar Border"})
+
+            # Guarantee AvatarBorder_Default_SF.upk is always present when on disk
+            if "avatarborder_default_sf.upk" not in seen_p:
+                if not disk_files or "avatarborder_default_sf.upk" in disk_files or "avatarborder_default_sf.upk.bak" in disk_files:
+                    real_def = disk_files.get("avatarborder_default_sf.upk", "AvatarBorder_Default_SF.upk") if disk_files else "AvatarBorder_Default_SF.upk"
+                    seen_p.add("avatarborder_default_sf.upk")
+                    self.all_pfps.append({"Product": "Default", "AssetPackage": real_def, "Slot": "Avatar Border"})
+
+            # Supplement any extra items from items.json
+            with open(get_resource_path("items.json"), "r", encoding="utf-8") as f:
+                raw_items = json.load(f).get("Items", [])
             for i in raw_items:
                 pkg = i.get("AssetPackage")
                 if not pkg:
@@ -727,9 +764,15 @@ class RLSwapperApp(ctk.CTk):
                     self.all_banners.append(entry)
                 elif slot in ("Avatar Border", "PlayerAvatarBorder") and pkg_low not in seen_p:
                     seen_p.add(pkg_low)
+                    if pkg_low == "avatarborder_default_sf.upk":
+                        entry["Product"] = "Default"
                     self.all_pfps.append(entry)
+
             self.all_banners.sort(key=lambda x: x.get("Product", "").lower())
-            self.all_pfps.sort(key=lambda x: x.get("Product", "").lower())
+            # Keep 'Default' pinned at index 0 for instant access, sort remaining borders alphabetically
+            self.all_pfps.sort(
+                key=lambda x: (0 if x.get("AssetPackage", "").lower() == "avatarborder_default_sf.upk" else 1, x.get("Product", "").lower())
+            )
         except Exception:
             self.all_banners = []
             self.all_pfps = []
@@ -947,8 +990,8 @@ class RLSwapperApp(ctk.CTk):
         self._suppress_trace = False
         self.want_search_var.trace_add("write", lambda *_: self._on_item_filter())
         self.have_search_var.trace_add("write", lambda *_: self._on_item_filter())
-        self.want_lb.bind("<<ListboxSelect>>", lambda _: self._update_selection_summary())
-        self.have_lb.bind("<<ListboxSelect>>", lambda _: self._update_selection_summary())
+        self.want_lb.bind("<<ListboxSelect>>", lambda _: (self._hide_color_popover(), self._update_selection_summary()))
+        self.have_lb.bind("<<ListboxSelect>>", lambda _: (self._hide_color_popover(), self._update_selection_summary()))
 
     def _set_decal_filter(self, pill: str) -> None:
         self.decal_filter = pill
@@ -1091,6 +1134,24 @@ class RLSwapperApp(ctk.CTk):
 
         self.filter_banners()
 
+    def _make_swatch_icon(self, hex_color: str = None, size: int = 10) -> ctk.CTkImage:
+        key = (hex_color, size)
+        if key in self._swatch_icon_cache:
+            return self._swatch_icon_cache[key]
+        scale = 4
+        px = size * scale
+        im = Image.new("RGBA", (px, px), (0, 0, 0, 0))
+        draw = ImageDraw.Draw(im)
+        if hex_color:
+            # Subtle outer ring so ultra-dark swatches (#000000 / Black) stay crisp on OLED black
+            draw.ellipse((1, 1, px - 2, px - 2), fill=hex_color, outline="#3A3A40", width=max(2, scale // 2))
+        else:
+            draw.ellipse((3, 3, px - 4, px - 4), fill=None, outline=TEXT_MUTED, width=scale)
+        im_small = im.resize((size, size), Image.LANCZOS)
+        icon = ctk.CTkImage(light_image=im_small, dark_image=im_small, size=(size, size))
+        self._swatch_icon_cache[key] = icon
+        return icon
+
     def _build_bottom_bar(self) -> None:
         self.bottom_wrap = ctk.CTkFrame(self.workspace, fg_color=OLED_BLACK, corner_radius=0)
         self.bottom_wrap.pack(side="bottom", fill="x", padx=26, pady=(6, 20))
@@ -1123,6 +1184,195 @@ class RLSwapperApp(ctk.CTk):
         )
         self.btn_export.pack(side="right", padx=(0, 8))
 
+        self.btn_color = ctk.CTkButton(
+            row,
+            text="Color: Default",
+            image=self._make_swatch_icon(None, 10),
+            compound="left",
+            width=136,
+            height=34,
+            corner_radius=8,
+            fg_color=OLED_ELEVATED,
+            hover_color=OLED_SELECTED,
+            text_color=TEXT_SECONDARY,
+            border_width=1,
+            border_color=OLED_BORDER,
+            font=ctk.CTkFont(family=FONT_FAMILY, size=12),
+            command=self._toggle_color_popover,
+        )
+        self.btn_color.pack(side="right", padx=(0, 8))
+
+        self._build_color_popover()
+
+    def _build_color_popover(self) -> None:
+        self.color_popover = ctk.CTkFrame(
+            self.workspace,
+            width=336,
+            fg_color=OLED_ELEVATED,
+            corner_radius=12,
+            border_width=1,
+            border_color=OLED_BORDER_FOCUS,
+        )
+
+        hdr = ctk.CTkFrame(self.color_popover, fg_color="transparent")
+        hdr.pack(fill="x", padx=14, pady=(12, 6))
+
+        self.color_popover_title_lbl = ctk.CTkLabel(
+            hdr, text="Item Color", text_color=TEXT_PRIMARY,
+            font=ctk.CTkFont(family=FONT_FAMILY, size=12, weight="bold")
+        )
+        self.color_popover_title_lbl.pack(side="left")
+
+        ctk.CTkButton(
+            hdr, text="Default", width=56, height=22, corner_radius=6,
+            fg_color="transparent", hover_color=OLED_SELECTED, text_color=TEXT_SECONDARY,
+            font=ctk.CTkFont(family=FONT_FAMILY, size=11),
+            command=lambda: self._select_color_spec(None),
+        ).pack(side="right")
+
+        grid = ctk.CTkFrame(self.color_popover, fg_color="transparent")
+        grid.pack(fill="x", padx=10, pady=(2, 8))
+        grid.grid_columnconfigure(0, weight=1)
+        grid.grid_columnconfigure(1, weight=1)
+
+        self.preset_color_btns = {}
+        for idx, paint in enumerate(rl_color_injector.OFFICIAL_PAINTS):
+            r, c = divmod(idx, 2)
+            b = ctk.CTkButton(
+                grid,
+                text=paint.name,
+                image=self._make_swatch_icon(paint.hex_srgb, 10),
+                compound="left",
+                anchor="w",
+                height=28,
+                corner_radius=7,
+                fg_color="transparent",
+                hover_color=OLED_HOVER,
+                text_color=TEXT_SECONDARY,
+                font=ctk.CTkFont(family=FONT_FAMILY, size=11),
+                command=lambda sp=paint: self._select_color_spec(sp),
+            )
+            b.grid(row=r, column=c, sticky="ew", padx=3, pady=2)
+            self.preset_color_btns[paint.name] = b
+
+        ctk.CTkFrame(self.color_popover, height=1, fg_color=OLED_BORDER).pack(fill="x", padx=14, pady=(4, 10))
+
+        custom_row = ctk.CTkFrame(self.color_popover, fg_color="transparent")
+        custom_row.pack(fill="x", padx=14, pady=(0, 12))
+
+        self.custom_hex_var = tk.StringVar(value="")
+        self.custom_hex_entry = ctk.CTkEntry(
+            custom_row,
+            textvariable=self.custom_hex_var,
+            placeholder_text="#RRGGBB",
+            width=116,
+            height=30,
+            corner_radius=7,
+            border_width=1,
+            fg_color=OLED_INPUT,
+            border_color=OLED_BORDER,
+            text_color=TEXT_PRIMARY,
+            placeholder_text_color=TEXT_MUTED,
+            font=ctk.CTkFont(family=FONT_FAMILY, size=11),
+        )
+        self.custom_hex_entry.pack(side="left")
+        self.custom_hex_entry.bind("<Return>", lambda _e: self._apply_custom_hex_entry())
+
+        ctk.CTkButton(
+            custom_row, text="Set", width=52, height=30, corner_radius=7,
+            fg_color=OLED_SELECTED, hover_color=OLED_BORDER_FOCUS, text_color=TEXT_PRIMARY,
+            font=ctk.CTkFont(family=FONT_FAMILY, size=11),
+            command=self._apply_custom_hex_entry,
+        ).pack(side="left", padx=(6, 6))
+
+        ctk.CTkButton(
+            custom_row, text="Picker...", width=82, height=30, corner_radius=7,
+            fg_color="transparent", hover_color=OLED_HOVER, text_color=TEXT_SECONDARY,
+            border_width=1, border_color=OLED_BORDER,
+            font=ctk.CTkFont(family=FONT_FAMILY, size=11),
+            command=self._open_native_color_picker,
+        ).pack(side="right")
+
+    def _is_current_slot_colorable(self) -> bool:
+        return self.current_mode == "items" and getattr(self, "current_slot", None) in rl_color_injector.COLORABLE_SLOTS
+
+    def _active_color_spec_for_slot(self):
+        return self.selected_color_spec if self._is_current_slot_colorable() else None
+
+    def _refresh_color_pill(self) -> None:
+        spec = self.selected_color_spec
+        if spec is None:
+            self.btn_color.configure(
+                text="Color: Default",
+                image=self._make_swatch_icon(None, 10),
+                text_color=TEXT_SECONDARY,
+                border_color=OLED_BORDER,
+            )
+        else:
+            short = spec.hex_srgb.upper() if spec.is_custom else spec.name
+            self.btn_color.configure(
+                text=short,
+                image=self._make_swatch_icon(spec.hex_srgb, 10),
+                text_color=TEXT_PRIMARY,
+                border_color=OLED_BORDER_FOCUS,
+            )
+        for pname, b in self.preset_color_btns.items():
+            if spec is not None and not spec.is_custom and spec.name == pname:
+                b.configure(fg_color=OLED_SELECTED, text_color=TEXT_PRIMARY)
+            else:
+                b.configure(fg_color="transparent", text_color=TEXT_SECONDARY)
+
+    def _reset_color_to_default(self) -> None:
+        """Always return the color picker to Default right after each swap."""
+        self.selected_color_spec = None
+        if hasattr(self, "custom_hex_var"):
+            self.custom_hex_var.set("")
+        self._hide_color_popover()
+        self._refresh_color_pill()
+
+    def _toggle_color_popover(self) -> None:
+        if self.color_popover_visible:
+            self._hide_color_popover()
+        else:
+            self.color_popover_visible = True
+            self.color_popover.place(relx=1.0, rely=1.0, x=-26, y=-68, anchor="se")
+            self.color_popover.lift()
+
+    def _hide_color_popover(self) -> None:
+        if getattr(self, "color_popover_visible", False):
+            self.color_popover_visible = False
+            self.color_popover.place_forget()
+
+    def _select_color_spec(self, spec) -> None:
+        self.selected_color_spec = spec
+        if spec is not None and spec.is_custom:
+            self.custom_hex_var.set(spec.hex_srgb)
+        elif spec is None:
+            self.custom_hex_var.set("")
+        self._refresh_color_pill()
+        self._hide_color_popover()
+        self._update_selection_summary()
+
+
+
+    def _apply_custom_hex_entry(self) -> None:
+        raw = self.custom_hex_var.get().strip()
+        if not raw:
+            self._select_color_spec(None)
+            return
+        try:
+            spec = rl_color_injector.resolve_color_spec(raw)
+            self._select_color_spec(spec)
+        except Exception:
+            self.set_status("Enter a valid 6-digit hex color (e.g. #00FFD5 or #000000)", color=TEXT_DANGER)
+
+    def _open_native_color_picker(self) -> None:
+        init_hex = self.selected_color_spec.hex_srgb if self.selected_color_spec else "#FFFFFF"
+        picked = colorchooser.askcolor(color=init_hex, title="Choose Custom Item Color", parent=self)
+        if picked and picked[1]:
+            self.custom_hex_var.set(picked[1].upper())
+            self._apply_custom_hex_entry()
+
     def set_status(self, message: str, subtle: bool = True, color: str = None) -> None:
         c = color if color else (TEXT_SECONDARY if not subtle else TEXT_MUTED)
         self.status_lbl.configure(text=message, text_color=c)
@@ -1140,6 +1390,7 @@ class RLSwapperApp(ctk.CTk):
             }
 
     def _hide_all_views(self) -> None:
+        self._hide_color_popover()
         self.items_frame.pack_forget()
         self.pfp_frame.pack_forget()
         self.banner_frame.pack_forget()
@@ -1151,7 +1402,11 @@ class RLSwapperApp(ctk.CTk):
         self._highlight_nav(f"slot:{slot}")
         self._hide_all_views()
         self.items_frame.pack(side="top", fill="both", expand=True)
+        self.btn_color.pack_forget()
+        self.btn_export.pack_forget()
         self.btn_export.pack(side="right", padx=(0, 8))
+        if slot in rl_color_injector.COLORABLE_SLOTS:
+            self.btn_color.pack(side="right", padx=(0, 8))
 
         if slot == "Decal":
             self.decal_filter_bar.grid()
@@ -1172,6 +1427,7 @@ class RLSwapperApp(ctk.CTk):
         self.current_mode = "custom_pfp"
         self._highlight_nav("custom:pfp")
         self._hide_all_views()
+        self.btn_color.pack_forget()
         self.btn_export.pack_forget()
         self.pfp_frame.pack(side="top", fill="both", expand=True)
         self._update_selection_summary()
@@ -1181,6 +1437,7 @@ class RLSwapperApp(ctk.CTk):
         self.current_mode = "custom_banner"
         self._highlight_nav("custom:banner")
         self._hide_all_views()
+        self.btn_color.pack_forget()
         self.btn_export.pack_forget()
         self.banner_frame.pack(side="top", fill="both", expand=True)
         self._update_selection_summary()
@@ -1247,6 +1504,8 @@ class RLSwapperApp(ctk.CTk):
 
     def _update_selection_summary(self) -> None:
         if self.current_mode == "items":
+            cspec = self._active_color_spec_for_slot()
+            ctag = f" [{cspec.label}]" if cspec else ""
             sw, sh = self.want_lb.curselection(), self.have_lb.curselection()
             if sw and sh:
                 donor_entry = self.want_visible[sw[0]]
@@ -1260,11 +1519,11 @@ class RLSwapperApp(ctk.CTk):
                     tc = target_entry.get("decal_car")
                     if dc and dc != "Universal" and tc and dc != tc:
                         mesh_note = f"  ·  note: {dc} UV mesh decal"
-                self.set_status(f"{donor}  →  {target}{suffix}{mesh_note}", subtle=False)
+                self.set_status(f"{donor}{ctag}  →  {target}{suffix}{mesh_note}", subtle=False)
             elif sw:
-                self.set_status(f"{self.want_visible[sw[0]]['product_name']}  →  select equipped item", subtle=True)
+                self.set_status(f"{self.want_visible[sw[0]]['product_name']}{ctag}  →  select equipped item", subtle=True)
             else:
-                self.set_status("Select items to swap", subtle=True)
+                self.set_status(f"Select items to swap{ctag}", subtle=True)
         elif self.current_mode == "custom_pfp":
             pkg = self.pfp_target_var.get()
             if pkg and self.cropped_pfp_path:
@@ -1295,8 +1554,10 @@ class RLSwapperApp(ctk.CTk):
             self.set_status("Select both a replacement item and an equipped item", color=TEXT_DANGER)
             return
 
+        self._hide_color_popover()
         donor_item = self.want_visible[sw[0]]["item"]
         target_item = self.have_visible[sh[0]]["item"]
+        color_spec = self._active_color_spec_for_slot()
 
         if in_game:
             out_dir = Path(self.folder)
@@ -1310,17 +1571,19 @@ class RLSwapperApp(ctk.CTk):
             btn = self.btn_export
             orig_text = "Export"
 
+        ctag = f" [{color_spec.label}]" if color_spec else ""
         btn.configure(text="Working...", state="disabled")
-        self.set_status(f"Applying {donor_item.product}  →  {target_item.product}...", subtle=False)
+        self.set_status(f"Applying {donor_item.product}{ctag}  →  {target_item.product}...", subtle=False)
         threading.Thread(
             target=self._run_item_swap,
-            args=(donor_item, target_item, out_dir, in_game, btn, orig_text),
+            args=(donor_item, target_item, out_dir, in_game, btn, orig_text, color_spec),
             daemon=True,
         ).start()
 
-    def _run_item_swap(self, donor_item, target_item, out_dir: Path, in_game: bool, btn, orig_text: str) -> None:
+    def _run_item_swap(self, donor_item, target_item, out_dir: Path, in_game: bool, btn, orig_text: str, color_spec=None) -> None:
         try:
             rl_asset_swapper._keys_map = self.keys_map
+            color_arg = (color_spec.hex_srgb if color_spec.is_custom else color_spec.name) if color_spec else None
             opts = SwapOptions(
                 items_path=Path(get_resource_path("items.json")),
                 keys_path=self.keys_path,
@@ -1331,12 +1594,16 @@ class RLSwapperApp(ctk.CTk):
                 preserve_header_offsets=True,
                 overwrite=True,
                 logger=None,
+                color=color_arg,
             )
-            rl_asset_swapper.swap_asset(rl_upk_editor, target_item, donor_item, opts)
+            _, swap_logs = rl_asset_swapper.swap_asset(rl_upk_editor, target_item, donor_item, opts)
+            no_local_color = color_spec is not None and any("Total binary color edits applied: 0" in ln for ln in swap_logs)
+            donor_log_label = f"{donor_item.product} [{color_spec.label}]" if (color_spec and not no_local_color) else donor_item.product
+
             if in_game:
                 self.record_swap(
                     target_item.asset_package,
-                    donor_item.product,
+                    donor_log_label,
                     target_item.product,
                     mode="IN-GAME",
                     target_asset_path=target_item.asset_path,
@@ -1344,11 +1611,14 @@ class RLSwapperApp(ctk.CTk):
                 self.clear_rl_cache()
 
             def on_done():
+                # Always reset color picker back to Default after each swap
+                self._reset_color_to_default()
                 btn.configure(text="Applied" if in_game else "Exported", state="normal")
                 self._on_item_filter()
+                extra = "  ·  stock material (unpaintable)" if no_local_color else ""
                 msg = (
-                    f"Applied  {donor_item.product}  →  {target_item.product}"
-                    if in_game else f"Exported {target_item.asset_package}"
+                    f"Applied  {donor_log_label}  →  {target_item.product}{extra}"
+                    if in_game else f"Exported {target_item.asset_package}{extra}"
                 )
                 self.set_status(msg, color=TEXT_SUCCESS)
                 self.after(1600, lambda: btn.configure(text=orig_text))
@@ -1356,6 +1626,7 @@ class RLSwapperApp(ctk.CTk):
             self.after(0, on_done)
         except Exception as e:
             def on_err(err=str(e)):
+                self._reset_color_to_default()
                 btn.configure(text=orig_text, state="normal")
                 self.set_status(f"Swap failed: {err}", color=TEXT_DANGER)
                 messagebox.showerror("Swap Error", err)
@@ -1425,6 +1696,7 @@ class RLSwapperApp(ctk.CTk):
                 self.clear_rl_cache()
 
                 def done():
+                    self._reset_color_to_default()
                     self.btn_apply.configure(text="Applied", state="normal")
                     self.filter_pfps()
                     self.set_status(f"Applied custom profile picture to {border_name}", color=TEXT_SUCCESS)
@@ -1432,12 +1704,27 @@ class RLSwapperApp(ctk.CTk):
                 self.after(0, done)
             except Exception as e:
                 def err(msg=str(e)):
+                    self._reset_color_to_default()
                     self.btn_apply.configure(text="Apply", state="normal")
                     self.set_status(f"Failed: {msg}", color=TEXT_DANGER)
                     messagebox.showerror("Profile Picture Error", msg)
                 self.after(0, err)
 
         threading.Thread(target=worker, daemon=True).start()
+
+    def _bulk_pfp(self) -> None:
+        folder = filedialog.askdirectory(title="Select Folder of Profile Picture Images")
+        if not folder:
+            return
+        images = self._collect_images(Path(folder))
+        if not images:
+            messagebox.showwarning("No Images", "No supported image files found in that folder.")
+            return
+        borders = [
+            b.name for b in Path(self.folder).glob("AvatarBorder_*_SF.upk")
+            if b.name.lower() != "avatarborder_default_sf.upk"
+        ]
+        self._run_bulk_image_job("Randomizing Avatar Borders", borders, images, mode="pfp")
 
     def filter_banners(self, *_args) -> None:
         q = self.banner_search_var.get().strip().lower()
@@ -1498,6 +1785,7 @@ class RLSwapperApp(ctk.CTk):
                 self.clear_rl_cache()
 
                 def done():
+                    self._reset_color_to_default()
                     self.btn_apply.configure(text="Applied", state="normal")
                     self.filter_banners()
                     self.set_status(f"Applied custom banner to {banner_name}", color=TEXT_SUCCESS)
@@ -1521,8 +1809,8 @@ class RLSwapperApp(ctk.CTk):
             messagebox.showwarning("No Images", "No supported image files found in that folder.")
             return
         borders = [
-            b.name for b in Path(self.folder).glob("AvatarBorder_*_SF.upk")
-            if b.name.lower() != "avatarborder_default_sf.upk"
+            p["AssetPackage"] for p in self.all_pfps
+            if p.get("AssetPackage") and p["AssetPackage"].lower() != "avatarborder_default_sf.upk"
         ]
         self._run_bulk_image_job("Randomizing Avatar Borders", borders, images, mode="pfp")
 
@@ -1556,6 +1844,11 @@ class RLSwapperApp(ctk.CTk):
         prog.configure(fg_color=OLED_BLACK)
         prog.grab_set()
         prog.after(50, lambda: apply_oled_titlebar(prog))
+        if hasattr(self, "icon_path") and os.path.exists(self.icon_path):
+            try:
+                prog.iconbitmap(self.icon_path)
+            except Exception:
+                pass
 
         lbl = ctk.CTkLabel(prog, text="Preparing...", text_color=TEXT_SECONDARY, font=ctk.CTkFont(family=FONT_FAMILY, size=12))
         lbl.pack(pady=(28, 12))
@@ -1617,6 +1910,7 @@ class RLSwapperApp(ctk.CTk):
             def finish():
                 prog.destroy()
                 if mode == "pfp":
+                    self._reset_color_to_default()
                     self.filter_pfps()
                 else:
                     self.filter_banners()
@@ -1678,10 +1972,30 @@ class RLSwapperApp(ctk.CTk):
         win.grab_set()
         win.after(50, lambda: apply_oled_titlebar(win))
 
+        if hasattr(self, "icon_path") and os.path.exists(self.icon_path):
+            try:
+                win.iconbitmap(self.icon_path)
+            except Exception:
+                pass
+
+        hdr = ctk.CTkFrame(win, fg_color="transparent")
+        hdr.pack(fill="x", padx=24, pady=(22, 4))
+
+        logo_path = get_resource_path("logo.png")
+        if not os.path.exists(logo_path):
+            logo_path = get_resource_path(os.path.join("assets", "logo.png"))
+        if os.path.exists(logo_path):
+            try:
+                logo_pil = Image.open(logo_path).convert("RGBA")
+                win.reset_logo = ctk.CTkImage(light_image=logo_pil, dark_image=logo_pil, size=(20, 20))
+                ctk.CTkLabel(hdr, image=win.reset_logo, text="").pack(side="left", padx=(0, 9))
+            except Exception:
+                pass
+
         ctk.CTkLabel(
-            win, text="Active Swaps", anchor="w", text_color=TEXT_PRIMARY,
+            hdr, text="Active Swaps", anchor="w", text_color=TEXT_PRIMARY,
             font=ctk.CTkFont(family=FONT_FAMILY, size=15, weight="bold")
-        ).pack(fill="x", padx=24, pady=(22, 4))
+        ).pack(side="left")
 
         ctk.CTkLabel(
             win, text="Select modified packages to restore to original game files.",

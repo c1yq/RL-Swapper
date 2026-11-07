@@ -16,7 +16,7 @@ Minimalist client-side cosmetic swapper and custom texture injector for Rocket L
 
 <br />
 
-[Download Latest `.exe`](https://github.com/c1yq/RL-Swapper/releases/latest) &nbsp;·&nbsp; [Features](#features) &nbsp;·&nbsp; [Usage](#usage) &nbsp;·&nbsp; [Development](#development)
+[Download Latest `.exe`](https://github.com/c1yq/RL-Swapper/releases/latest) &nbsp;·&nbsp; [Features](#features) &nbsp;·&nbsp; [Usage](#usage) &nbsp;·&nbsp; [Development](#development) &nbsp;·&nbsp; [Contact](#contact--notes)
 
 <br />
 
@@ -26,11 +26,20 @@ Minimalist client-side cosmetic swapper and custom texture injector for Rocket L
 
 ## Features
 
-- **Universal Item Swapper** — Swap any item with any item in the same category across all 12 cosmetic slots (`8,798+` verified items: Bodies, Decals, Wheels, Boosts, Goal Explosions, Trails, Toppers, Antennas, Paint Finishes, Engine Audio, Banners, and Avatar Borders), including shared-container packages and CTR-encrypted items.
-- **Custom Profile Pictures & Banners** — Inject PNG or JPG images directly into avatar borders (`1:1` crop with native frame compositing; recommended border: *XP Level 25*) and player banners (`14:3` crop without vertical stretching; recommended banner: *Topographic*).
-- **Bulk Randomizer** — Populate every player banner and avatar border in the game client from any local image folder. Works well alongside [Pinterest Bulk Downloader](https://github.com/c1yq/Pinterest-bulk-downloader).
-- **Pure OLED Interface** — Clean `#000000` sidebar layout with instant search, per-category selection memory, and car-specific Decal filter pills.
-- **Pristine Backups & Silent Update Sync** — Re-swapping an already modified item automatically restores its original `.bak` baseline first. Game updates are detected on launch and silently reset outdated swaps.
+- **Universal Item Swapper** — Swaps any cosmetic item in your inventory with any desired item across all 12 categories (`8,798+` items including Bodies, Decals, Wheels, Boosts, Goal Explosions, Trails, Toppers, Antennas, Paint Finishes, Engine Audio, Banners, and Avatar Borders) through surgical cooked package export rewiring.
+- **Direct UPK Paint Programming** — Bakes all 14 official Rocket League painted variants (`Titanium White`, `Black`, `Crimson`, `Cobalt`, `Sky Blue`, `Gold`, and more) directly into swapped package material instances and particle parameters even if your equipped donor item is unpainted.
+- **Custom Hex Color Injection** — Lets you choose any arbitrary 24-bit sRGB color via an interactive palette or hexadecimal input (`#RRGGBB`) to program custom linear color vectors into cosmetic shader networks.
+- **Auto-Resetting Color System** — Automatically resets your active color selection back to `Default` immediately following every successful swap so subsequent swaps preserve their authentic appearance without manual re-selection.
+- **Custom Profile Picture Injection** — Injects any 1:1 image file into equipped avatar border packages using byte-for-byte cooked zlib compression that guarantees zero in-game crashes.
+- **Custom Player Banner Injection** — Crops and patches custom 14:3 high-resolution artwork into player banner packages so your personalized graphics show up across scoreboards, goal replays, and post-game podiums.
+- **Bulk Image Randomizer** — Loops through any local folder of images to automatically randomize custom artwork across every installed avatar border or player banner package in a single batch operation.
+- **Pure OLED Interface** — Features a pitch-black `#000000` aesthetic with instant fuzzy search, per-category selection memory, live previews, and native Windows 10/11 dark titlebars.
+- **Car-Specific Decal Filtering** — Identifies decal body compatibility automatically and provides responsive chassis filter pills (`All`, `Universal`, `Octane`, `Fennec`, `Dominus`, and more) to prevent incompatible cross-chassis swaps.
+- **Silent Game Update Detection** — Validates package headers on startup against known base revisions, automatically alerting you to game updates from Epic Games or Steam and safely restoring stale mods before conflicts arise.
+- **Pristine Baseline Backups** — Automatically creates untouched `.bak` backups before modifying any game file and silently restores the original baseline before applying chained modifications to prevent package degradation.
+- **Dedicated Reset Swaps Manager** — Provides an integrated, branded management window that displays every currently active package swap and allows restoring individual items or all files back to vanilla in one click.
+- **Automatic Texture Cache Cleaner** — Clears stale cooked texture cache files from your Rocket League user directory immediately after swapping so your newly injected cosmetics appear instantly in-game without requiring a computer restart.
+- **Standalone Portable Executable** — Bundles the full cosmetic catalog, decryption keys, and binary editor into a single self-contained executable that requires zero external dependencies or Python installations to run.
 
 ---
 
@@ -39,9 +48,9 @@ Minimalist client-side cosmetic swapper and custom texture injector for Rocket L
 1. Download [`RL_Swapper.exe`](https://github.com/c1yq/RL-Swapper/releases/latest) from the [Releases](https://github.com/c1yq/RL-Swapper/releases) page.
 2. Launch `RL_Swapper.exe` (run as Administrator if Rocket League is installed under `C:\Program Files`).
 3. Your Epic Games or Steam `CookedPCConsole` directory is detected automatically.
-4. Pick the item you **want** on the left, select the item you have **equipped** on the right, and click **Swap**.
+4. Select the item you **want** on the left, pick the item you have **equipped** on the right, pick an optional color, and click **Apply**.
 
-Use **Reset Swaps** in the sidebar at any time to restore all modified packages to vanilla.
+Use **Reset Swaps** in the sidebar at any time to inspect your active modifications or restore original game files.
 
 ---
 
@@ -62,7 +71,7 @@ python SwapperGUI.py
 pyinstaller --noconfirm RL_Swapper.spec
 ```
 
-The single-file executable is written to `dist/RL_Swapper.exe`.
+The single-file executable is generated at `dist/RL_Swapper.exe`.
 
 ---
 
@@ -70,10 +79,11 @@ The single-file executable is written to `dist/RL_Swapper.exe`.
 
 ```text
 RL-Swapper/
-├── assets/              # Application icon & logo
-├── SwapperGUI.py        # Pure OLED desktop interface
-├── rl_asset_swapper.py  # Surgical ExportTable rewiring & swap engine
-├── rl_upk_editor.py     # UPK binary parser, zlib chunker & AES crypto
+├── assets/              # Application icon & brand logo
+├── SwapperGUI.py         # Pure OLED desktop interface
+├── rl_asset_swapper.py   # Surgical ExportTable rewiring & swap engine
+├── rl_color_injector.py  # Binary UObject paint & custom RGB color engine
+├── rl_upk_editor.py      # UPK binary parser, zlib chunker & AES crypto
 ├── items.json           # Verified Rocket League cosmetic catalog
 ├── keys_map.json        # Package-to-AES key mapping table
 ├── keys.txt             # Indexed AES-256 decryption key list

@@ -1,9 +1,9 @@
 # -*- mode: python ; coding: utf-8 -*-
 from PyInstaller.utils.hooks import collect_all
 
-datas = [('items.json', '.'), ('keys.txt', '.'), ('keys_map.json', '.'), ('assets/icon.ico', 'assets'), ('assets/logo.png', 'assets'), ('rl_asset_swapper.py', '.'), ('rl_upk_editor.py', '.')]
+datas = [('items.json', '.'), ('keys.txt', '.'), ('keys_map.json', '.'), ('assets/icon.ico', 'assets'), ('assets/logo.png', 'assets'), ('rl_asset_swapper.py', '.'), ('rl_color_injector.py', '.'), ('rl_upk_editor.py', '.')]
 binaries = []
-hiddenimports = ['rl_asset_swapper', 'rl_upk_editor']
+hiddenimports = ['rl_asset_swapper', 'rl_color_injector', 'rl_upk_editor', 'tkinter.colorchooser']
 tmp_ret = collect_all('customtkinter')
 datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 tmp_ret = collect_all('PIL')

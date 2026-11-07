@@ -91,6 +91,7 @@ class SwapOptions:
     preserve_header_offsets: bool
     overwrite: bool
     logger: Optional[Callable[[str], None]] = None
+    color: Optional[str] = None
 
 
 def script_dir() -> Path:
@@ -1248,7 +1249,7 @@ def _rewire_header_surgical(
 
 
 def swap_one_package(
-    upk,  # kept for API compatibility; unused in the new pipeline
+    upk,
     source_path: Path,
     output_path: Path,
     key_source_path: Path,
@@ -1256,6 +1257,8 @@ def swap_one_package(
     options: SwapOptions,
     donor_asset_path: Optional[str] = None,
     target_asset_path: Optional[str] = None,
+    donor_slot: str = "",
+    color: Optional[str] = None,
 ) -> Tuple[Path, List[str]]:
     """
     Universal header-only swap (supports both AES-256-ECB and 0x800 AES-256-CTR packages):
@@ -1271,8 +1274,41 @@ def swap_one_package(
     if not pristine_source.exists():
         raise FileNotFoundError(f"Source package not found: {source_path}")
 
-    # Read pristine donor bytes before touching output_path (handles donor==target or previously swapped donor)
-    donor_data = pristine_source.read_bytes()
+    # Read pristine donor bytes (and optionally bake color UObject edits) before touching output_path
+    color_spec = None
+    if color:
+        import rl_color_injector
+        color_spec = rl_color_injector.resolve_color_spec(color)
+
+    if color_spec is not None:
+        import tempfile
+        import rl_color_injector
+        if upk is None:
+            upk = import_rl_upk_editor()
+        d_key = _get_exact_key(source_path)
+        if d_key is None:
+            raise ValueError(f"No AES key found for {source_path.name}.")
+        prov = upk.DecryptionProvider(None)
+        prov.decryption_keys = [d_key]
+        with tempfile.TemporaryDirectory() as td:
+            td_path = Path(td)
+            # Copy pristine source to a clean .upk filename in case pristine_source ends with .upk.bak
+            clean_src = td_path / source_path.name
+            shutil.copy2(pristine_source, clean_src)
+            dec_path = td_path / f"dec_{source_path.name}"
+            upk.unpack_package(str(clean_src), str(dec_path), prov)
+            parsed_pkg = upk.parse_decrypted_package(dec_path)
+            colored_pkg, color_log = rl_color_injector.apply_color_to_package(
+                parsed_pkg, donor_asset_path, donor_slot, color_spec
+            )
+            log.extend(color_log)
+            rebuilt_src = td_path / f"colored_{source_path.name}"
+            upk.build_reencrypted_package(
+                clean_src, colored_pkg.file_bytes, prov, rebuilt_src, override_key=d_key
+            )
+            donor_data = rebuilt_src.read_bytes()
+    else:
+        donor_data = pristine_source.read_bytes()
 
     in_place = output_path.parent.resolve() == options.donor_dir.resolve()
     backup_path = output_path.with_suffix(output_path.suffix + ".bak")
@@ -1514,6 +1550,8 @@ def swap_asset(upk, target: Item, donor: Item, options: SwapOptions) -> Tuple[Li
         options,
         donor_asset_path=donor.asset_path,
         target_asset_path=target.asset_path,
+        donor_slot=donor.slot,
+        color=options.color,
     )
     all_paths.append(main_path)
     all_log.extend(main_log)
@@ -1995,7 +2033,7 @@ def _inplace_zlib_patch(upk, png_path: Path, options: SwapOptions, target_pkg: s
         
         # Paste the original border on top of the custom image
         img.paste(border_img, (0, 0), border_img)
-    elif target_height == 100: # THIS IS A BANNER
+    elif target_height == 100:  # THIS IS A BANNER
         scaled = original_img.resize((target_width, 90), Image.LANCZOS)
         img = Image.new("RGBA", (target_width, target_height), (0, 0, 0, 0))
         img.paste(scaled, (0, 5))
@@ -2079,6 +2117,7 @@ def swap_pfp_from_png(upk, png_path: Path, target_pkg: str, options: 'SwapOption
         magic_size=57600
     )
 
+
 def swap_banner_from_png(upk, png_path: Path, target_pkg: str, options: 'SwapOptions') -> Tuple[List[Path], List[str]]:
     return _inplace_zlib_patch(
         upk=upk,
@@ -2090,5 +2129,5 @@ def swap_banner_from_png(upk, png_path: Path, target_pkg: str, options: 'SwapOpt
         target_height=100,
         img_size=None,
         img_offset=0,
-        magic_size=168000
+        magic_size=168000,
     )
