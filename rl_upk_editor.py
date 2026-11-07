@@ -738,7 +738,7 @@ def find_valid_key(encrypted_path: Path, provider: DecryptionProvider) -> Tuple[
     raise ValueError("Unknown Decryption key")
 
 
-def serialize_rl_chunk_table(chunks: List[FCompressedChunk]) -> bytes:
+def serialize_rl_chunk_table(chunks: List[FCompressedChunk], licensee_version: int = 34) -> bytes:
     out = bytearray()
     out += struct.pack("<i", len(chunks))
     for chunk in chunks:
@@ -746,8 +746,9 @@ def serialize_rl_chunk_table(chunks: List[FCompressedChunk]) -> bytes:
         out += struct.pack("<i", chunk.uncompressed_size)
         out += struct.pack("<q", chunk.compressed_offset)
         out += struct.pack("<i", chunk.compressed_size)
-        nonce = getattr(chunk, "chunk_nonce", b"\x00" * 12) or (b"\x00" * 12)
-        out += nonce[:12].ljust(12, b"\x00")
+        if licensee_version >= 33:
+            nonce = getattr(chunk, "chunk_nonce", b"\x00" * 12) or (b"\x00" * 12)
+            out += nonce[:12].ljust(12, b"\x00")
     return bytes(out)
 
 
@@ -806,7 +807,7 @@ def build_reencrypted_package(original_encrypted_path: Path, modified_decrypted_
         original_plain = bytearray(DecryptionProvider.crypt_ctr(orig_key, meta.ctr_nonce, original_encrypted_data))
     else:
         original_plain = bytearray(DecryptionProvider.decrypt_ecb(orig_key, original_encrypted_data))
-    original_chunks = parse_rl_compressed_chunks(bytes(original_plain), meta.compressed_chunks_offset)
+    original_chunks = parse_rl_compressed_chunks(bytes(original_plain), meta.compressed_chunks_offset, summary.licensee_version)
     if not original_chunks:
         raise ValueError("No compressed chunks were found in original encrypted header")
 
@@ -818,7 +819,7 @@ def build_reencrypted_package(original_encrypted_path: Path, modified_decrypted_
     rebuilt_chunk_payloads: List[bytes] = []
     chunk_table_placeholder = serialize_rl_chunk_table([
         FCompressedChunk(0, 0, 0, 0) for _ in original_chunks
-    ])
+    ], summary.licensee_version)
     required_plain_len = new_chunk_table_offset + len(chunk_table_placeholder)
     encrypted_plain_len = (required_plain_len + 15) & ~15
     header_plain = bytearray(encrypted_plain_len)
@@ -859,7 +860,7 @@ def build_reencrypted_package(original_encrypted_path: Path, modified_decrypted_
     if patch_limit > 0:
         header_plain[:patch_limit] = modified_decrypted_bytes[summary.name_offset:modified_summary.depends_offset]
 
-    chunk_table = serialize_rl_chunk_table(rebuilt_chunks)
+    chunk_table = serialize_rl_chunk_table(rebuilt_chunks, summary.licensee_version)
     table_end = new_chunk_table_offset + len(chunk_table)
     if table_end > len(header_plain):
         raise ValueError("Rebuilt compressed chunk table does not fit inside encrypted header")
@@ -2066,6 +2067,16 @@ def read_compressed_chunk_64(reader: BinaryReader) -> FCompressedChunk:
     )
 
 
+def read_compressed_chunk_64_no_nonce(reader: BinaryReader) -> FCompressedChunk:
+    return FCompressedChunk(
+        uncompressed_offset=reader.read_i64(),
+        uncompressed_size=reader.read_i32(),
+        compressed_offset=reader.read_i64(),
+        compressed_size=reader.read_i32(),
+        chunk_nonce=b"\x00" * 12,
+    )
+
+
 def parse_file_summary(stream: BinaryIO) -> FileSummary:
     r = BinaryReader(stream)
     summary = FileSummary()
@@ -2155,11 +2166,16 @@ def decrypt_data(stream: BinaryIO, summary: FileSummary, meta: FileCompressionMe
     return DecryptionProvider.decrypt_ecb(valid_key, encrypted_data)
 
 
-def parse_rl_compressed_chunks(decrypted_data: bytes, offset: int) -> List[FCompressedChunk]:
+def parse_rl_compressed_chunks(decrypted_data: bytes, offset: int, licensee_version: int = -1) -> List[FCompressedChunk]:
+    if licensee_version < 0 and offset + 4 <= len(decrypted_data):
+        cnt = struct.unpack_from("<i", decrypted_data, offset)[0]
+        use_nonce = cnt >= 0 and (offset + 4 + cnt * 36 <= len(decrypted_data))
+    else:
+        use_nonce = licensee_version >= 33
     bio = io.BytesIO(decrypted_data)
     bio.seek(offset)
     r = BinaryReader(bio)
-    return read_tarray(r, read_compressed_chunk_64)
+    return read_tarray(r, read_compressed_chunk_64 if use_nonce else read_compressed_chunk_64_no_nonce)
 
 
 def process_compressed_data(output: BinaryIO, package_stream: BinaryIO, summary: FileSummary) -> None:
@@ -2212,7 +2228,7 @@ def unpack_package(input_path: str, output_path: str, provider: DecryptionProvid
         src.seek(0)
         header_bytes = src.read(summary.name_offset)
         decrypted_data = decrypt_data(src, summary, meta, provider)
-        summary.compressed_chunks = parse_rl_compressed_chunks(decrypted_data, meta.compressed_chunks_offset)
+        summary.compressed_chunks = parse_rl_compressed_chunks(decrypted_data, meta.compressed_chunks_offset, summary.licensee_version)
         if not summary.compressed_chunks or summary.compressed_chunks[0].uncompressed_offset != summary.depends_offset:
             raise ValueError("Failed to parse decrypted compressed chunk table")
         output_path = str(output_path)

@@ -1,35 +1,89 @@
-﻿# Rocket League Asset Swapper
-![Total Downloads](https://img.shields.io/github/downloads/c1yq/RL-Swapper/total.svg?style=for-the-badge&color=blue)
+<div align="center">
 
-The ultimate tool to use any item in Rocket League (just like Bakkesmod), plus advanced tools to inject your own custom images directly into the game!
+<br />
 
-## 🚀 Main Features
+<img src="assets/logo.png" alt="RL Swapper" width="108" />
 
-### 1. The Item Swapper (Get Any Item)
-Equip any Decal, Wheels, Goal Explosion, Boost, or Car Body you want!
-* **How it works:** Pick the item you *want* (Target), and the item you currently have equipped (Sacrifice). The tool swaps them in the game files so you see the item you want!
-* **Smart Filtering:** The tool automatically hides sacrifice items that are mathematically impossible to swap, guaranteeing your game won't crash.
-* **Hitbox Matching:** When swapping car bodies, it automatically filters out cars with different hitboxes, so your gameplay and car feel remain perfectly identical.
+# RL Swapper
 
-### 2. Custom Profile Pictures & Banners
-Inject your own custom images (PNG, JPG) directly into the UI!
-* **Profile Pictures:** Automatically crops and blends your picture into the native silver frame (Recommended: XP Level 25 border).
-* **Player Banners:** Automatically crops your image to 14:3 without any ugly vertical stretching (Recommended: Topographic, which lets you change colors).
+Minimalist client-side cosmetic swapper and custom texture injector for Rocket League.
 
-### 3. Bulk Randomizer (Troll Your Opponents!)
-Select a folder of funny pictures on your PC and click Bulk Randomize. The tool will inject a random picture into **EVERY SINGLE BORDER (348+) AND BANNER (1400+)** in the game. When an opponent scores, they'll show up with your custom picture regardless of what item they have equipped!
-> 💡 **Need pictures to use?**  
-> Check out our [Bulk Downloader](https://github.com/c1yq/Pinterest-bulk-downloader) to bulk download pictures!
+[![Downloads](https://img.shields.io/github/downloads/c1yq/RL-Swapper/total?style=flat-square&label=downloads&labelColor=111111&color=2563eb)](https://github.com/c1yq/RL-Swapper/releases)
+![Platform](https://img.shields.io/badge/platform-windows-262626?style=flat-square&labelColor=111111)
+![Python](https://img.shields.io/badge/python-3.10+-262626?style=flat-square&labelColor=111111)
+![Discord](https://img.shields.io/badge/discord-c1ya-262626?style=flat-square&labelColor=111111)
+[![License](https://img.shields.io/badge/license-MIT-262626?style=flat-square&labelColor=111111)](LICENSE)
 
-### 4. Safe & Easy Backups
-* **Auto-Restore Engine:** The tool silently manages pristine backups behind the scenes, so you can overwrite items as many times as you want without corrupting your game.
-* **Restore Menu:** A dedicated menu lets you selectively undo specific mods, or revert everything back to normal with one click.
+<br />
 
-## 📥 Installation & Usage
+[Download Latest `.exe`](https://github.com/c1yq/RL-Swapper/releases/latest) &nbsp;·&nbsp; [Features](#features) &nbsp;·&nbsp; [Usage](#usage) &nbsp;·&nbsp; [Development](#development)
 
-1. Download the latest release .exe (or run SwapperGUI.py if you have Python installed).
-2. Run the program (Administrator rights may be required depending on where your game is installed).
-3. The tool will automatically locate your Rocket League installation.
-4. Select your items/images, hit Inject, and launch the game!
+<br />
 
-*Disclaimer: Modifying game files is at your own risk. These are local visual mods, meaning only you will see the changes in-game.*
+</div>
+
+---
+
+## Features
+
+- **Universal Item Swapper** — Swap any item with any item in the same category across all 12 cosmetic slots (`8,798+` verified items: Bodies, Decals, Wheels, Boosts, Goal Explosions, Trails, Toppers, Antennas, Paint Finishes, Engine Audio, Banners, and Avatar Borders), including shared-container packages and CTR-encrypted items.
+- **Custom Profile Pictures & Banners** — Inject PNG or JPG images directly into avatar borders (`1:1` crop with native frame compositing; recommended border: *XP Level 25*) and player banners (`14:3` crop without vertical stretching; recommended banner: *Topographic*).
+- **Bulk Randomizer** — Populate every player banner and avatar border in the game client from any local image folder. Works well alongside [Pinterest Bulk Downloader](https://github.com/c1yq/Pinterest-bulk-downloader).
+- **Pure OLED Interface** — Clean `#000000` sidebar layout with instant search, per-category selection memory, and car-specific Decal filter pills.
+- **Pristine Backups & Silent Update Sync** — Re-swapping an already modified item automatically restores its original `.bak` baseline first. Game updates are detected on launch and silently reset outdated swaps.
+
+---
+
+## Usage
+
+1. Download [`RL_Swapper.exe`](https://github.com/c1yq/RL-Swapper/releases/latest) from the [Releases](https://github.com/c1yq/RL-Swapper/releases) page.
+2. Launch `RL_Swapper.exe` (run as Administrator if Rocket League is installed under `C:\Program Files`).
+3. Your Epic Games or Steam `CookedPCConsole` directory is detected automatically.
+4. Pick the item you **want** on the left, select the item you have **equipped** on the right, and click **Swap**.
+
+Use **Reset Swaps** in the sidebar at any time to restore all modified packages to vanilla.
+
+---
+
+## Development
+
+### Run from Source
+
+```bash
+git clone https://github.com/c1yq/RL-Swapper.git
+cd RL-Swapper
+pip install -r requirements.txt
+python SwapperGUI.py
+```
+
+### Build Standalone Executable
+
+```bash
+pyinstaller --noconfirm RL_Swapper.spec
+```
+
+The single-file executable is written to `dist/RL_Swapper.exe`.
+
+---
+
+## Structure
+
+```text
+RL-Swapper/
+├── assets/              # Application icon & logo
+├── SwapperGUI.py        # Pure OLED desktop interface
+├── rl_asset_swapper.py  # Surgical ExportTable rewiring & swap engine
+├── rl_upk_editor.py     # UPK binary parser, zlib chunker & AES crypto
+├── items.json           # Verified Rocket League cosmetic catalog
+├── keys_map.json        # Package-to-AES key mapping table
+├── keys.txt             # Indexed AES-256 decryption key list
+└── RL_Swapper.spec      # PyInstaller build configuration
+```
+
+---
+
+## Contact & Notes
+
+For questions or help, message **`c1ya`** on Discord.
+
+All modifications are strictly local and client-side—only your client renders swapped cosmetics, while gameplay physics, hitboxes, memory, and network packets remain untouched. Released under the [MIT License](LICENSE).
