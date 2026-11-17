@@ -2,98 +2,98 @@
 
 <br />
 
-<img src="assets/logo.png" alt="RL Swapper" width="108" />
+<img src="assets/logo.png" alt="RL Swapper" width="96" />
 
 # RL Swapper
 
-Minimalist client-side cosmetic swapper and custom texture injector for Rocket League.
+**Prototype (v4.1 — Portable Rust)**
 
-[![Downloads](https://img.shields.io/github/downloads/c1yq/RL-Swapper/total?style=flat-square&label=downloads&labelColor=111111&color=2563eb)](https://github.com/c1yq/RL-Swapper/releases)
+Client-side native Rust cosmetic swapper, AlphaConsole decal/ball importer, custom PFP/banner studio, map swapper, and Epic Workshop loader for Rocket League on Windows.
+
+![Status](https://img.shields.io/badge/status-prototype-d97706?style=flat-square&labelColor=111111)
 ![Platform](https://img.shields.io/badge/platform-windows-262626?style=flat-square&labelColor=111111)
-![Python](https://img.shields.io/badge/python-3.10+-262626?style=flat-square&labelColor=111111)
-![Discord](https://img.shields.io/badge/discord-c1ya-262626?style=flat-square&labelColor=111111)
+![Rust](https://img.shields.io/badge/rust-1.99%2B-262626?style=flat-square&labelColor=111111)
 [![License](https://img.shields.io/badge/license-MIT-262626?style=flat-square&labelColor=111111)](LICENSE)
 
-<br />
-
-[Download Latest `.exe`](https://github.com/c1yq/RL-Swapper/releases/latest) &nbsp;·&nbsp; [Features](#features) &nbsp;·&nbsp; [Usage](#usage) &nbsp;·&nbsp; [Development](#development) &nbsp;·&nbsp; [Contact](#contact--notes)
-
-<br />
+[Quick Start](#quick-start) &nbsp;·&nbsp; [Features](#features) &nbsp;·&nbsp; [Building](#building-from-source) &nbsp;·&nbsp; [Structure](#project-structure) &nbsp;·&nbsp; [Notes](#notes)
 
 </div>
 
 ---
 
+> **Prototype Notice:** RL Swapper directly patches client-side Unreal Engine 3 `.upk` packages inside `TAGame\CookedPCConsole`. Although a 3-tier backup vault protects original files, always expect rough edges in a prototype and use **Health → Reset All Vanilla** before Rocket League updates or online troubleshooting.
+
+---
+
 ## Features
 
-- **Universal Item Swapper** — Swaps any cosmetic item in your inventory with any desired item across all 12 categories (`8,798+` items including Bodies, Decals, Wheels, Boosts, Goal Explosions, Trails, Toppers, Antennas, Paint Finishes, Engine Audio, Banners, and Avatar Borders) through surgical cooked package export rewiring.
-- **Direct UPK Paint Programming** — Bakes all 14 official Rocket League painted variants (`Titanium White`, `Black`, `Crimson`, `Cobalt`, `Sky Blue`, `Gold`, and more) directly into swapped package material instances and particle parameters even if your equipped donor item is unpainted.
-- **Custom Hex Color Injection** — Lets you choose any arbitrary 24-bit sRGB color via an interactive palette or hexadecimal input (`#RRGGBB`) to program custom linear color vectors into cosmetic shader networks.
-- **Auto-Resetting Color System** — Automatically resets your active color selection back to `Default` immediately following every successful swap so subsequent swaps preserve their authentic appearance without manual re-selection.
-- **Custom Profile Picture Injection** — Injects any 1:1 image file into equipped avatar border packages using byte-for-byte cooked zlib compression that guarantees zero in-game crashes.
-- **Custom Player Banner Injection** — Crops and patches custom 14:3 high-resolution artwork into player banner packages so your personalized graphics show up across scoreboards, goal replays, and post-game podiums.
-- **Bulk Image Randomizer** — Loops through any local folder of images to automatically randomize custom artwork across every installed avatar border or player banner package in a single batch operation.
-- **Pure OLED Interface** — Features a pitch-black `#000000` aesthetic with instant fuzzy search, per-category selection memory, live previews, and native Windows 10/11 dark titlebars.
-- **Car-Specific Decal Filtering** — Identifies decal body compatibility automatically and provides responsive chassis filter pills (`All`, `Universal`, `Octane`, `Fennec`, `Dominus`, and more) to prevent incompatible cross-chassis swaps.
-- **Silent Game Update Detection** — Validates package headers on startup against known base revisions, automatically alerting you to game updates from Epic Games or Steam and safely restoring stale mods before conflicts arise.
-- **Pristine Baseline Backups** — Automatically creates untouched `.bak` backups before modifying any game file and silently restores the original baseline before applying chained modifications to prevent package degradation.
-- **Dedicated Reset Swaps Manager** — Provides an integrated, branded management window that displays every currently active package swap and allows restoring individual items or all files back to vanilla in one click.
-- **Automatic Texture Cache Cleaner** — Clears stale cooked texture cache files from your Rocket League user directory immediately after swapping so your newly injected cosmetics appear instantly in-game without requiring a computer restart.
-- **Standalone Portable Executable** — Bundles the full cosmetic catalog, decryption keys, and binary editor into a single self-contained executable that requires zero external dependencies or Python installations to run.
+- **Portable Native Rust Binary** — Single-file GPU UI (`eframe`/`egui`) with built-in AES-256 ECB/CTR `.upk` decryption, parallel `rayon` chunk compression, and local `CookedPCConsole` detection.
+- **Automatic PC Light & Dark Theme** — Follows Windows' system appearance automatically (`Auto`) with `Dark` and `Light` overrides in the sidebar.
+- **Cosmetic Slot Swapper & Paints** — Swaps `9,503` catalog items across 12 slots (`Body`, `Decal`, `Wheels`, `Rocket Boost`, `Goal Explosion`, `Trail`, `Topper`, `Antenna`, `Paint Finish`, `Engine Audio`, `Player Banner`, `Avatar Border`), with body hitbox filters and 14 official paints + custom `#RRGGBB` colors.
+- **AlphaConsole Decal & Match Ball Studios** — Imports AlphaConsole `.zip`, `.json`, folder, or `.png` packs (`1_Diffuse_Skin` + `2_Diffuse_Skin_Mask` + legacy `Diffuse`/`Skin` decals; `Diffuse` + `PF_DXT1` normal-map balls) with 2D car UV and spherical ball previews and full `TextureAllocations` rebuilding.
+- **Avatar PFP & Banner Studios** — Composites profile images cleanly inside all `177` `BGRA8`/`PF_DXT5` Avatar Borders with catalog-matched border names, plus `840×200` (`14:3`) Player Banner preview and injection.
+- **Arena & Epic Workshop Loader** — Swaps between `96` official arenas (including Default-Size override while leaving Labs untouched), loads `.udk`/`.upk`/`.zip` Workshop maps into offline Free Play (`Labs_Underpass_P.upk`) with a `workshopTextures` dependency scanner, and browses community catalogs with a streaming download progress bar.
+- **Backups, Presets & Health Guard** — Saves whole-setup presets (`%LOCALAPPDATA%\RLSwapper\presets_v4.json`), maintains `.bak` + `%LOCALAPPDATA%\RLSwapper\pristine_backups`, detects `RocketLeague.exe` binary changes, and restores single packages or full vanilla state.
 
 ---
 
-## Usage
+## Quick Start
 
-1. Download [`RL_Swapper.exe`](https://github.com/c1yq/RL-Swapper/releases/latest) from the [Releases](https://github.com/c1yq/RL-Swapper/releases) page.
-2. Launch `RL_Swapper.exe` (run as Administrator if Rocket League is installed under `C:\Program Files`).
-3. Your Epic Games or Steam `CookedPCConsole` directory is detected automatically.
-4. Select the item you **want** on the left, pick the item you have **equipped** on the right, pick an optional color, and click **Apply**.
-
-Use **Reset Swaps** in the sidebar at any time to inspect your active modifications or restore original game files.
+1. Download [`RL_Swapper.exe`](https://github.com/c1yq/RL-Swapper/releases/latest) (or [build from source](#building-from-source)) and run it from any folder.
+2. Verify or select your Rocket League `TAGame\CookedPCConsole` folder (`Game Folder` in the sidebar).
+3. Pick an item swap in **ITEMS**, customize decals/PFP/banners/balls/maps/workshop in **STUDIO**, or restore backups in **Health**.
 
 ---
 
-## Development
+## Building from Source
 
-### Run from Source
+Requires Windows and a Rust toolchain (`1.99+`):
 
 ```bash
 git clone https://github.com/c1yq/RL-Swapper.git
 cd RL-Swapper
-pip install -r requirements.txt
-python SwapperGUI.py
+cargo build --release --bin RL_Swapper
 ```
 
-### Build Standalone Executable
+The standalone executable is written to `target/release/RL_Swapper.exe`.
+
+### Running Verification Tests
 
 ```bash
-pyinstaller --noconfirm RL_Swapper.spec
+cargo check --all-targets
+cargo test --release --test verify_v4_all_features -- --nocapture
 ```
 
-The single-file executable is generated at `dist/RL_Swapper.exe`.
+Integration tests automatically detect local Epic/Steam Rocket League installations (or use `RL_COOKED_DIR`) and skip UPK file checks cleanly when Rocket League is not installed.
 
 ---
 
-## Structure
+## Project Structure
 
 ```text
 RL-Swapper/
-├── assets/              # Application icon & brand logo
-├── SwapperGUI.py         # Pure OLED desktop interface
-├── rl_asset_swapper.py   # Surgical ExportTable rewiring & swap engine
-├── rl_color_injector.py  # Binary UObject paint & custom RGB color engine
-├── rl_upk_editor.py      # UPK binary parser, zlib chunker & AES crypto
-├── items.json           # Verified Rocket League cosmetic catalog
-├── keys_map.json        # Package-to-AES key mapping table
-├── keys.txt             # Indexed AES-256 decryption key list
-└── RL_Swapper.spec      # PyInstaller build configuration
+├── Cargo.toml                  # Crate manifest & dependencies
+├── assets/                     # Application icon & logo
+├── src/
+│   ├── lib.rs                  # Library module exports
+│   ├── upk_engine.rs           # UPK header/table parser, AES-256 crypto, rewiring, paint & health vault
+│   ├── icon_system.rs          # DXT1/DXT5/BGRA8 codecs, .tfc & _T_SF.upk extractors, wiki fallback
+│   ├── templates.rs            # 2D Decal UV, Ball & Banner templates + studio previews
+│   ├── custom_studio.rs        # AlphaConsole Decal/Ball, Avatar PFP & Banner UPK injectors
+│   ├── map_editor.rs           # 96-arena catalog & default-size map swapper
+│   ├── workshop.rs             # Underpass Workshop loader, dependency scanner, catalog & streaming download
+│   └── bin/
+│       └── swapper_gui.rs      # Main eframe/egui GUI binary (RL_Swapper)
+├── tests/
+│   └── verify_v4_all_features.rs
+├── items.json                  # Embedded item catalog (9,503 entries)
+├── keys_map.json               # Package AES key index mapping (28,639 packages)
+└── keys.txt                    # Indexed AES-256 UPK keys (1,135 keys)
 ```
 
 ---
 
-## Contact & Notes
+## Notes
 
-For questions or help, message **`c1ya`** on Discord.
-
-All modifications are strictly local and client-side—only your client renders swapped cosmetics, while gameplay physics, hitboxes, memory, and network packets remain untouched. Released under the [MIT License](LICENSE).
+- All edits are strictly local and client-side; gameplay physics, memory, and network traffic are untouched.
+- Released under the [MIT License](LICENSE). Contact: **`c1ya`** on Discord.
