@@ -10,9 +10,11 @@
 
 Client-side native Rust cosmetic swapper, AlphaConsole decal/ball importer, custom PFP/banner studio, map swapper, and Epic Workshop loader for Rocket League on Windows.
 
+[![Downloads](https://img.shields.io/github/downloads/c1yq/RL-Swapper/total?style=flat-square&label=downloads&labelColor=111111&color=2563eb)](https://github.com/c1yq/RL-Swapper/releases)
 ![Status](https://img.shields.io/badge/status-prototype-d97706?style=flat-square&labelColor=111111)
 ![Platform](https://img.shields.io/badge/platform-windows-262626?style=flat-square&labelColor=111111)
 ![Rust](https://img.shields.io/badge/rust-1.99%2B-262626?style=flat-square&labelColor=111111)
+![Discord](https://img.shields.io/badge/discord-c1ya-262626?style=flat-square&labelColor=111111)
 [![License](https://img.shields.io/badge/license-MIT-262626?style=flat-square&labelColor=111111)](LICENSE)
 
 [Quick Start](#quick-start) &nbsp;·&nbsp; [Features](#features) &nbsp;·&nbsp; [Building](#building-from-source) &nbsp;·&nbsp; [Structure](#project-structure) &nbsp;·&nbsp; [Notes](#notes)
