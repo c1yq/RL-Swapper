@@ -1,0 +1,19 @@
+# Rust build outputs & executables (binaries belong in GitHub Releases)
+target/
+*.exe
+*.pdb
+*.manifest
+
+# Swapper runtime backups & logs
+backups/
+*.bak
+*.tmp
+*.log
+
+# Editors & OS metadata
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
