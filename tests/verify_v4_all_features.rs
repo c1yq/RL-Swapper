@@ -178,7 +178,9 @@ fn test_v4_complete_pipeline() {
         "Labs_CirclePillars_P.upk",
         "Labs_Underpass_P.upk",
     ] {
-        let src = real_cooked.join(f);
+        let raw_src = real_cooked.join(f);
+        let bak_src = rl_swapper::upk_engine::bak_path_for(&raw_src);
+        let src = if bak_src.is_file() { bak_src } else { raw_src };
         if src.exists() {
             fs::copy(&src, sandbox.join(f)).unwrap();
         }

@@ -3,8 +3,8 @@
 
 use crate::custom_studio::decode_texture2d_export;
 use crate::icon_system::extract_ball_texture_preview;
-use crate::upk_engine::{get_appdata_dir, unpack_upk_from_disk};
-use image::{imageops::FilterType, DynamicImage, Rgba, RgbaImage};
+use crate::upk_engine::{bak_path_for, detect_car_uv_label, get_appdata_dir, unpack_upk_from_disk, vault_backup_path};
+use image::{imageops, imageops::FilterType, Rgba, RgbaImage};
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -91,6 +91,29 @@ pub fn draw_text_5x7(img: &mut RgbaImage, text: &str, x0: u32, y0: u32, scale: u
     }
 }
 
+fn blend_pixel_over(img: &mut RgbaImage, x: u32, y: u32, src: Rgba<u8>) {
+    if src[3] == 0 {
+        return;
+    }
+    if src[3] == 255 {
+        img.put_pixel(x, y, src);
+        return;
+    }
+    let dst = *img.get_pixel(x, y);
+    let sa = src[3] as f32 / 255.0;
+    let inv = 1.0 - sa;
+    img.put_pixel(
+        x,
+        y,
+        Rgba([
+            (src[0] as f32 * sa + dst[0] as f32 * inv).round().clamp(0.0, 255.0) as u8,
+            (src[1] as f32 * sa + dst[1] as f32 * inv).round().clamp(0.0, 255.0) as u8,
+            (src[2] as f32 * sa + dst[2] as f32 * inv).round().clamp(0.0, 255.0) as u8,
+            (src[3] as f32 + dst[3] as f32 * inv).round().clamp(0.0, 255.0) as u8,
+        ]),
+    );
+}
+
 fn draw_rect_box(
     img: &mut RgbaImage,
     x0: u32,
@@ -101,15 +124,17 @@ fn draw_rect_box(
     border: Rgba<u8>,
     border_w: u32,
 ) {
-    let x1 = (x0 + w).min(img.width());
-    let y1 = (y0 + h).min(img.height());
+    let x1 = x0.saturating_add(w).min(img.width());
+    let y1 = y0.saturating_add(h).min(img.height());
     for y in y0..y1 {
         for x in x0..x1 {
-            let is_b = (x - x0) < border_w
-                || (x1 - 1 - x) < border_w
-                || (y - y0) < border_w
-                || (y1 - 1 - y) < border_w;
-            img.put_pixel(x, y, if is_b { border } else { fill });
+            let is_b = border_w > 0
+                && ((x - x0) < border_w
+                    || (x1 - 1 - x) < border_w
+                    || (y - y0) < border_w
+                    || (y1 - 1 - y) < border_w);
+            let px = if is_b { border } else { fill };
+            blend_pixel_over(img, x, y, px);
         }
     }
 }
@@ -126,7 +151,16 @@ fn extract_real_car_uv_from_game(car_name: &str, cooked_dir: &Path) -> Option<Rg
         ("Body_Octane_SF.upk", "Body_Octane_Bevel_RGB", None)
     };
 
-    let upk_p = cooked_dir.join(pkg);
+    let live_p = cooked_dir.join(pkg);
+    let vault_p = vault_backup_path(&live_p);
+    let bak_p = bak_path_for(&live_p);
+    let upk_p = if vault_p.is_file() {
+        vault_p
+    } else if bak_p.is_file() {
+        bak_p
+    } else {
+        live_p
+    };
     if !upk_p.is_file() {
         return None;
     }
@@ -139,11 +173,7 @@ fn extract_real_car_uv_from_game(car_name: &str, cooked_dir: &Path) -> Option<Rg
             }
             if upk.full_export_path(idx + 1).contains(needle) {
                 if let Some(im) = decode_texture2d_export(&upk, idx, Some(cooked_dir)) {
-                    return Some(
-                        DynamicImage::ImageRgba8(im)
-                            .resize_exact(1024, 1024, FilterType::Triangle)
-                            .to_rgba8(),
-                    );
+                    return Some(imageops::resize(&im, 1024, 1024, FilterType::Triangle));
                 }
             }
         }
@@ -268,12 +298,10 @@ fn generate_proportional_fallback_uv(car_name: &str) -> RgbaImage {
 /// (extracted directly from RL body curvature/bevel maps when `cooked_dir` is available & cached,
 /// or accurate proportional fallback). Used identically for BOTH preview and PNG export!
 pub fn generate_decal_template_for_car(car_name: &str, cooked_dir: Option<&Path>) -> RgbaImage {
-    let key = if car_name.to_lowercase().contains("fennec") {
-        "fennec"
-    } else if car_name.to_lowercase().contains("dominus") {
-        "dominus"
-    } else {
-        "octane"
+    let key = match detect_car_uv_label(car_name) {
+        Some("Fennec") => "fennec",
+        Some("Dominus") => "dominus",
+        _ => "octane",
     };
     let cache_p = get_templates_dir().join(format!("uv_real_v2_{}.png", key));
     if cache_p.is_file() {
@@ -330,7 +358,7 @@ pub fn generate_ball_template(cooked_dir: Option<&Path>) -> RgbaImage {
     let s = 512u32;
     let mut img = cooked_dir
         .and_then(extract_ball_texture_preview)
-        .map(|raw| DynamicImage::ImageRgba8(raw).resize_exact(s, s, FilterType::Lanczos3).to_rgba8())
+        .map(|raw| imageops::resize(&raw, s, s, FilterType::Lanczos3))
         .unwrap_or_else(|| {
             let mut base = RgbaImage::from_pixel(s, s, Rgba([42, 46, 56, 255]));
             for y in 0..s {
@@ -400,33 +428,28 @@ pub fn render_2d_car_decal_with_mask_preview(
     accent_rgb: [u8; 3],
     size: u32,
 ) -> RgbaImage {
+    let size = size.max(32);
     let tpl = generate_decal_template_for_car(car_model, cooked_dir);
-    let mut out = DynamicImage::ImageRgba8(tpl)
-        .resize_exact(size, size, FilterType::Triangle)
-        .to_rgba8();
+    let mut out = imageops::resize(&tpl, size, size, FilterType::Triangle);
 
     if decal_img.is_some() || mask_img.is_some() {
-        let d_scaled = decal_img.map(|d| {
-            DynamicImage::ImageRgba8(d.clone())
-                .resize_exact(size, size, FilterType::Lanczos3)
-                .to_rgba8()
-        });
-        let m_scaled = mask_img.map(|m| {
-            DynamicImage::ImageRgba8(m.clone())
-                .resize_exact(size, size, FilterType::Lanczos3)
-                .to_rgba8()
-        });
+        let d_scaled = decal_img.map(|d| imageops::resize(d, size, size, FilterType::Lanczos3));
+        let m_scaled = mask_img.map(|m| imageops::resize(m, size, size, FilterType::Lanczos3));
+        let tpl_nearest = imageops::resize(&tpl, size, size, FilterType::Nearest);
         for y in 0..size {
             for x in 0..size {
                 let tpx = out.get_pixel(x, y).0;
-                let is_seam = tpx[2] > 180 && tpx[1] > 140;
+                let npx = tpl_nearest.get_pixel(x, y).0;
+                // Ignore header label bar (top 30px of 1024px UV guide) when detecting UV seam outlines
+                let in_label = y < (size * 30 / 1024).max(10);
+                let is_seam = !in_label && npx[2] > 180 && npx[1] > 140 && npx[0] < 185;
                 let is_body_fill = tpx[2] > 70 && tpx[0] < 45;
                 let mut r = if is_body_fill { primary_rgb[0] as f32 } else { tpx[0] as f32 };
                 let mut g = if is_body_fill { primary_rgb[1] as f32 } else { tpx[1] as f32 };
                 let mut b = if is_body_fill { primary_rgb[2] as f32 } else { tpx[2] as f32 };
                 if let Some(ref ms) = m_scaled {
                     let mp = ms.get_pixel(x, y).0;
-                    let mask_amt = (mp[2].max(mp[1]) as f32 / 255.0) * (mp[3] as f32 / 255.0);
+                    let mask_amt = (mp[0].max(mp[1]).max(mp[2]) as f32 / 255.0) * (mp[3] as f32 / 255.0);
                     if mask_amt > 0.02 {
                         r = r * (1.0 - mask_amt) + accent_rgb[0] as f32 * mask_amt;
                         g = g * (1.0 - mask_amt) + accent_rgb[1] as f32 * mask_amt;
@@ -460,9 +483,7 @@ pub fn bake_name_onto_banner(banner_img: &RgbaImage, player_name: &str) -> RgbaI
     if clean.is_empty() {
         return banner_img.clone();
     }
-    let mut scaled = DynamicImage::ImageRgba8(banner_img.clone())
-        .resize_exact(420, 100, FilterType::Lanczos3)
-        .to_rgba8();
+    let mut scaled = imageops::resize(banner_img, 420, 100, FilterType::Lanczos3);
     let max_chars = clean.chars().take(18).collect::<String>();
     draw_rect_box(&mut scaled, 98, 34, 210, 32, Rgba([8, 10, 16, 175]), Rgba([0, 0, 0, 0]), 0);
     draw_text_5x7(&mut scaled, &max_chars, 106, 43, 2, Rgba([255, 255, 255, 255]));
@@ -477,27 +498,25 @@ pub fn render_2d_banner_scoreboard_preview(
     w: u32,
     h: u32,
 ) -> RgbaImage {
+    let w = w.max(64);
+    let h = h.max(32);
     let mut out = RgbaImage::from_pixel(w, h, Rgba([12, 13, 18, 255]));
-    let bar_w = w.saturating_sub(24);
-    let bar_h = (bar_w * 100 / 420).min(h.saturating_sub(24)).max(60);
+    let bar_w = w.saturating_sub(24).max(24);
+    let bar_h = (bar_w * 100 / 420).min(h.saturating_sub(16)).max(24);
     let bx = (w - bar_w) / 2;
     let by = (h - bar_h) / 2;
 
     if let Some(b_raw) = banner_img {
-        let scaled = DynamicImage::ImageRgba8(b_raw.clone())
-            .resize_exact(bar_w, bar_h, FilterType::Lanczos3)
-            .to_rgba8();
-        image::imageops::overlay(&mut out, &scaled, bx as i64, by as i64);
+        let scaled = imageops::resize(b_raw, bar_w, bar_h, FilterType::Lanczos3);
+        imageops::overlay(&mut out, &scaled, bx as i64, by as i64);
     } else {
         draw_rect_box(&mut out, bx, by, bar_w, bar_h, Rgba([24, 28, 42, 255]), Rgba([59, 130, 246, 255]), 2);
     }
 
-    let av = (bar_h - 4).max(44);
+    let av = (bar_h.saturating_sub(4)).clamp(16, bar_w.saturating_sub(8));
     if let Some(p_raw) = pfp_img {
-        let p_scaled = DynamicImage::ImageRgba8(p_raw.clone())
-            .resize_exact(av, av, FilterType::Lanczos3)
-            .to_rgba8();
-        image::imageops::overlay(&mut out, &p_scaled, (bx + 4) as i64, (by + 2) as i64);
+        let p_scaled = imageops::resize(p_raw, av, av, FilterType::Lanczos3);
+        imageops::overlay(&mut out, &p_scaled, (bx + 4) as i64, (by + 2) as i64);
     } else {
         draw_rect_box(&mut out, bx + 4, by + 2, av, av, Rgba([18, 20, 28, 255]), Rgba([226, 232, 240, 255]), 2);
     }
@@ -505,11 +524,67 @@ pub fn render_2d_banner_scoreboard_preview(
     let trimmed = player_name.trim();
     if !trimmed.is_empty() {
         let label: String = trimmed.chars().take(18).collect();
-        let pill_w = (label.len() as u32 * 12 + 20).clamp(90, bar_w.saturating_sub(av + 16));
-        draw_rect_box(&mut out, bx + av + 12, by + bar_h / 2 - 14, pill_w, 28, Rgba([8, 10, 16, 200]), Rgba([0, 0, 0, 0]), 0);
-        draw_text_5x7(&mut out, &label, bx + av + 20, by + bar_h / 2 - 7, 2, Rgba([255, 255, 255, 245]));
+        let avail_pill = bar_w.saturating_sub(av + 16);
+        if avail_pill >= 24 && bar_h >= 28 {
+            let pill_w = (label.len() as u32 * 12 + 20).min(avail_pill).max(avail_pill.min(90));
+            let pill_y = by + bar_h / 2 - 14;
+            draw_rect_box(&mut out, bx + av + 12, pill_y, pill_w, 28, Rgba([8, 10, 16, 200]), Rgba([0, 0, 0, 0]), 0);
+            draw_text_5x7(&mut out, &label, bx + av + 20, pill_y + 7, 2, Rgba([255, 255, 255, 245]));
+        }
     }
     out
+}
+
+/// Computes the exact pixel crop rectangle `(x, y, w, h)` inside `(src_w, src_h)` for `target_aspect`,
+/// `zoom` (`>= 1.0`), and normalized pan offsets (`pan_x`, `pan_y` in `[-1.0, 1.0]`).
+pub fn compute_crop_rect(
+    src_w: u32,
+    src_h: u32,
+    target_aspect: f32,
+    zoom: f32,
+    pan_x: f32,
+    pan_y: f32,
+) -> (u32, u32, u32, u32) {
+    let sw = src_w.max(1);
+    let sh = src_h.max(1);
+    let aspect = target_aspect.max(0.05);
+    let z = zoom.clamp(1.0, 8.0);
+    let src_aspect = sw as f32 / sh as f32;
+    let (base_w, base_h) = if src_aspect > aspect {
+        (sh as f32 * aspect, sh as f32)
+    } else {
+        (sw as f32, sw as f32 / aspect)
+    };
+    let cw = (base_w / z).round().clamp(1.0, sw as f32) as u32;
+    let ch = (base_h / z).round().clamp(1.0, sh as f32) as u32;
+    let slack_x = sw.saturating_sub(cw);
+    let slack_y = sh.saturating_sub(ch);
+    let rx = ((pan_x.clamp(-1.0, 1.0) + 1.0) * 0.5 * slack_x as f32)
+        .round()
+        .clamp(0.0, slack_x as f32) as u32;
+    let ry = ((pan_y.clamp(-1.0, 1.0) + 1.0) * 0.5 * slack_y as f32)
+        .round()
+        .clamp(0.0, slack_y as f32) as u32;
+    (rx, ry, cw.max(1), ch.max(1))
+}
+
+/// Crops `src` according to `(target_aspect, zoom, pan_x, pan_y)` and resizes cleanly to `(out_w, out_h)`.
+pub fn crop_and_resize_rgba(
+    src: &RgbaImage,
+    target_aspect: f32,
+    zoom: f32,
+    pan_x: f32,
+    pan_y: f32,
+    out_w: u32,
+    out_h: u32,
+) -> RgbaImage {
+    let (rx, ry, rw, rh) = compute_crop_rect(src.width(), src.height(), target_aspect, zoom, pan_x, pan_y);
+    let cropped = imageops::crop_imm(src, rx, ry, rw, rh).to_image();
+    if rw == out_w && rh == out_h {
+        cropped
+    } else {
+        imageops::resize(&cropped, out_w.max(1), out_h.max(1), FilterType::Lanczos3)
+    }
 }
 
 /// Renders a spherical-lit 2D preview orb from a Match Ball texture (`Ball_Default00_D`).
@@ -545,4 +620,45 @@ pub fn render_2d_ball_orb_preview(ball_tex: &RgbaImage, size: u32, glow_rgb: Opt
         }
     }
     out
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn bake_name_onto_banner_blends_without_punching_alpha_hole() {
+        let base = RgbaImage::from_pixel(420, 100, Rgba([200, 100, 50, 255]));
+        let baked = bake_name_onto_banner(&base, "PlayerOne");
+        // Every pixel inside the nameplate box (98..308, 34..66) must remain opaque (alpha = 255)
+        // and preserve blended warm background tint underneath the semi-transparent dark pill.
+        let p = baked.get_pixel(100, 36).0;
+        assert_eq!(p[3], 255, "Baked banner pixel alpha must remain 255, got {}", p[3]);
+        assert!(p[0] > 40 && p[0] < 90, "Expected blended red channel behind dark scrim, got {:?}", p);
+    }
+
+    #[test]
+    fn narrow_banner_scoreboard_preview_never_panics() {
+        let out = render_2d_banner_scoreboard_preview(None, None, "VeryLongPlayerName123", 120, 60);
+        assert_eq!(out.dimensions(), (120, 60));
+    }
+
+    #[test]
+    fn crop_rect_and_resize_cover_1_1_and_14_3_accurately() {
+        // Construct 1920x1080 source: left half red, right half green
+        let src = RgbaImage::from_fn(1920, 1080, |x, _y| {
+            if x < 960 { Rgba([220, 20, 20, 255]) } else { Rgba([20, 220, 40, 255]) }
+        });
+        assert_eq!(compute_crop_rect(1920, 1080, 1.0, 1.0, -1.0, 0.0), (0, 0, 1080, 1080));
+        assert_eq!(compute_crop_rect(1920, 1080, 1.0, 1.0, 1.0, 0.0), (840, 0, 1080, 1080));
+        assert_eq!(compute_crop_rect(1920, 1080, 4.2, 1.0, 0.0, 0.0), (0, 312, 1920, 457));
+
+        let pfp_left = crop_and_resize_rgba(&src, 1.0, 2.0, -1.0, 0.0, 256, 256);
+        assert_eq!(pfp_left.dimensions(), (256, 256));
+        assert!(pfp_left.get_pixel(128, 128)[0] > 200);
+
+        let ban_right = crop_and_resize_rgba(&src, 4.2, 2.0, 1.0, 0.0, 420, 100);
+        assert_eq!(ban_right.dimensions(), (420, 100));
+        assert!(ban_right.get_pixel(210, 50)[1] > 200);
+    }
 }

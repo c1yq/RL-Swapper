@@ -5,14 +5,27 @@ use crate::upk_engine::{
     decompress_all_upk_chunks, decompress_chunk_payload, get_appdata_dir, read_i32_le, read_i64_le,
     read_u32_le, unpack_upk_from_disk, CatalogItem, PaintColorSpec, PACKAGE_FILE_TAG,
 };
-use image::{imageops::FilterType, DynamicImage, Rgba, RgbaImage};
+use image::{imageops, imageops::FilterType, Rgba, RgbaImage};
 use rayon::prelude::*;
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 use std::fs::{self, File};
 use std::io::{Read, Seek, SeekFrom};
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex};
-use std::time::Duration;
+use std::sync::{Arc, Mutex, OnceLock};
+use std::time::{Duration, SystemTime};
+
+fn shared_wiki_client() -> Option<&'static reqwest::blocking::Client> {
+    static CLIENT: OnceLock<Option<reqwest::blocking::Client>> = OnceLock::new();
+    CLIENT
+        .get_or_init(|| {
+            reqwest::blocking::Client::builder()
+                .user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36")
+                .timeout(Duration::from_secs(6))
+                .build()
+                .ok()
+        })
+        .as_ref()
+}
 
 // ── Pure-Rust DXT1 (BC1), DXT5 (BC3), and BGRA8 Decoder & Encoder ────────────
 
@@ -335,7 +348,7 @@ fn extract_tfc_mip(uncomp: &[u8], cooked_dir: &Path) -> Option<RgbaImage> {
             continue;
         }
         let elem_cnt = read_i32_le(uncomp, pos + 4) as usize;
-        if !(4096..=16_777_216).contains(&elem_cnt) || (elem_cnt & (elem_cnt - 1)) != 0 {
+        if !(2048..=16_777_216).contains(&elem_cnt) || (elem_cnt & (elem_cnt - 1)) != 0 {
             continue;
         }
         let disk_sz = read_i32_le(uncomp, pos + 8) as usize;
@@ -411,19 +424,48 @@ fn extract_tfc_mip(uncomp: &[u8], cooked_dir: &Path) -> Option<RgbaImage> {
 pub fn extract_texture_from_upk(upk_path: &Path, cooked_dir: Option<&Path>) -> Option<RgbaImage> {
     let eff_cooked = cooked_dir.or_else(|| upk_path.parent());
     if let Ok((upk, _)) = unpack_upk_from_disk(upk_path) {
+        let mut cands: Vec<(u8, usize)> = upk
+            .exports
+            .iter()
+            .enumerate()
+            .filter_map(|(idx, exp)| {
+                if upk.export_class_name(exp) != "Texture2D" {
+                    return None;
+                }
+                let nm = upk.full_export_path(idx + 1).to_ascii_lowercase();
+                let obj = upk.resolve_name(exp.object_name).to_ascii_lowercase();
+                if obj.ends_with("_n")
+                    || obj.contains("normal")
+                    || obj.contains("curvature")
+                    || obj.contains("blackalpha")
+                    || obj.contains("fxmask")
+                    || obj.contains("gradmask")
+                {
+                    return None;
+                }
+                let prio = if nm.contains("thumb") || nm.contains("icon") {
+                    0u8
+                } else if !obj.contains("mask") && !nm.contains("chassis") {
+                    1u8
+                } else {
+                    2u8
+                };
+                Some((prio, idx))
+            })
+            .collect();
+        cands.sort_by_key(|&(p, i)| (p, i));
+
         let mut best_thumb: Option<(u32, RgbaImage)> = None;
         let mut best_any: Option<(u32, RgbaImage)> = None;
-        for (idx, exp) in upk.exports.iter().enumerate() {
-            if upk.export_class_name(exp) != "Texture2D" {
-                continue;
+        for (prio, idx) in cands {
+            if prio > 0 && best_thumb.is_some() {
+                break;
             }
             if let Some(im) = crate::custom_studio::decode_texture2d_export(&upk, idx, eff_cooked) {
                 let area = im.width().saturating_mul(im.height());
-                let nm = upk.full_export_path(idx + 1).to_ascii_lowercase();
-                if nm.contains("thumb") || nm.contains("icon") {
+                if prio == 0 {
                     if best_thumb.as_ref().map_or(true, |(ba, _)| area >= *ba) {
                         best_thumb = Some((area, im));
-                        continue;
                     }
                 } else if best_any.as_ref().map_or(true, |(ba, _)| area >= *ba) {
                     best_any = Some((area, im));
@@ -436,11 +478,11 @@ pub fn extract_texture_from_upk(upk_path: &Path, cooked_dir: Option<&Path>) -> O
     }
 
     let chunks = decompress_all_upk_chunks(upk_path).ok()?;
-    let mut sorted = chunks.clone();
+    let mut sorted: Vec<&Vec<u8>> = chunks.iter().collect();
     sorted.sort_by(|a, b| b.len().cmp(&a.len()));
 
     // Pass 1: Scan first 4096 bytes for inline Mip0 (>= 64px)
-    for uncomp in &sorted {
+    for &uncomp in &sorted {
         let l = uncomp.len();
         let limit = l.saturating_sub(16).min(4096);
         for idx in 0..limit {
@@ -476,7 +518,7 @@ pub fn extract_texture_from_upk(upk_path: &Path, cooked_dir: Option<&Path>) -> O
         8388608, 4194304, 2097152, 1048576, 524288, 262144, 168000, 140800, 131072, 65536, 57600,
         32768,
     ];
-    for uncomp in &sorted {
+    for &uncomp in &sorted {
         let l = uncomp.len();
         for &cand_sz in &STD_SIZES {
             if cand_sz + 16 > l {
@@ -532,11 +574,7 @@ pub fn scrape_item_icon_online(product_name: &str, slot_name: &str) -> Option<Rg
         return None;
     }
 
-    let client = reqwest::blocking::Client::builder()
-        .user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36")
-        .timeout(Duration::from_secs(6))
-        .build()
-        .ok()?;
+    let client = shared_wiki_client()?;
 
     // Candidate page titles to query via prop=pageimages&redirects=1
     let mut titles_to_try = vec![
@@ -562,7 +600,7 @@ pub fn scrape_item_icon_online(product_name: &str, slot_name: &str) -> Option<Rg
         .send()
     {
         if let Ok(json) = resp.json::<serde_json::Value>() {
-            if let Some(img) = extract_image_from_pageimages_json(&client, &json) {
+            if let Some(img) = extract_image_from_pageimages_json(client, &json, &titles_to_try) {
                 return Some(img);
             }
         }
@@ -607,7 +645,7 @@ pub fn scrape_item_icon_online(product_name: &str, slot_name: &str) -> Option<Rg
                         .send()
                     {
                         if let Ok(j2) = r2.json::<serde_json::Value>() {
-                            if let Some(img) = extract_image_from_pageimages_json(&client, &j2) {
+                            if let Some(img) = extract_image_from_pageimages_json(client, &j2, &hit_titles) {
                                 return Some(img);
                             }
                         }
@@ -620,39 +658,64 @@ pub fn scrape_item_icon_online(product_name: &str, slot_name: &str) -> Option<Rg
     None
 }
 
+fn fit_icon_dims(src_w: u32, src_h: u32, max_dim: u32) -> (u32, u32) {
+    let sw = src_w.max(1);
+    let sh = src_h.max(1);
+    let md = max_dim.max(1);
+    if sw >= sh {
+        let nw = md;
+        let nh = ((sh as u64 * md as u64) / sw as u64).max(1) as u32;
+        (nw, nh.min(md))
+    } else {
+        let nh = md;
+        let nw = ((sw as u64 * md as u64) / sh as u64).max(1) as u32;
+        (nw.min(md), nh)
+    }
+}
+
 fn extract_image_from_pageimages_json(
     client: &reqwest::blocking::Client,
     json: &serde_json::Value,
+    preferred_titles: &[String],
 ) -> Option<RgbaImage> {
     let pages = json.get("query")?.get("pages")?.as_object()?;
-    for (_pid, pinfo) in pages {
-        let img_url = pinfo
-            .get("original")
-            .and_then(|o| o.get("source"))
-            .and_then(|s| s.as_str())
-            .or_else(|| {
-                pinfo
-                    .get("thumbnail")
-                    .and_then(|t| t.get("source"))
-                    .and_then(|s| s.as_str())
-            });
-        if let Some(url) = img_url {
-            let direct_url = url.split("/revision/").next().unwrap_or(url);
-            for cand_url in [direct_url, url] {
-                if let Ok(img_resp) = client
-                    .get(cand_url)
-                    .header("Referer", "https://rocketleague.fandom.com/")
-                    .send()
-                {
-                    if let Ok(bytes) = img_resp.bytes() {
-                        if let Ok(dyn_im) = image::load_from_memory(&bytes) {
-                            let resized = dyn_im.thumbnail(256, 256).to_rgba8();
-                            let mut canvas = RgbaImage::from_pixel(256, 256, Rgba([0, 0, 0, 0]));
-                            let ox = (256 - resized.width()) / 2;
-                            let oy = (256 - resized.height()) / 2;
-                            image::imageops::overlay(&mut canvas, &resized, ox as i64, oy as i64);
-                            return Some(canvas);
-                        }
+    let mut ordered_pages: Vec<(usize, &serde_json::Value)> = pages
+        .values()
+        .map(|pinfo| {
+            let title = pinfo.get("title").and_then(|t| t.as_str()).unwrap_or("");
+            let prio = preferred_titles
+                .iter()
+                .position(|t| t.eq_ignore_ascii_case(title))
+                .unwrap_or(usize::MAX);
+            (prio, pinfo)
+        })
+        .collect();
+    ordered_pages.sort_by_key(|&(prio, _)| prio);
+
+    for (_prio, pinfo) in ordered_pages {
+        let thumb_url = pinfo.get("thumbnail").and_then(|t| t.get("source")).and_then(|s| s.as_str());
+        let orig_url = pinfo.get("original").and_then(|o| o.get("source")).and_then(|s| s.as_str());
+        let direct_orig = orig_url.map(|u| u.split("/revision/").next().unwrap_or(u));
+        for url in [thumb_url, orig_url, direct_orig].into_iter().flatten() {
+            if let Ok(img_resp) = client
+                .get(url)
+                .header("Referer", "https://rocketleague.fandom.com/")
+                .send()
+            {
+                if let Ok(bytes) = img_resp.bytes() {
+                    if let Ok(dyn_im) = image::load_from_memory(&bytes) {
+                        let rgba = dyn_im.to_rgba8();
+                        let (nw, nh) = fit_icon_dims(rgba.width(), rgba.height(), 256);
+                        let resized = if (rgba.width(), rgba.height()) == (nw, nh) {
+                            rgba
+                        } else {
+                            imageops::resize(&rgba, nw, nh, FilterType::Triangle)
+                        };
+                        let mut canvas = RgbaImage::from_pixel(256, 256, Rgba([0, 0, 0, 0]));
+                        let ox = (256 - resized.width()) / 2;
+                        let oy = (256 - resized.height()) / 2;
+                        imageops::overlay(&mut canvas, &resized, ox as i64, oy as i64);
+                        return Some(canvas);
                     }
                 }
             }
@@ -664,6 +727,7 @@ fn extract_image_from_pageimages_json(
 // ── Procedural High-DPI Vector Icon Card Fallback ────────────────────────────
 
 pub fn render_procedural_icon(product_name: &str, slot_name: &str, size: u32) -> RgbaImage {
+    let size = size.max(8);
     let mut img = RgbaImage::from_pixel(size, size, Rgba([12, 12, 16, 255]));
     let accent: [u8; 3] = match slot_name {
         "Body" => [59, 130, 246],
@@ -720,9 +784,15 @@ pub fn composite_icon_with_paint(
     paint: Option<&PaintColorSpec>,
     target_size: u32,
 ) -> RgbaImage {
-    let resized = DynamicImage::ImageRgba8(base.clone())
-        .resize(target_size - 8, target_size - 8, FilterType::Lanczos3)
-        .to_rgba8();
+    let target_size = target_size.max(16);
+    let inner_sz = target_size.saturating_sub(8).max(8);
+    let filt = if target_size <= 64 { FilterType::Triangle } else { FilterType::Lanczos3 };
+    let (nw, nh) = fit_icon_dims(base.width(), base.height(), inner_sz);
+    let resized = if base.width() == nw && base.height() == nh {
+        base.clone()
+    } else {
+        imageops::resize(base, nw, nh, filt)
+    };
 
     let mut canvas = RgbaImage::from_pixel(target_size, target_size, Rgba([10, 10, 13, 255]));
     if let Some(p) = paint {
@@ -783,20 +853,24 @@ pub fn composite_icon_with_paint(
 
 // ── Thread-Safe Icon Cache & Resolver ────────────────────────────────────────
 
+const MAX_MEM_ICONS: usize = 256;
+
 pub struct IconCacheManager {
     pub cache_dir: PathBuf,
     pub cooked_index: Arc<Mutex<HashMap<String, PathBuf>>>,
     pub mem_cache: Arc<Mutex<HashMap<String, RgbaImage>>>,
+    mem_order: Arc<Mutex<VecDeque<String>>>,
 }
 
 impl IconCacheManager {
     pub fn new() -> Self {
-        let cache_dir = get_appdata_dir().join("icon_cache");
+        let cache_dir = get_appdata_dir().join("Cache").join("Icons");
         let _ = fs::create_dir_all(&cache_dir);
         Self {
             cache_dir,
             cooked_index: Arc::new(Mutex::new(HashMap::new())),
             mem_cache: Arc::new(Mutex::new(HashMap::new())),
+            mem_order: Arc::new(Mutex::new(VecDeque::new())),
         }
     }
 
@@ -876,6 +950,23 @@ impl IconCacheManager {
         format!("{}_{:08x}", safe, h as u32)
     }
 
+    fn insert_mem_cache(&self, key: String, img: RgbaImage) {
+        if let (Ok(mut guard), Ok(mut order)) = (self.mem_cache.lock(), self.mem_order.lock()) {
+            if !guard.contains_key(&key) {
+                while guard.len() >= MAX_MEM_ICONS {
+                    if let Some(old) = order.pop_front() {
+                        guard.remove(&old);
+                    } else {
+                        guard.clear();
+                        break;
+                    }
+                }
+                order.push_back(key.clone());
+            }
+            guard.insert(key, img);
+        }
+    }
+
     /// Resolves an item's icon (`Memory -> Disk Cache -> Local *_T_SF.upk / .tfc -> Online Wiki Scraper -> Procedural`).
     pub fn get_icon_sync(&self, cooked_dir: &Path, item: &CatalogItem, allow_online: bool) -> (RgbaImage, &'static str) {
         let key = Self::cache_key(item);
@@ -889,47 +980,65 @@ impl IconCacheManager {
         if disk_path.exists() {
             if let Ok(im) = image::open(&disk_path) {
                 let rgba = im.to_rgba8();
-                if let Ok(mut guard) = self.mem_cache.lock() {
-                    guard.insert(key, rgba.clone());
-                }
-                return (rgba, "disk");
+                let (nw, nh) = fit_icon_dims(rgba.width(), rgba.height(), 128);
+                let resized = if (rgba.width(), rgba.height()) == (nw, nh) {
+                    rgba
+                } else {
+                    imageops::resize(&rgba, nw, nh, FilterType::Triangle)
+                };
+                self.insert_mem_cache(key, resized.clone());
+                return (resized, "disk");
             }
         }
 
         // 1. Local *_T_SF.upk + .tfc extraction
         if let Some(t_upk) = self.resolve_thumbnail_upk(cooked_dir, &item.asset_package, &item.asset_path) {
             if let Some(extracted) = extract_texture_from_upk(&t_upk, Some(cooked_dir)) {
-                let thumb = DynamicImage::ImageRgba8(extracted)
-                    .thumbnail(256, 256)
-                    .to_rgba8();
+                let (nw, nh) = fit_icon_dims(extracted.width(), extracted.height(), 128);
+                let thumb = if (extracted.width(), extracted.height()) == (nw, nh) {
+                    extracted
+                } else {
+                    imageops::resize(&extracted, nw, nh, FilterType::Lanczos3)
+                };
                 let _ = thumb.save(&disk_path);
-                if let Ok(mut guard) = self.mem_cache.lock() {
-                    guard.insert(key, thumb.clone());
-                }
+                self.insert_mem_cache(key, thumb.clone());
                 return (thumb, "upk");
             }
         }
 
-        // 2. Online Rocket League Wiki MediaWiki PageImages + Search scraper
+        // 2. Online Rocket League Wiki MediaWiki PageImages + Search scraper (with 7-day negative cache)
         if allow_online {
-            if let Some(scraped) = scrape_item_icon_online(&item.product, &item.slot) {
-                let _ = scraped.save(&disk_path);
-                if let Ok(mut guard) = self.mem_cache.lock() {
-                    guard.insert(key, scraped.clone());
+            let miss_path = self.cache_dir.join(format!("{}.miss", key));
+            let miss_fresh = miss_path
+                .metadata()
+                .and_then(|m| m.modified())
+                .ok()
+                .and_then(|t| SystemTime::now().duration_since(t).ok())
+                .map_or(false, |age| age < Duration::from_secs(7 * 86_400));
+            if !miss_fresh {
+                if let Some(scraped) = scrape_item_icon_online(&item.product, &item.slot) {
+                    let (nw, nh) = fit_icon_dims(scraped.width(), scraped.height(), 128);
+                    let thumb = if (scraped.width(), scraped.height()) == (nw, nh) {
+                        scraped
+                    } else {
+                        imageops::resize(&scraped, nw, nh, FilterType::Lanczos3)
+                    };
+                    let _ = thumb.save(&disk_path);
+                    let _ = fs::remove_file(&miss_path);
+                    self.insert_mem_cache(key, thumb.clone());
+                    return (thumb, "web");
                 }
-                return (scraped, "web");
+                let _ = fs::write(&miss_path, b"");
             }
         }
 
         // 3. Procedural high-DPI vector fallback
-        let proc_img = render_procedural_icon(&item.product, &item.slot, 256);
-        if let Ok(mut guard) = self.mem_cache.lock() {
-            guard.insert(key, proc_img.clone());
-        }
+        let proc_img = render_procedural_icon(&item.product, &item.slot, 128);
+        self.insert_mem_cache(key, proc_img.clone());
         (proc_img, "procedural")
     }
 
-    /// Parallel bulk icon extractor & scraper using `rayon` across all CPU cores!
+    /// Parallel bulk icon extractor & scraper (bounded worker concurrency for Wiki politeness).
     pub fn bulk_sync_category(
         &self,
         cooked_dir: &Path,
@@ -937,13 +1046,24 @@ impl IconCacheManager {
         allow_online: bool,
     ) -> (usize, usize, usize) {
         self.index_cooked_dir(cooked_dir);
-        let results: Vec<&'static str> = items
-            .par_iter()
-            .map(|it| {
-                let (_im, src) = self.get_icon_sync(cooked_dir, it, allow_online);
-                src
-            })
-            .collect();
+        let run = || -> Vec<&'static str> {
+            items
+                .par_iter()
+                .map(|it| {
+                    let (_im, src) = self.get_icon_sync(cooked_dir, it, allow_online);
+                    src
+                })
+                .collect()
+        };
+        let results: Vec<&'static str> = if allow_online {
+            rayon::ThreadPoolBuilder::new()
+                .num_threads(4)
+                .build()
+                .map(|pool| pool.install(run))
+                .unwrap_or_else(|_| run())
+        } else {
+            run()
+        };
 
         let local = results.iter().filter(|&&s| s == "upk" || s == "disk" || s == "cache").count();
         let web = results.iter().filter(|&&s| s == "web").count();
@@ -967,4 +1087,31 @@ pub fn extract_ball_texture_preview(cooked_dir: &Path) -> Option<RgbaImage> {
     let exp = &upk.exports[exp_idx];
     let end = (exp.serial_offset + exp.serial_size).min(upk.file_bytes.len());
     extract_tfc_mip(&upk.file_bytes[exp.serial_offset..end], cooked_dir)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn mem_cache_evicts_oldest_single_entry_without_clearing_all() {
+        let mgr = IconCacheManager::new();
+        let sample = RgbaImage::from_pixel(4, 4, Rgba([10, 20, 30, 255]));
+        for i in 0..=MAX_MEM_ICONS {
+            mgr.insert_mem_cache(format!("k_{}", i), sample.clone());
+        }
+        let guard = mgr.mem_cache.lock().unwrap();
+        assert_eq!(guard.len(), MAX_MEM_ICONS);
+        assert!(!guard.contains_key("k_0"), "oldest entry must be evicted");
+        assert!(guard.contains_key(&format!("k_{}", MAX_MEM_ICONS)));
+        assert!(guard.contains_key("k_1"));
+    }
+
+    #[test]
+    fn composite_and_procedural_icon_handle_small_sizes_safely() {
+        let p = render_procedural_icon("Octane", "Body", 2);
+        assert_eq!(p.dimensions(), (8, 8));
+        let comp = composite_icon_with_paint(&p, None, 4);
+        assert_eq!(comp.dimensions(), (16, 16));
+    }
 }

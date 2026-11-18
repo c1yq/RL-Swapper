@@ -1,7 +1,7 @@
 //! Native Rust UPK Binary Parser, AES-256 (ECB & CTR) Crypto, Zlib Chunk Engine,
 //! Surgical ExportTable Swapper, Binary Paint Color Injector, and 3-Tier Pristine Backup Vault.
 
-use aes::cipher::{BlockDecrypt, BlockEncrypt, KeyInit, KeyIvInit, StreamCipher};
+use aes::cipher::{BlockDecrypt, BlockEncrypt, KeyInit, KeyIvInit, StreamCipher, StreamCipherSeek};
 use aes::Aes256;
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 use flate2::read::ZlibDecoder;
@@ -89,9 +89,9 @@ pub fn read_fstring_at(buf: &[u8], offset: usize) -> Option<(String, usize)> {
         let s = String::from_utf8_lossy(trimmed).into_owned();
         Some((s, pos + len))
     } else {
-        let char_count = (-raw_len) as usize;
-        let byte_len = char_count * 2;
-        if char_count > 4096 || pos + byte_len > buf.len() {
+        let char_count = raw_len.unsigned_abs() as usize;
+        let byte_len = char_count.saturating_mul(2);
+        if char_count > 4096 || pos.saturating_add(byte_len) > buf.len() {
             return None;
         }
         let mut u16_buf = Vec::with_capacity(char_count);
@@ -196,13 +196,11 @@ pub fn get_key_db() -> &'static KeyDatabase {
 pub fn lookup_package_key(upk_path: &Path) -> Option<[u8; 32]> {
     let db = get_key_db();
     let file_name = upk_path.file_name()?.to_string_lossy().to_lowercase();
-    let stem = file_name
-        .strip_suffix(".bak")
-        .unwrap_or(&file_name)
+    let no_bak = file_name.strip_suffix(".bak").unwrap_or(&file_name);
+    let stem = no_bak
         .strip_suffix(".upk")
-        .unwrap_or(&file_name)
-        .strip_suffix(".udk")
-        .unwrap_or(&file_name);
+        .or_else(|| no_bak.strip_suffix(".udk"))
+        .unwrap_or(no_bak);
 
     let base_no_sf = stem.strip_suffix("_sf").unwrap_or(stem);
     let base_no_t = base_no_sf.strip_suffix("_t").unwrap_or(base_no_sf);
@@ -299,9 +297,16 @@ pub fn parse_upk_prefix(raw: &[u8]) -> Result<UpkPrefix, String> {
     let thumbnail_table_offset_off = pos + 12;
     // Skip 4 ints + 16-byte GUID
     pos += 32;
+    if pos + 4 > raw.len() {
+        return Err("Truncated UPK summary at generations".into());
+    }
     let generations_count = read_i32_le(raw, pos).max(0) as usize;
     let generations_entries_off = pos + 4;
-    pos += 4 + generations_count * 12;
+    let gen_bytes = generations_count.checked_mul(12).ok_or("Invalid UPK generations count")?;
+    pos = pos
+        .checked_add(4 + gen_bytes)
+        .filter(|&p| p + 16 <= raw.len())
+        .ok_or("Truncated UPK summary past generations")?;
     // EngineVersion(4), CookerVersion(4), CompressionFlags(4)
     let compression_flags_off = pos + 8;
     pos += 12;
@@ -309,7 +314,11 @@ pub fn parse_upk_prefix(raw: &[u8]) -> Result<UpkPrefix, String> {
         return Err("Truncated UPK summary at outerchunks".into());
     }
     let outer_chunks = read_i32_le(raw, pos).max(0) as usize;
-    pos += 4 + outer_chunks * 16;
+    let chunk_bytes = outer_chunks.checked_mul(16).ok_or("Invalid UPK outer chunks count")?;
+    pos = pos
+        .checked_add(4 + chunk_bytes)
+        .filter(|&p| p + 4 <= raw.len())
+        .ok_or("Truncated UPK summary past outerchunks")?;
     // PackageSource + AdditionalPackagesToCook
     pos += 4;
     if let Some((_, next_p)) = read_fstring_array_skip(raw, pos) {
@@ -452,9 +461,49 @@ pub fn decrypt_upk_header(upk_path: &Path, raw: &[u8], pfx: &UpkPrefix) -> Resul
         }
     }
 
-    // 2. Parallel probe across all 711 keys using rayon
+    // 2. Parallel probe across all keys using minimal block probing before full decrypt
     let db = get_key_db();
+    let c_off = pfx.compressed_chunks_offset;
+    let has_c_probe = c_off > 0 && c_off + 8 <= enc_block.len();
+    let probe_matches = |k: &[u8; 32]| -> bool {
+        if has_c_probe {
+            let blk_start = c_off & !15;
+            let blk_end = ((c_off + 8 + 15) & !15).min(enc_block.len());
+            if blk_start < blk_end {
+                let mut probe = enc_block[blk_start..blk_end].to_vec();
+                if let Some(nonce) = pfx.ctr_nonce {
+                    let mut iv = [0u8; 16];
+                    let nlen = nonce.len().min(12);
+                    iv[..nlen].copy_from_slice(&nonce[..nlen]);
+                    let mut cipher = Aes256Ctr::new(k.into(), &iv.into());
+                    cipher.seek(blk_start as u64);
+                    cipher.apply_keystream(&mut probe);
+                } else if let Ok(cipher) = Aes256::new_from_slice(k) {
+                    for ch in probe.chunks_exact_mut(16) {
+                        cipher.decrypt_block(aes::Block::from_mut_slice(ch));
+                    }
+                }
+                let rel = c_off - blk_start;
+                if rel + 8 <= probe.len() {
+                    let num_c = read_i32_le(&probe, rel);
+                    let u0 = read_i32_le(&probe, rel + 4) as usize;
+                    return (1..=512).contains(&num_c) && u0 == pfx.depends_offset;
+                }
+            }
+        }
+        let head_len = enc_block.len().min(256);
+        let head = if let Some(nonce) = pfx.ctr_nonce {
+            aes_ctr_crypt(k, &nonce, &enc_block[..head_len])
+        } else {
+            aes_ecb_decrypt(k, &enc_block[..head_len])
+        };
+        is_valid_decrypted_header(&head, pfx)
+    };
+
     let found = db.keys_list.par_iter().find_map_first(|k| {
+        if !probe_matches(k) {
+            return None;
+        }
         if let Some(nonce) = pfx.ctr_nonce {
             let ctr = aes_ctr_crypt(k, &nonce, enc_block);
             if is_valid_decrypted_header(&ctr, pfx) {
@@ -1217,6 +1266,11 @@ pub fn rebuild_upk_with_mod_resized_added_and_names_to_vec(
         new_len: usize,
     }
 
+    for &(exp_idx, _) in replacements {
+        if exp_idx >= orig_unpacked.exports.len() {
+            return Err("Export index out of range".into());
+        }
+    }
     let mut sorted_idx: Vec<usize> = (0..replacements.len()).collect();
     sorted_idx.sort_by_key(|&ri| orig_unpacked.exports[replacements[ri].0].serial_offset);
 
@@ -1225,9 +1279,6 @@ pub fn rebuild_upk_with_mod_resized_added_and_names_to_vec(
     let mut total_delta = 0isize;
     for ri in sorted_idx {
         let (exp_idx, ref new_bytes) = replacements[ri];
-        if exp_idx >= orig_unpacked.exports.len() {
-            return Err("Export index out of range".into());
-        }
         let exp = &orig_unpacked.exports[exp_idx];
         let old_off = exp.serial_offset;
         let old_end = old_off + exp.serial_size;
@@ -1671,19 +1722,127 @@ pub fn rebuild_upk_resized_export(
     )
 }
 
-// ── 3-Tier Pristine Backup Vault & Self-Healing Avatar Cutout Engine ─────────
+// ── Unified `Downloads\RL Swapper` Hub, 3-Tier Pristine Vault & Self-Healing Cutout Engine ──
+
+fn copy_dir_non_destructive(src: &Path, dst: &Path) {
+    if !src.is_dir() {
+        return;
+    }
+    let _ = fs::create_dir_all(dst);
+    let Ok(entries) = fs::read_dir(src) else {
+        return;
+    };
+    for entry in entries.flatten() {
+        let sp = entry.path();
+        let dp = dst.join(entry.file_name());
+        if sp.is_dir() {
+            copy_dir_non_destructive(&sp, &dp);
+        } else if sp.is_file() && !dp.exists() {
+            let _ = fs::copy(&sp, &dp);
+        }
+    }
+}
+
+fn ensure_hub_subdirs_and_migrate(hub: &Path) {
+    for sub in [
+        "Presets",
+        "Custom Items/Decals",
+        "Custom Items/PFP",
+        "Custom Items/Banners",
+        "Custom Items/Balls",
+        "Workshop Maps",
+        "Workshop Textures",
+        "Backups/Pristine Vault",
+        "Active Studio",
+        "Cache/Icons",
+        "Cache/Workshop Thumbs",
+    ] {
+        let _ = fs::create_dir_all(hub.join(sub));
+    }
+
+    let marker = hub.join("_migrated_v8.marker");
+    if marker.exists() {
+        return;
+    }
+
+    if let Ok(local_app) = std::env::var("LOCALAPPDATA") {
+        let legacy = PathBuf::from(local_app).join("RLSwapper");
+        if legacy.is_dir() && legacy != hub {
+            copy_dir_non_destructive(&legacy.join("pristine_backups"), &hub.join("Backups/Pristine Vault"));
+            copy_dir_non_destructive(&legacy.join("active_studio"), &hub.join("Active Studio"));
+            copy_dir_non_destructive(&legacy.join("icon_cache"), &hub.join("Cache/Icons"));
+            copy_dir_non_destructive(&legacy.join("workshop_maps"), &hub.join("Workshop Maps"));
+            for fname in ["swapper_state_v4.json", "presets_v4.json"] {
+                let s = legacy.join(fname);
+                let d = hub.join(fname);
+                if s.is_file() && !d.exists() {
+                    let _ = fs::copy(&s, &d);
+                }
+            }
+        }
+    }
+    let _ = fs::write(&marker, b"RL Swapper v8 Downloads Hub initialized\n");
+}
+
+/// Returns the user-visible `Downloads\RL Swapper` hub directory (or `RL_SWAPPER_HUB_OVERRIDE` in tests),
+/// automatically creating its subfolder hierarchy and migrating legacy `%LOCALAPPDATA%\RLSwapper` data once.
+pub fn get_swapper_hub_dir() -> PathBuf {
+    if let Ok(ovr) = std::env::var("RL_SWAPPER_HUB_OVERRIDE") {
+        if !ovr.trim().is_empty() {
+            let p = PathBuf::from(ovr);
+            ensure_hub_subdirs_and_migrate(&p);
+            return p;
+        }
+    }
+    static HUB_DIR: OnceLock<PathBuf> = OnceLock::new();
+    HUB_DIR
+        .get_or_init(|| {
+            let base = std::env::var("USERPROFILE")
+                .map(|u| PathBuf::from(u).join("Downloads"))
+                .ok()
+                .filter(|d| d.is_dir())
+                .or_else(|| std::env::var("LOCALAPPDATA").ok().map(PathBuf::from))
+                .unwrap_or_else(|| PathBuf::from("."));
+            let p = base.join("RL Swapper");
+            ensure_hub_subdirs_and_migrate(&p);
+            p
+        })
+        .clone()
+}
 
 pub fn get_appdata_dir() -> PathBuf {
-    let base = std::env::var("LOCALAPPDATA").unwrap_or_else(|_| ".".to_string());
-    let p = PathBuf::from(base).join("RLSwapper");
+    get_swapper_hub_dir()
+}
+
+pub fn get_presets_dir() -> PathBuf {
+    let p = get_swapper_hub_dir().join("Presets");
+    let _ = fs::create_dir_all(&p);
+    p
+}
+
+pub fn get_custom_items_dir(category: &str) -> PathBuf {
+    let p = get_swapper_hub_dir().join("Custom Items").join(category);
     let _ = fs::create_dir_all(&p);
     p
 }
 
 pub fn get_pristine_vault_dir() -> PathBuf {
-    let p = get_appdata_dir().join("pristine_backups");
+    let p = get_swapper_hub_dir().join("Backups").join("Pristine Vault");
     let _ = fs::create_dir_all(&p);
     p
+}
+
+/// Appends a human-readable entry to `Downloads\RL Swapper\swap_history.log`.
+pub fn append_swap_history_log(action: &str) {
+    use std::io::Write;
+    let log_path = get_swapper_hub_dir().join("swap_history.log");
+    let ts = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0);
+    if let Ok(mut f) = fs::OpenOptions::new().create(true).append(true).open(log_path) {
+        let _ = writeln!(f, "[t={}] {}", ts, action);
+    }
 }
 
 pub fn vault_backup_path(upk_path: &Path) -> PathBuf {
@@ -1720,10 +1879,12 @@ pub fn is_avatar_border_modified(upk_path: &Path) -> bool {
     }
     if let Ok(chunks) = decompress_all_upk_chunks(upk_path) {
         let marker = [0x00, 0xE1, 0x00, 0x00, 0x00, 0xE1, 0x00, 0x00]; // (57600, 57600)
+        let mut saw_120_marker = false;
         for ch in &chunks {
             let mut search_from = 0usize;
             while search_from + 8 <= ch.len() {
                 if let Some(rel) = ch[search_from..].windows(8).position(|w| w == marker) {
+                    saw_120_marker = true;
                     let pos = search_from + rel;
                     let center_off = pos + 8 + (60 * 120 + 60) * 4;
                     if center_off + 4 <= ch.len() && ch[center_off + 3] > 16 {
@@ -1733,6 +1894,11 @@ pub fn is_avatar_border_modified(upk_path: &Path) -> bool {
                 } else {
                     break;
                 }
+            }
+        }
+        if !saw_120_marker {
+            if let Ok((upk, _)) = unpack_upk_from_disk(upk_path) {
+                return crate::custom_studio::detect_modified_border_from_exports(&upk, upk_path.parent());
             }
         }
     }
@@ -3410,7 +3576,22 @@ pub fn build_surgically_rewired_upk_with_guid(
         write_i32_le(&mut prefix, pfx.import_offset_off, (name_off + new_import_rel) as i32);
         write_i32_le(&mut prefix, pfx.export_offset_off, (name_off + new_export_rel) as i32);
         write_i32_le(&mut prefix, pfx.depends_offset_off, (name_off + new_depends_rel) as i32);
-        write_i32_le(&mut prefix, pfx.import_export_guids_offset_off, (name_off + new_depends_rel) as i32);
+        let old_guids_off = read_i32_le(&prefix, pfx.import_export_guids_offset_off);
+        if old_guids_off > 0 {
+            write_i32_le(
+                &mut prefix,
+                pfx.import_export_guids_offset_off,
+                (old_guids_off as isize + header_delta) as i32,
+            );
+        }
+        let old_thumb_off = read_i32_le(&prefix, pfx.thumbnail_table_offset_off);
+        if old_thumb_off > 0 {
+            write_i32_le(
+                &mut prefix,
+                pfx.thumbnail_table_offset_off,
+                (old_thumb_off as isize + header_delta) as i32,
+            );
+        }
         if pfx.generations_count > 0 {
             let last_gen = pfx.generations_entries_off + (pfx.generations_count - 1) * 12;
             if last_gen + 8 <= prefix.len() {
@@ -3527,9 +3708,17 @@ pub fn swap_item_packages(
     let target_pfx = parse_upk_prefix(&target_raw)?;
     let (_, target_key, _) = decrypt_upk_header(&target_pristine, &target_raw, &target_pfx)?;
 
-    // 2. Read pristine donor (and bake Paint Color shader edits if chosen)
+    // 2. Read pristine donor (prefer .bak -> Vault -> live file)
     let donor_bak = bak_path_for(&donor_raw_path);
-    let donor_path = if donor_bak.exists() { &donor_bak } else { &donor_raw_path };
+    let donor_vault = vault_backup_path(&donor_raw_path);
+    let donor_path_buf = if donor_bak.exists() {
+        donor_bak
+    } else if donor_vault.exists() {
+        donor_vault
+    } else {
+        donor_raw_path.clone()
+    };
+    let donor_path = donor_path_buf.as_path();
 
     let mut color_edits = 0usize;
     let mut tex_tints = 0usize;
@@ -3818,7 +4007,10 @@ pub fn inspect_cooked_health(cooked_dir: &Path) -> CookedHealthReport {
                 if !vpath.exists() {
                     rep.missing_vault_backups.push(base_pkg);
                 }
-            } else if low.starts_with("avatarborder_") && !low.ends_with("_t_sf.upk") && low.ends_with("_sf.upk") {
+            } else if (low.starts_with("avatarborder_") || low == "paca6f52bcd3aad77dd19_sf.upk")
+                && !low.ends_with("_t_sf.upk")
+                && low.ends_with("_sf.upk")
+            {
                 let bak = bak_path_for(&entry.path());
                 if !bak.exists() && is_avatar_border_modified(&entry.path()) {
                     rep.damaged_avatar_borders.push(nm);
@@ -3944,5 +4136,28 @@ pub fn detect_car_uv_label(pkg_or_name: &str) -> Option<&'static str> {
         Some("Backfire")
     } else {
         None
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn lookup_package_key_resolves_upk_sf_bak_and_udk_extensions() {
+        assert!(lookup_package_key(Path::new("Body_Octane_SF.upk")).is_some());
+        assert!(lookup_package_key(Path::new("Body_Octane_SF.upk.bak")).is_some());
+        assert!(lookup_package_key(Path::new("Body_Octane_T_SF.upk")).is_some());
+        assert!(lookup_package_key(Path::new("Labs_Underpass_P.udk")).is_some());
+    }
+
+    #[test]
+    fn truncated_prefix_and_fstring_min_never_panic() {
+        let bad_fstr = i32::MIN.to_le_bytes();
+        assert!(read_fstring_at(&bad_fstr, 0).is_none());
+
+        let mut trunc = PACKAGE_FILE_TAG.to_le_bytes().to_vec();
+        trunc.extend_from_slice(&[0u8; 80]);
+        assert!(parse_upk_prefix(&trunc).is_err());
     }
 }

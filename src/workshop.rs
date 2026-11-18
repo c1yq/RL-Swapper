@@ -14,19 +14,42 @@ use std::collections::HashSet;
 use std::fs::{self, File};
 use std::io::{self, Read};
 use std::path::{Path, PathBuf};
+use std::sync::OnceLock;
 use std::time::{Duration, SystemTime};
 use zip::ZipArchive;
 
+fn shared_http_client() -> Option<&'static reqwest::blocking::Client> {
+    static CLIENT: OnceLock<Option<reqwest::blocking::Client>> = OnceLock::new();
+    CLIENT
+        .get_or_init(|| {
+            reqwest::blocking::Client::builder()
+                .timeout(Duration::from_secs(15))
+                .user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) RLSwapper/4.1")
+                .build()
+                .ok()
+        })
+        .as_ref()
+}
+
 pub const WORKSHOP_SAFE_SLOT: &str = "Labs_Underpass_P.upk";
+pub const WORKSHOP_TEXTURES_PAGE_URL: &str = "https://bakkesplugins.com/maps/96";
+pub const WORKSHOP_TEXTURES_CDN_FALLBACK_URL: &str =
+    "https://cdn.bakkesplugins.com/uploads/bda9556fe79d4359afb8e000ac7ec63e-96_1.0.0_6858564db4de4cba8ce31032563a0c44.zip";
 
 pub fn get_workshop_library_dir() -> PathBuf {
-    let p = get_appdata_dir().join("workshop_maps");
+    let p = get_appdata_dir().join("Workshop Maps");
+    let _ = fs::create_dir_all(&p);
+    p
+}
+
+pub fn get_workshop_textures_dir() -> PathBuf {
+    let p = get_appdata_dir().join("Workshop Textures");
     let _ = fs::create_dir_all(&p);
     p
 }
 
 pub fn get_workshop_thumb_cache_dir() -> PathBuf {
-    let p = get_workshop_library_dir().join("_thumb_cache");
+    let p = get_appdata_dir().join("Cache").join("Workshop Thumbs");
     let _ = fs::create_dir_all(&p);
     p
 }
@@ -95,6 +118,7 @@ const BUILTIN_ENGINE_PACKAGES: &[&str] = &[
     "psy_materialfunctions",
     "editormeshes",
     "editorresources",
+    "unrealed",
     "temp",
     "transient",
 ];
@@ -103,9 +127,18 @@ const BUILTIN_ENGINE_PACKAGES: &[&str] = &[
 /// `Package` dependencies that are missing from `cooked_dir`.
 pub fn scan_upk_external_dependencies(map_path: &Path, cooked_dir: &Path) -> Vec<String> {
     let mut missing = Vec::new();
-    let Ok(raw) = fs::read(map_path) else {
+    let Ok(mut f) = File::open(map_path) else {
         return missing;
     };
+    let file_len = f.metadata().map(|m| m.len() as usize).unwrap_or(0);
+    if file_len < 64 {
+        return missing;
+    }
+    let probe_len = file_len.min(512 * 1024);
+    let mut raw = vec![0u8; probe_len];
+    if f.read_exact(&mut raw).is_err() {
+        return missing;
+    }
     let Ok(pfx) = parse_upk_prefix(&raw) else {
         return missing;
     };
@@ -122,11 +155,30 @@ pub fn scan_upk_external_dependencies(map_path: &Path, cooked_dir: &Path) -> Vec
     }
 
     let mut pkg_names: Vec<String> = Vec::new();
+    let comp_flags = if pfx.compression_flags_off + 4 <= raw.len() {
+        read_u32_le(&raw, pfx.compression_flags_off)
+    } else {
+        0
+    };
+    let needed_hdr_end = pfx.import_offset.saturating_add(pfx.import_count.saturating_mul(28));
     let is_plain_udk = (pfx.package_flags & 0x800) == 0
+        && comp_flags == 0
         && pfx.name_offset > 0
-        && pfx.import_offset + pfx.import_count * 28 <= raw.len();
+        && needed_hdr_end <= file_len
+        && needed_hdr_end <= 32 * 1024 * 1024;
 
     if is_plain_udk {
+        if needed_hdr_end > raw.len() {
+            let extra = needed_hdr_end - raw.len();
+            let old_len = raw.len();
+            raw.resize(needed_hdr_end, 0);
+            if f.read_exact(&mut raw[old_len..old_len + extra]).is_err() {
+                raw.truncate(old_len);
+            }
+        }
+    }
+
+    if is_plain_udk && needed_hdr_end <= raw.len() {
         // Walk plaintext NameTable directly
         let mut names = Vec::with_capacity(pfx.name_count);
         let mut npos = pfx.name_offset;
@@ -222,7 +274,7 @@ pub fn install_workshop_textures_folder(src_dir: &Path, cooked_dir: &Path) -> Re
 
 // ── Local Workshop Library Management ────────────────────────────────────────
 
-fn sanitize_slug(name: &str) -> String {
+pub fn sanitize_slug(name: &str) -> String {
     let clean: String = name
         .chars()
         .map(|c| if c.is_ascii_alphanumeric() { c.to_ascii_lowercase() } else { '_' })
@@ -230,7 +282,61 @@ fn sanitize_slug(name: &str) -> String {
     clean.trim_matches('_').to_string()
 }
 
+/// Deduplicates legacy timestamped folders (`<slug>_18651`, `<slug>_20300`) inside `Workshop Maps\`
+/// so each map has a single canonical folder and entry.
+pub fn deduplicate_workshop_library() -> usize {
+    let root = get_workshop_library_dir();
+    let Ok(entries) = fs::read_dir(&root) else {
+        return 0;
+    };
+    let mut by_key: std::collections::HashMap<(String, String), Vec<(PathBuf, WorkshopMapEntry, SystemTime)>> =
+        std::collections::HashMap::new();
+
+    for e in entries.flatten() {
+        let dir = e.path();
+        if !dir.is_dir() {
+            continue;
+        }
+        let meta_p = dir.join("workshop.json");
+        if !meta_p.is_file() {
+            continue;
+        }
+        let Ok(txt) = fs::read_to_string(&meta_p) else {
+            continue;
+        };
+        let Ok(m) = serde_json::from_str::<WorkshopMapEntry>(&txt) else {
+            continue;
+        };
+        let mtime = meta_p
+            .metadata()
+            .and_then(|md| md.modified())
+            .unwrap_or(SystemTime::UNIX_EPOCH);
+        let key = (sanitize_slug(&m.name), m.map_file_rel.to_lowercase());
+        by_key.entry(key).or_default().push((dir, m, mtime));
+    }
+
+    let mut removed = 0usize;
+    for ((slug, _), mut group) in by_key {
+        if group.len() <= 1 {
+            continue;
+        }
+        // Prefer exact canonical slug folder if present; otherwise keep newest modified entry
+        group.sort_by(|a, b| {
+            let a_exact = a.1.id == slug;
+            let b_exact = b.1.id == slug;
+            b_exact.cmp(&a_exact).then_with(|| b.2.cmp(&a.2))
+        });
+        for (dup_dir, _, _) in group.into_iter().skip(1) {
+            if fs::remove_dir_all(&dup_dir).is_ok() {
+                removed += 1;
+            }
+        }
+    }
+    removed
+}
+
 pub fn list_library_maps() -> Vec<WorkshopMapEntry> {
+    let _ = deduplicate_workshop_library();
     let root = get_workshop_library_dir();
     let mut list = Vec::new();
     let Ok(entries) = fs::read_dir(&root) else {
@@ -250,7 +356,28 @@ pub fn list_library_maps() -> Vec<WorkshopMapEntry> {
     list
 }
 
+/// Finds a library map by exact ID or by matching its canonical slug prefix (for backwards-compatibility with legacy `_timestamp` IDs).
+pub fn find_library_map_by_id_or_slug(id_or_slug: &str) -> Option<WorkshopMapEntry> {
+    let maps = list_library_maps();
+    if let Some(exact) = maps.iter().find(|e| e.id.eq_ignore_ascii_case(id_or_slug)) {
+        return Some(exact.clone());
+    }
+    let q_slug = sanitize_slug(id_or_slug);
+    maps.into_iter().find(|e| {
+        let es = sanitize_slug(&e.name);
+        !es.is_empty() && (es == q_slug || q_slug.starts_with(&format!("{}_", es)) || e.id.starts_with(&format!("{}_", q_slug)))
+    })
+}
+
 pub fn delete_library_map(entry: &WorkshopMapEntry) -> Result<(), String> {
+    if entry.id.is_empty()
+        || entry.id == "."
+        || entry.id.contains('/')
+        || entry.id.contains('\\')
+        || entry.id.contains("..")
+    {
+        return Err("Invalid workshop map ID".into());
+    }
     let dir = get_workshop_library_dir().join(&entry.id);
     if dir.exists() {
         fs::remove_dir_all(dir).map_err(|e| e.to_string())?;
@@ -258,7 +385,8 @@ pub fn delete_library_map(entry: &WorkshopMapEntry) -> Result<(), String> {
     Ok(())
 }
 
-/// Imports a `.udk`, `.upk`, or `.zip` Workshop map archive into `%LOCALAPPDATA%\RLSwapper\workshop_maps\`.
+/// Imports a `.udk`, `.upk`, or `.zip` Workshop map archive into `Downloads\RL Swapper\Workshop Maps\`,
+/// using a deterministic slug folder and deduplicating any legacy timestamped copies of the same map.
 pub fn import_workshop_file_or_zip(src_path: &Path, display_name_override: Option<&str>, source_url: Option<&str>) -> Result<WorkshopMapEntry, String> {
     if !src_path.is_file() {
         return Err(format!("File not found: {}", src_path.display()));
@@ -279,15 +407,28 @@ pub fn import_workshop_file_or_zip(src_path: &Path, display_name_override: Optio
                 .to_string_lossy()
                 .replace('_', " ")
         });
-    let id = format!(
-        "{}_{}",
-        sanitize_slug(&raw_title),
-        std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .map(|d| d.as_secs() % 100000)
-            .unwrap_or(1)
-    );
-    let dest_dir = get_workshop_library_dir().join(&id);
+    let lib_root = get_workshop_library_dir();
+    let base_slug = {
+        let s = sanitize_slug(&raw_title);
+        if s.is_empty() { "workshop_map".to_string() } else { s }
+    };
+
+    // Remove any legacy timestamped duplicate folders for this same map title before writing canonical folder
+    if let Ok(entries) = fs::read_dir(&lib_root) {
+        for e in entries.flatten() {
+            let meta_p = e.path().join("workshop.json");
+            if let Ok(txt) = fs::read_to_string(&meta_p) {
+                if let Ok(existing) = serde_json::from_str::<WorkshopMapEntry>(&txt) {
+                    if sanitize_slug(&existing.name) == base_slug && existing.id != base_slug {
+                        let _ = fs::remove_dir_all(e.path());
+                    }
+                }
+            }
+        }
+    }
+
+    let id = base_slug;
+    let dest_dir = lib_root.join(&id);
     fs::create_dir_all(&dest_dir).map_err(|e| e.to_string())?;
 
     let mut map_file_rel: Option<String> = None;
@@ -320,11 +461,11 @@ pub fn import_workshop_file_or_zip(src_path: &Path, display_name_override: Optio
                 .to_lowercase();
 
             if f_ext == "udk" || f_ext == "upk" || f_ext == "tfc" {
-                let mut buf = Vec::new();
-                zf.read_to_end(&mut buf).map_err(|e| e.to_string())?;
-                let sz = buf.len() as u64;
                 let out_file = dest_dir.join(&base_nm);
-                fs::write(&out_file, &buf).map_err(|e| e.to_string())?;
+                let sz = {
+                    let mut out = File::create(&out_file).map_err(|e| e.to_string())?;
+                    io::copy(&mut zf, &mut out).map_err(|e| e.to_string())?
+                };
 
                 if (f_ext == "udk" || (f_ext == "upk" && base_nm.to_lowercase().ends_with("_p.upk")))
                     && sz > best_map_size
@@ -340,16 +481,15 @@ pub fn import_workshop_file_or_zip(src_path: &Path, display_name_override: Optio
                     extra_files_rel.push(base_nm.clone());
                 }
             } else if matches!(f_ext.as_str(), "png" | "jpg" | "jpeg" | "webp") && thumb_file_rel.is_none() {
-                let mut buf = Vec::new();
-                if zf.read_to_end(&mut buf).is_ok() {
-                    let out_img = dest_dir.join(&base_nm);
-                    if fs::write(&out_img, &buf).is_ok() {
+                let out_img = dest_dir.join(&base_nm);
+                if let Ok(mut out) = File::create(&out_img) {
+                    if io::copy(&mut zf, &mut out).is_ok() {
                         thumb_file_rel = Some(base_nm);
                     }
                 }
             } else if f_ext == "json" && base_nm.to_lowercase().ends_with(".json") {
                 let mut s = String::new();
-                if zf.read_to_string(&mut s).is_ok() {
+                if zf.take(1024 * 1024).read_to_string(&mut s).is_ok() {
                     if let Ok(v) = serde_json::from_str::<serde_json::Value>(&s) {
                         if let Some(d) = v.get("desc").or_else(|| v.get("description")).and_then(|x| x.as_str()) {
                             description = d.to_string();
@@ -364,12 +504,16 @@ pub fn import_workshop_file_or_zip(src_path: &Path, display_name_override: Optio
             .unwrap_or_default()
             .to_string_lossy()
             .to_string();
-        let hdr_check = fs::read(src_path).map_err(|e| e.to_string())?;
-        if hdr_check.len() < 64 || read_u32_le(&hdr_check, 0) != PACKAGE_FILE_TAG {
+        let mut hdr = [0u8; 64];
+        let hdr_ok = File::open(src_path)
+            .and_then(|mut f| f.read_exact(&mut hdr))
+            .is_ok()
+            && read_u32_le(&hdr, 0) == PACKAGE_FILE_TAG;
+        if !hdr_ok {
             let _ = fs::remove_dir_all(&dest_dir);
             return Err("File does not have a valid UE3 UPK/UDK header magic.".into());
         }
-        fs::write(dest_dir.join(&base_nm), &hdr_check).map_err(|e| e.to_string())?;
+        fs::copy(src_path, dest_dir.join(&base_nm)).map_err(|e| e.to_string())?;
         map_file_rel = Some(base_nm);
     } else {
         let _ = fs::remove_dir_all(&dest_dir);
@@ -416,13 +560,17 @@ pub fn load_workshop_map_into_underpass(
         return Err(format!("Workshop map file missing: {}", src_map_path.display()));
     }
 
-    let ws_bytes = fs::read(&src_map_path).map_err(|e| e.to_string())?;
-    if ws_bytes.len() < 64 || read_u32_le(&ws_bytes, 0) != PACKAGE_FILE_TAG {
+    let mut hdr_buf = [0u8; 4096];
+    let hdr_n = {
+        let mut f = File::open(&src_map_path).map_err(|e| e.to_string())?;
+        f.read(&mut hdr_buf).map_err(|e| e.to_string())?
+    };
+    if hdr_n < 64 || read_u32_le(&hdr_buf[..hdr_n], 0) != PACKAGE_FILE_TAG {
         return Err("Invalid UPK/UDK package magic".into());
     }
     // IMPORTANT: Do NOT set PKG_COOKED (0x8) on uncooked .udk maps — Epic/Steam RL loads uncooked
     // .udk files natively when copied unmodified, whereas forcing 0x8 triggers Bad name index crashes.
-    let _ = parse_upk_prefix(&ws_bytes).map_err(|e| format!("Corrupt UPK/UDK header: {e}"))?;
+    let _ = parse_upk_prefix(&hdr_buf[..hdr_n]).map_err(|e| format!("Corrupt UPK/UDK header: {e}"))?;
 
     // Copy any non-conflicting bundled extra texture/dependency UPKs shipped in the zip
     let mut copied_extras = 0usize;
@@ -436,10 +584,16 @@ pub fn load_workshop_map_into_underpass(
         }
     }
 
+    // Also auto-install any cached shared Workshop Textures from `Downloads\RL Swapper\Workshop Textures`
+    let tex_dir = get_workshop_textures_dir();
+    if let Ok((c, _)) = install_workshop_textures_folder(&tex_dir, cooked_dir) {
+        copied_extras += c;
+    }
+
     let missing_deps = scan_upk_external_dependencies(&src_map_path, cooked_dir);
 
     ensure_pristine_before_swap(&target_path)?;
-    fs::write(&target_path, &ws_bytes).map_err(|e| e.to_string())?;
+    fs::copy(&src_map_path, &target_path).map_err(|e| e.to_string())?;
     clear_rl_texture_cache();
 
     let extra_note = if copied_extras > 0 {
@@ -467,11 +621,7 @@ pub fn restore_workshop_underpass(cooked_dir: &Path) -> bool {
 // ── Online Community Workshop Browser (`lethamyr.com/api/v1/maps`) ───────────
 
 pub fn fetch_lethamyr_catalog_page(page: usize) -> Result<OnlineWorkshopPage, String> {
-    let client = reqwest::blocking::Client::builder()
-        .timeout(Duration::from_secs(12))
-        .user_agent("RLSwapper/4.1")
-        .build()
-        .map_err(|e| e.to_string())?;
+    let client = shared_http_client().ok_or_else(|| "Failed to initialize HTTP client".to_string())?;
 
     let url = format!("https://lethamyr.com/api/v1/maps?page={}", page.max(1));
     let val: serde_json::Value = client
@@ -666,6 +816,10 @@ pub fn parse_bakkesplugins_maps_html(html: &str) -> (usize, Vec<OnlineWorkshopIt
 /// Extracts a direct CDN archive link (`https://cdn.bakkesplugins.com/uploads/...zip/.udk/.upk`)
 /// or fallback Drive/map download URL from a BakkesPlugins map detail page.
 pub fn extract_bakkesplugins_download_url(html: &str) -> Option<String> {
+    let has_archive_ext = |url: &str| {
+        let base = url.split(['?', '#']).next().unwrap_or(url).to_lowercase();
+        base.ends_with(".zip") || base.ends_with(".udk") || base.ends_with(".upk")
+    };
     let mut scan = html;
     while let Some(pos) = scan.find("https://cdn.bakkesplugins.com/uploads/") {
         let sub = &scan[pos..];
@@ -673,11 +827,19 @@ pub fn extract_bakkesplugins_download_url(html: &str) -> Option<String> {
             .find(|c: char| matches!(c, '"' | '\'' | '<' | '>' | ' ' | '\\'))
             .unwrap_or(sub.len());
         let url = &sub[..end];
-        let low = url.to_lowercase();
-        if low.ends_with(".zip") || low.ends_with(".udk") || low.ends_with(".upk") {
+        if has_archive_ext(url) {
             return Some(url.to_string());
         }
         scan = &scan[pos + end.max(1)..];
+    }
+    for prefix in ["https://drive.google.com/file/d/", "https://drive.google.com/uc?"] {
+        if let Some(pos) = html.find(prefix) {
+            let sub = &html[pos..];
+            let end = sub
+                .find(|c: char| matches!(c, '"' | '\'' | '<' | '>' | ' ' | '\\'))
+                .unwrap_or(sub.len());
+            return Some(sub[..end].to_string());
+        }
     }
     None
 }
@@ -900,19 +1062,23 @@ pub fn fetch_all_online_workshop_maps(force_refresh: bool) -> Result<Vec<OnlineW
     Ok(merged)
 }
 
+pub fn thumb_cache_filename(url: &str) -> String {
+    let mut safe = sanitize_slug(url);
+    safe.truncate(44);
+    let h = url
+        .bytes()
+        .fold(5381u64, |acc, b| acc.wrapping_mul(33).wrapping_add(b as u64));
+    format!("{}_{:08x}.png", safe, h as u32)
+}
+
 pub fn fetch_or_cache_thumb(url: &str) -> Option<RgbaImage> {
-    let key = sanitize_slug(url);
-    let cache_p = get_workshop_thumb_cache_dir().join(format!("{}.png", &key[..key.len().min(64)]));
+    let cache_p = get_workshop_thumb_cache_dir().join(thumb_cache_filename(url));
     if cache_p.is_file() {
         if let Ok(im) = image::open(&cache_p) {
             return Some(im.to_rgba8());
         }
     }
-    let client = reqwest::blocking::Client::builder()
-        .timeout(Duration::from_secs(8))
-        .user_agent("RLSwapper/4.1")
-        .build()
-        .ok()?;
+    let client = shared_http_client()?;
     let bytes = client.get(url).send().ok()?.bytes().ok()?;
     let im = image::load_from_memory(&bytes).ok()?.thumbnail(220, 124).to_rgba8();
     let _ = im.save(&cache_p);
@@ -1171,4 +1337,202 @@ where
 /// Downloads a map ZIP/UDK/UPK from `download_url` into a temporary file and imports it.
 pub fn download_online_workshop_map(item: &OnlineWorkshopItem) -> Result<WorkshopMapEntry, String> {
     download_online_workshop_map_with_progress(item, |_, _, _| {})
+}
+
+/// Returns true if an online catalog entry represents the shared Workshop Textures pack rather than a single map.
+pub fn is_workshop_textures_item(item: &OnlineWorkshopItem) -> bool {
+    let low_nm = item.name.trim().to_lowercase();
+    let low_url = item.download_url.to_lowercase();
+    low_nm == "workshop textures"
+        || low_nm.contains("workshop textures")
+        || low_url.ends_with("/maps/96")
+}
+
+/// Returns how many `.upk` / `.tfc` files are currently cached inside `Downloads\RL Swapper\Workshop Textures\`.
+pub fn count_cached_workshop_textures() -> usize {
+    let tex_dir = get_workshop_textures_dir();
+    let Ok(entries) = fs::read_dir(&tex_dir) else {
+        return 0;
+    };
+    entries
+        .flatten()
+        .filter(|e| {
+            let p = e.path();
+            p.is_file()
+                && matches!(
+                    p.extension().and_then(|s| s.to_str()).unwrap_or("").to_ascii_lowercase().as_str(),
+                    "upk" | "tfc"
+                )
+        })
+        .count()
+}
+
+/// Directly downloads the official ~44.5 MB `Workshop Textures` pack (`https://bakkesplugins.com/maps/96` / CDN fallback),
+/// caches all `.upk` and `.tfc` files inside `Downloads\RL Swapper\Workshop Textures\`, and installs missing ones
+/// into `cooked_dir`. Returns `(copied_to_cooked, skipped_existing, total_cached)`.
+pub fn download_and_install_workshop_textures_with_progress<F>(
+    cooked_dir: &Path,
+    force_redownload: bool,
+    mut on_progress: F,
+) -> Result<(usize, usize, usize), String>
+where
+    F: FnMut(u64, Option<u64>, &str),
+{
+    let tex_dir = get_workshop_textures_dir();
+    let existing_cached = count_cached_workshop_textures();
+    if !force_redownload && existing_cached >= 5 {
+        on_progress(1, Some(1), "Installing cached Workshop Textures...");
+        let (copied, skipped) = install_workshop_textures_folder(&tex_dir, cooked_dir)?;
+        return Ok((copied, skipped, existing_cached));
+    }
+
+    on_progress(0, None, "Resolving Workshop Textures mirror...");
+    let client = reqwest::blocking::Client::builder()
+        .timeout(Duration::from_secs(600))
+        .user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) RLSwapper/4.1")
+        .build()
+        .map_err(|e| e.to_string())?;
+
+    let direct_url = client
+        .get(WORKSHOP_TEXTURES_PAGE_URL)
+        .send()
+        .ok()
+        .and_then(|r| r.text().ok())
+        .and_then(|html| extract_bakkesplugins_download_url(&html))
+        .unwrap_or_else(|| WORKSHOP_TEXTURES_CDN_FALLBACK_URL.to_string());
+
+    let mut resp = client
+        .get(&direct_url)
+        .send()
+        .map_err(|e| format!("Workshop Textures download failed: {e}"))?
+        .error_for_status()
+        .map_err(|e| format!("Workshop Textures HTTP error: {e}"))?;
+
+    let total_bytes = resp
+        .headers()
+        .get(reqwest::header::CONTENT_LENGTH)
+        .and_then(|v| v.to_str().ok())
+        .and_then(|s| s.trim().parse::<u64>().ok())
+        .or_else(|| resp.content_length())
+        .filter(|&n| n > 0);
+
+    let tmp_zip = tex_dir.join("_workshop_textures_dl.zip");
+    let mut downloaded = 0u64;
+    on_progress(0, total_bytes, "Downloading Workshop Textures...");
+    {
+        let mut out_f = File::create(&tmp_zip).map_err(|e| e.to_string())?;
+        let mut buf = [0u8; 65536];
+        loop {
+            match resp.read(&mut buf) {
+                Ok(0) => break,
+                Ok(n) => {
+                    io::Write::write_all(&mut out_f, &buf[..n])
+                        .map_err(|e| format!("Failed writing textures archive: {e}"))?;
+                    downloaded += n as u64;
+                    on_progress(downloaded, total_bytes, "Downloading Workshop Textures...");
+                }
+                Err(e) => {
+                    let _ = fs::remove_file(&tmp_zip);
+                    return Err(format!("Workshop Textures stream error: {e}"));
+                }
+            }
+        }
+    }
+
+    on_progress(downloaded, total_bytes, "Extracting Workshop Textures...");
+    let extracted_res: Result<usize, String> = (|| {
+        let f = File::open(&tmp_zip).map_err(|e| e.to_string())?;
+        let mut archive = ZipArchive::new(f).map_err(|e| format!("Invalid textures ZIP: {e}"))?;
+        let mut extracted = 0usize;
+        for i in 0..archive.len() {
+            let mut zf = archive.by_index(i).map_err(|e| e.to_string())?;
+            if !zf.is_file() {
+                continue;
+            }
+            let base_nm = Path::new(zf.name())
+                .file_name()
+                .unwrap_or_default()
+                .to_string_lossy()
+                .to_string();
+            if base_nm.is_empty() || base_nm.starts_with('.') {
+                continue;
+            }
+            let ext = Path::new(&base_nm)
+                .extension()
+                .and_then(|s| s.to_str())
+                .unwrap_or("")
+                .to_ascii_lowercase();
+            if ext == "upk" || ext == "tfc" {
+                let dst = tex_dir.join(&base_nm);
+                let mut out = File::create(&dst).map_err(|e| e.to_string())?;
+                io::copy(&mut zf, &mut out).map_err(|e| e.to_string())?;
+                extracted += 1;
+            }
+        }
+        Ok(extracted)
+    })();
+    let _ = fs::remove_file(&tmp_zip);
+    let extracted_count = extracted_res?;
+    if extracted_count == 0 {
+        return Err("No .UPK or .TFC texture packages found in downloaded archive.".into());
+    }
+
+    on_progress(downloaded, total_bytes, "Installing into CookedPCConsole...");
+    let (copied, skipped) = install_workshop_textures_folder(&tex_dir, cooked_dir)?;
+    Ok((copied, skipped, count_cached_workshop_textures()))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn thumb_cache_filename_avoids_steam_cdn_prefix_collisions() {
+        let a = thumb_cache_filename("https://steamuserimages-a.akamaihd.net/ugc/1111111111111111111/AAAA/");
+        let b = thumb_cache_filename("https://steamuserimages-a.akamaihd.net/ugc/1111111111111111111/BBBB/");
+        assert_ne!(a, b, "Steam UGC URLs sharing >44 prefix chars must hash differently");
+    }
+
+    #[test]
+    fn bakkesplugins_download_url_supports_query_and_gdrive() {
+        let html_q = r#"<a href="https://cdn.bakkesplugins.com/uploads/maps/Rings.zip?v=2">DL</a>"#;
+        assert_eq!(
+            extract_bakkesplugins_download_url(html_q).as_deref(),
+            Some("https://cdn.bakkesplugins.com/uploads/maps/Rings.zip?v=2")
+        );
+        let html_gd = r#"<a href="https://drive.google.com/file/d/1AbCdEfG/view?usp=sharing">Drive</a>"#;
+        assert_eq!(
+            extract_bakkesplugins_download_url(html_gd).as_deref(),
+            Some("https://drive.google.com/file/d/1AbCdEfG/view?usp=sharing")
+        );
+    }
+
+    #[test]
+    fn delete_library_map_rejects_traversal() {
+        let bad = WorkshopMapEntry {
+            id: "../outside".into(),
+            name: "Bad".into(),
+            description: String::new(),
+            map_file_rel: "x.udk".into(),
+            thumb_file_rel: None,
+            extra_files_rel: vec![],
+            source_url: None,
+        };
+        assert!(delete_library_map(&bad).is_err());
+    }
+
+    #[test]
+    fn detects_workshop_textures_utility_entry() {
+        let item = OnlineWorkshopItem {
+            name: "Workshop Textures".into(),
+            short_desc: "Missing textures fix".into(),
+            download_url: "https://bakkesplugins.com/maps/96".into(),
+            thumb_url: None,
+            downloads: 0,
+            likes: 0,
+            source: "BakkesPlugins".into(),
+            direct_download: true,
+        };
+        assert!(is_workshop_textures_item(&item));
+    }
 }

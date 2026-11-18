@@ -13,11 +13,23 @@ use crate::upk_engine::{
     unpack_upk_from_disk, unpack_upk_from_raw, vault_backup_path, write_i32_le, CatalogItem,
     PaintColorSpec, UnpackedUpk, PACKAGE_FILE_TAG,
 };
-use image::{imageops::FilterType, DynamicImage, Rgba, RgbaImage};
+use image::{imageops, imageops::FilterType, Rgba, RgbaImage};
 use std::collections::{HashMap, HashSet};
 use std::fs::{self, File};
 use std::io::{Read, Seek, SeekFrom};
 use std::path::{Path, PathBuf};
+
+fn cap_studio_tex_dim(img: &RgbaImage, orig_fmt: Option<&str>) -> u32 {
+    let m = img.width().max(img.height());
+    let d = if m >= 2048 {
+        2048
+    } else if m >= 1024 {
+        1024
+    } else {
+        512
+    };
+    if orig_fmt == Some("PF_A8R8G8B8") { d.min(512) } else { d }
+}
 
 /// Discovers all `AvatarBorder_*_SF.upk` (and obfuscated catalog border) packages in `cooked_dir`,
 /// using the official catalog product names so names match the Avatar Border swapper section 1:1.
@@ -276,9 +288,7 @@ fn render_pfp_into_border_frame(border_img: &RgbaImage, user_img: Option<&RgbaIm
     let hole_h = (iy1.saturating_sub(iy0) + 1).max(1) as u32;
 
     if let Some(u) = user_img {
-        let pfp_resized = DynamicImage::ImageRgba8(u.clone())
-            .resize_exact(hole_w, hole_h, FilterType::Lanczos3)
-            .to_rgba8();
+        let pfp_resized = imageops::resize(u, hole_w, hole_h, FilterType::Lanczos3);
         for y in iy0..=iy1 {
             for x in ix0..=ix1 {
                 if inside[y * w + x] {
@@ -393,9 +403,7 @@ pub fn compose_pfp_with_border_preview(
         for (prio, _, layer_im) in layers.iter().skip(1) {
             if *prio == 2 || *prio == 3 {
                 let resized = if layer_im.dimensions() != (bw, bh) {
-                    DynamicImage::ImageRgba8(layer_im.clone())
-                        .resize_exact(bw, bh, FilterType::Lanczos3)
-                        .to_rgba8()
+                    imageops::resize(layer_im, bw, bh, FilterType::Lanczos3)
                 } else {
                     layer_im.clone()
                 };
@@ -413,11 +421,7 @@ pub fn compose_pfp_with_border_preview(
 
     let preview = render_pfp_into_border_frame(&composite_frame, user_img);
     if preview.dimensions() != (120, 120) {
-        Some(
-            DynamicImage::ImageRgba8(preview)
-                .resize_exact(120, 120, FilterType::Lanczos3)
-                .to_rgba8(),
-        )
+        Some(imageops::resize(&preview, 120, 120, FilterType::Lanczos3))
     } else {
         Some(preview)
     }
@@ -447,7 +451,7 @@ fn patch_border_tex2d_export_in_place(
         return None;
     }
     let slice = &upk.file_bytes[exp.serial_offset..exp.serial_offset + exp.serial_size];
-    let (props_end, fmt, _, _, _) = parse_tex2d_header_props(upk, slice);
+    let (props_end, fmt, _, sx, sy) = parse_tex2d_header_props(upk, slice);
     if props_end == 0 {
         return None;
     }
@@ -481,6 +485,11 @@ fn patch_border_tex2d_export_in_place(
         return None;
     }
     let (m0_rel, w0, h0, md0) = inline_mips[0];
+    // If Mip0 lives externally in .tfc (inline mip is smaller than full SizeX/SizeY),
+    // return None so inject_custom_pfp upgrades the full-resolution texture inline.
+    if sx >= 64 && sy >= 64 && (w0 < sx || h0 < sy) {
+        return None;
+    }
     let border0 = decode_pixel_bytes(w0, h0, &fmt, &slice[m0_rel..m0_rel + md0])?;
     if border0.get_pixel(w0 / 2, h0 / 2)[3] >= 180 {
         return None;
@@ -495,9 +504,7 @@ fn patch_border_tex2d_export_in_place(
         let mip_im = if mw == w0 && mh == h0 {
             composited0.clone()
         } else {
-            DynamicImage::ImageRgba8(composited0.clone())
-                .resize_exact(mw, mh, FilterType::Lanczos3)
-                .to_rgba8()
+            imageops::resize(&composited0, mw, mh, FilterType::Lanczos3)
         };
         if let Some(encoded) = encode_border_mip_bytes(&mip_im, &fmt) {
             if encoded.len() == md {
@@ -524,12 +531,14 @@ pub fn inject_custom_pfp(
     let (unpacked, orig_raw) = unpack_upk_from_disk(&target_path)?;
     let mut mod_bytes = unpacked.file_bytes.clone();
     let mut patched_count = 0usize;
+    let mut resized_reps: Vec<(usize, Vec<u8>)> = Vec::new();
+    let mut added_names: Vec<String> = Vec::new();
 
-    // 1. Export-aware injection covering all 177+ BGRA8 & DXT5 borders across all dimensions
+    // 1. Export-aware injection covering all 177+ BGRA8 & DXT5 borders (including .tfc-backed Mip0)
     let cands = select_avatar_border_frame_exports(&unpacked, Some(cooked_dir));
     if !cands.is_empty() {
         let has_static = cands.iter().any(|(prio, _, _)| *prio == 0);
-        for (prio, exp_idx, _) in &cands {
+        for (prio, exp_idx, frame_im) in &cands {
             // When StaticLayer/StaticBG exists alongside PaintedLayer/TintedLayer, patch only the static base layer
             // (and fallback to all frame layers when no Static* layer exists).
             if has_static && *prio > 0 {
@@ -537,6 +546,17 @@ pub fn inject_custom_pfp(
             }
             if let Some(cnt) = patch_border_tex2d_export_in_place(&unpacked, *exp_idx, &mut mod_bytes, user_img) {
                 patched_count += cnt;
+            } else {
+                let exp = &unpacked.exports[*exp_idx];
+                let orig_ser = &unpacked.file_bytes[exp.serial_offset..exp.serial_offset + exp.serial_size];
+                let composited = render_pfp_into_border_frame(frame_im, Some(user_img));
+                let (tw, th) = scale_pow2_capped(frame_im.width(), frame_im.height(), 512);
+                if let Ok((new_ser, mcnt, _)) =
+                    build_inline_texture2d_serial_with_names(&unpacked, orig_ser, &composited, tw, th, true, &mut added_names)
+                {
+                    resized_reps.push((*exp_idx, new_ser));
+                    patched_count += mcnt;
+                }
             }
         }
     }
@@ -568,12 +588,25 @@ pub fn inject_custom_pfp(
         return Err(format!("Unsupported or empty avatar border texture in {}", target_border_pkg));
     }
 
-    rebuild_upk_selective_chunks(&orig_raw, &unpacked, &mod_bytes, &unpacked.key, &target_path)?;
+    if !resized_reps.is_empty() {
+        let built = rebuild_upk_with_mod_resized_added_and_names_to_vec(
+            &orig_raw,
+            &unpacked,
+            &mod_bytes,
+            &resized_reps,
+            &[],
+            &added_names,
+            &unpacked.key,
+        )?;
+        fs::write(&target_path, built).map_err(|e| e.to_string())?;
+    } else {
+        rebuild_upk_selective_chunks(&orig_raw, &unpacked, &mod_bytes, &unpacked.key, &target_path)?;
+    }
     clear_rl_texture_cache();
     Ok(format!("Injected custom Profile Picture into {} ({} mips)", target_border_pkg, patched_count))
 }
 
-// ── 2. Custom Player Banner Injector (420x100 BGRA8) ─────────────────────────
+// ── 2. Custom Player Banner Injector (420x100 BGRA8 / Texture2D Inline) ──────
 
 pub fn inject_custom_banner(
     cooked_dir: &Path,
@@ -589,9 +622,7 @@ pub fn inject_custom_banner(
     let (unpacked, orig_raw) = unpack_upk_from_disk(&target_path)?;
     let mut mod_bytes = unpacked.file_bytes.clone();
 
-    let banner_resized = DynamicImage::ImageRgba8(user_img.clone())
-        .resize_exact(420, 100, FilterType::Lanczos3)
-        .to_rgba8();
+    let banner_resized = imageops::resize(user_img, 420, 100, FilterType::Lanczos3);
     let bgra = encode_bgra8(&banner_resized);
 
     let marker = [0x40, 0x90, 0x02, 0x00, 0x40, 0x90, 0x02, 0x00]; // (168000, 168000)
@@ -611,6 +642,63 @@ pub fn inject_custom_banner(
             break;
         }
     }
+    let mut resized_reps: Vec<(usize, Vec<u8>)> = Vec::new();
+    let mut added_names: Vec<String> = Vec::new();
+    if patched_count == 0 {
+        let mut cands: Vec<(u8, usize, u32, u32)> = Vec::new();
+        for (idx, exp) in unpacked.exports.iter().enumerate() {
+            if unpacked.export_class_name(exp) != "Texture2D" || exp.serial_offset + exp.serial_size > unpacked.file_bytes.len() {
+                continue;
+            }
+            let obj_low = unpacked.resolve_name(exp.object_name).to_lowercase();
+            let full_low = unpacked.full_export_path(idx + 1).to_lowercase();
+            if obj_low.contains("thumb")
+                || obj_low.contains("icon")
+                || obj_low.contains("mask")
+                || obj_low.ends_with("_n")
+                || obj_low.contains("normal")
+                || obj_low.contains("curvature")
+                || obj_low.contains("blank")
+                || obj_low.contains("_fx")
+                || full_low.contains(".thumb")
+            {
+                continue;
+            }
+            let ser = &unpacked.file_bytes[exp.serial_offset..exp.serial_offset + exp.serial_size];
+            let (pe, _, _, sx, sy) = parse_tex2d_header_props(&unpacked, ser);
+            if pe == 0 || find_tex2d_mip_array_start(ser, pe).is_none() {
+                continue;
+            }
+            let prio = if obj_low.contains("banner") || obj_low.ends_with("_d") || obj_low.contains("diff") {
+                0u8
+            } else {
+                1u8
+            };
+            cands.push((prio, idx, sx.max(512), sy.max(128)));
+        }
+        cands.sort_by_key(|&(prio, idx, sx, _)| (prio, std::cmp::Reverse(sx), idx));
+        for (_prio, idx, sx, sy) in cands {
+            let exp = &unpacked.exports[idx];
+            let inline_hits = patch_texture2d_export_mips(&mut mod_bytes, exp.serial_offset, exp.serial_size, user_img, 32);
+            if inline_hits > 0 {
+                patched_count += inline_hits;
+            } else {
+                let ser = &unpacked.file_bytes[exp.serial_offset..exp.serial_offset + exp.serial_size];
+                let (tw, th) = if sx >= sy * 2 {
+                    (sx.clamp(256, 1024).next_power_of_two(), sy.clamp(64, 256).next_power_of_two())
+                } else {
+                    (512, 128)
+                };
+                if let Ok((new_ser, mcnt, _)) =
+                    build_inline_texture2d_serial_with_names(&unpacked, ser, user_img, tw, th, false, &mut added_names)
+                {
+                    resized_reps.push((idx, new_ser));
+                    patched_count += mcnt;
+                    break;
+                }
+            }
+        }
+    }
     if patched_count == 0 {
         patched_count = patch_any_inline_texture_mips(&unpacked, &mut mod_bytes, user_img);
     }
@@ -618,7 +706,20 @@ pub fn inject_custom_banner(
         return Err(format!("Banner texture mip not found in {}", target_banner_pkg));
     }
 
-    rebuild_upk_selective_chunks(&orig_raw, &unpacked, &mod_bytes, &unpacked.key, &target_path)?;
+    if !resized_reps.is_empty() {
+        let built = rebuild_upk_with_mod_resized_added_and_names_to_vec(
+            &orig_raw,
+            &unpacked,
+            &mod_bytes,
+            &resized_reps,
+            &[],
+            &added_names,
+            &unpacked.key,
+        )?;
+        fs::write(&target_path, built).map_err(|e| e.to_string())?;
+    } else {
+        rebuild_upk_selective_chunks(&orig_raw, &unpacked, &mod_bytes, &unpacked.key, &target_path)?;
+    }
     clear_rl_texture_cache();
     Ok(format!("Injected custom 14:3 Player Banner into {} ({} mips)", target_banner_pkg, patched_count))
 }
@@ -626,7 +727,7 @@ pub fn inject_custom_banner(
 // ── Shared Deterministic UE3 Texture2D Decoder & Inline Mip Rebuilder ────────
 
 fn parse_tex2d_header_props(upk: &UnpackedUpk, slice: &[u8]) -> (usize, String, String, u32, u32) {
-    let limit = slice.len().min(32);
+    let limit = slice.len().min(64);
     let mut props_end = 0usize;
     let mut props = Vec::new();
     for st in (0..limit).step_by(4).chain((0..limit).filter(|x| x % 4 != 0)) {
@@ -748,7 +849,10 @@ pub fn decode_texture2d_export(
                 let mut buf = vec![0u8; dsz];
                 if f.read_exact(&mut buf).is_ok() {
                     let raw = if buf.len() >= 4 && read_u32_le(&buf, 0) == PACKAGE_FILE_TAG {
-                        decompress_chunk_payload(&buf).unwrap_or(buf)
+                        let Ok(dec) = decompress_chunk_payload(&buf) else {
+                            return best_inline.and_then(|(iw, ih, pix)| decode_pixel_bytes(iw, ih, &fmt, pix));
+                        };
+                        dec
                     } else {
                         buf
                     };
@@ -819,7 +923,7 @@ fn build_inline_texture2d_inner(
     let mut props_start = 0usize;
     let mut parsed_props = Vec::new();
 
-    let limit = orig_serial.len().min(32);
+    let limit = orig_serial.len().min(64);
     for st in (0..limit).step_by(4).chain((0..limit).filter(|x| x % 4 != 0)) {
         let (end_off, parsed, ok) = parse_property_stream(upk, orig_serial, st);
         if ok && !parsed.is_empty() {
@@ -842,11 +946,11 @@ fn build_inline_texture2d_inner(
             break;
         }
         let flags = read_u32_le(orig_serial, walk);
-        let disk = read_i32_le(orig_serial, walk + 8).max(0) as usize;
-        if (flags & 0x21) != 0 {
-            walk += 28;
+        let disk_i = read_i32_le(orig_serial, walk + 8);
+        if (flags & 0x21) != 0 || disk_i <= 0 {
+            walk = walk.saturating_add(28).min(orig_serial.len());
         } else {
-            walk += 12 + disk + 8;
+            walk = walk.saturating_add(12 + disk_i as usize + 8).min(orig_serial.len());
         }
     }
     let tail_slice = if walk < orig_serial.len() {
@@ -855,9 +959,11 @@ fn build_inline_texture2d_inner(
         &[]
     };
 
-    let base_img = DynamicImage::ImageRgba8(user_img.clone())
-        .resize_exact(target_w, target_h, FilterType::Lanczos3)
-        .to_rgba8();
+    let base_img = if user_img.width() == target_w && user_img.height() == target_h {
+        user_img.clone()
+    } else {
+        imageops::resize(user_img, target_w, target_h, FilterType::Lanczos3)
+    };
     let has_alpha = base_img.pixels().any(|p| p[3] < 250);
 
     // Determine target UE3 PixelFormat before serializing properties.
@@ -988,9 +1094,7 @@ fn build_inline_texture2d_inner(
         let lvl = if w == target_w && h == target_h {
             base_img.clone()
         } else {
-            DynamicImage::ImageRgba8(base_img.clone())
-                .resize_exact(w, h, FilterType::Triangle)
-                .to_rgba8()
+            imageops::resize(&base_img, w, h, FilterType::Triangle)
         };
         let encoded = if fmt == "PF_A8R8G8B8" {
             encode_bgra8(&lvl)
@@ -1053,7 +1157,7 @@ pub struct AlphaConsoleBallPack {
 }
 
 enum AcAssetStore {
-    Zip(HashMap<String, Vec<u8>>),
+    Zip(Vec<Vec<u8>>, HashMap<String, usize>),
     Dir(PathBuf),
 }
 
@@ -1061,7 +1165,8 @@ impl AcAssetStore {
     fn from_zip_path(path: &Path) -> Result<(Self, Vec<(String, String)>), String> {
         let f = File::open(path).map_err(|e| format!("Failed opening archive: {e}"))?;
         let mut archive = zip::ZipArchive::new(f).map_err(|e| format!("Invalid ZIP archive: {e}"))?;
-        let mut files = HashMap::new();
+        let mut blobs = Vec::new();
+        let mut index = HashMap::new();
         let mut jsons = Vec::new();
         for i in 0..archive.len() {
             let Ok(mut entry) = archive.by_index(i) else {
@@ -1079,19 +1184,21 @@ impl AcAssetStore {
                 continue;
             }
             if raw_name.to_lowercase().ends_with(".json") {
-                if let Ok(txt) = String::from_utf8(buf.clone()) {
-                    jsons.push((raw_name.clone(), txt));
+                if let Ok(txt) = std::str::from_utf8(&buf) {
+                    jsons.push((raw_name.clone(), txt.to_string()));
                 }
             }
+            let blob_idx = blobs.len();
+            blobs.push(buf);
             let low = raw_name.to_lowercase();
             let base = Path::new(&raw_name)
                 .file_name()
                 .map(|s| s.to_string_lossy().to_lowercase())
                 .unwrap_or_else(|| low.clone());
-            files.insert(low, buf.clone());
-            files.entry(base).or_insert(buf);
+            index.insert(low, blob_idx);
+            index.entry(base).or_insert(blob_idx);
         }
-        Ok((Self::Zip(files), jsons))
+        Ok((Self::Zip(blobs, index), jsons))
     }
 
     fn load_image(&self, rel_or_name: &str, cache: &mut HashMap<String, RgbaImage>) -> Option<RgbaImage> {
@@ -1112,9 +1219,9 @@ impl AcAssetStore {
         }
 
         let loaded = match self {
-            AcAssetStore::Zip(map) => {
-                let bytes = map.get(&low).or_else(|| map.get(&base))?;
-                image::load_from_memory(bytes).ok().map(|im| im.to_rgba8())?
+            AcAssetStore::Zip(blobs, map) => {
+                let &blob_idx = map.get(&low).or_else(|| map.get(&base))?;
+                image::load_from_memory(&blobs[blob_idx]).ok().map(|im| im.to_rgba8())?
             }
             AcAssetStore::Dir(root) => {
                 let p1 = root.join(&clean);
@@ -1366,12 +1473,15 @@ pub fn parse_alphaconsole_decal_source(path: &Path) -> Result<Vec<AlphaConsoleDe
         }
     }
 
-    // Fallback: ZIP containing PNG(s) without a JSON manifest
+    // Fallback: ZIP containing PNG/JPG/WEBP images without a JSON manifest (nested or root)
     if out.is_empty() {
-        if let AcAssetStore::Zip(ref map) = store {
+        if let AcAssetStore::Zip(_, ref map) = store {
             let mut png_names: Vec<&String> = map
                 .keys()
-                .filter(|k| k.contains('/') && (k.ends_with(".png") || k.ends_with(".jpg")))
+                .filter(|k| {
+                    (k.ends_with(".png") || k.ends_with(".jpg") || k.ends_with(".jpeg") || k.ends_with(".webp"))
+                        && !k.contains("mask")
+                })
                 .collect();
             png_names.sort();
             if let Some(first) = png_names.first() {
@@ -1436,6 +1546,40 @@ pub fn parse_alphaconsole_ball_source(path: &Path) -> Result<Vec<AlphaConsoleBal
                             out.push(pack);
                         }
                     }
+                }
+            }
+        }
+    }
+
+    if out.is_empty() {
+        if let AcAssetStore::Zip(_, ref map) = store {
+            let mut img_names: Vec<&String> = map
+                .keys()
+                .filter(|k| k.ends_with(".png") || k.ends_with(".jpg") || k.ends_with(".jpeg") || k.ends_with(".webp"))
+                .collect();
+            img_names.sort();
+            if let Some(diff_k) = img_names
+                .iter()
+                .find(|k| k.contains("diff") || !k.contains("norm") && !k.contains("mask"))
+                .or_else(|| img_names.first())
+            {
+                if let Some(diff_im) = store.load_image(diff_k, &mut cache) {
+                    let normal_im = img_names
+                        .iter()
+                        .find(|k| k.contains("norm"))
+                        .and_then(|k| store.load_image(k, &mut cache));
+                    let mask_im = img_names
+                        .iter()
+                        .find(|k| k.contains("mask"))
+                        .and_then(|k| store.load_image(k, &mut cache));
+                    out.push(AlphaConsoleBallPack {
+                        name: src_label.clone(),
+                        group: String::new(),
+                        diffuse_img: diff_im,
+                        normal_img: normal_im,
+                        mask_img: mask_im,
+                        source_label: src_label,
+                    });
                 }
             }
         }
@@ -1750,16 +1894,12 @@ fn composite_legacy_skin_over_diffuse(base: &RgbaImage, skin: &RgbaImage) -> Rgb
     let mut out = if base.width() == w && base.height() == h {
         base.clone()
     } else {
-        DynamicImage::ImageRgba8(base.clone())
-            .resize_exact(w, h, FilterType::Lanczos3)
-            .to_rgba8()
+        imageops::resize(base, w, h, FilterType::Lanczos3)
     };
     let s_resized = if skin.width() == w && skin.height() == h {
         skin.clone()
     } else {
-        DynamicImage::ImageRgba8(skin.clone())
-            .resize_exact(w, h, FilterType::Lanczos3)
-            .to_rgba8()
+        imageops::resize(skin, w, h, FilterType::Lanczos3)
     };
     for (dst, src) in out.pixels_mut().zip(s_resized.pixels()) {
         let max_c = src[0].max(src[1]).max(src[2]);
@@ -1847,7 +1987,14 @@ pub fn inject_alphaconsole_decal_at(
     };
     let needs_upgrade = !native_ok;
 
-    if needs_upgrade {
+    let is_multi_skin_pkg = upk
+        .exports
+        .iter()
+        .filter(|e| upk.export_class_name(e) == "ProductAsset_Skin_TA")
+        .count()
+        > 1;
+
+    if needs_upgrade && !is_multi_skin_pkg {
         let allow_locked_pref = preferred_donor_pkg.is_some();
         if let Some((donor_path, donor_pa, donor_clean_2m)) =
             find_diffuse_donor_for_target(cooked_dir, target_decal_pkg, preferred_donor_pkg, allow_locked_pref)
@@ -1938,8 +2085,7 @@ pub fn inject_alphaconsole_decal_at(
     let encode_tex_for = |tmpl_i: usize, img: &RgbaImage, force_dxt5: bool, names_out: &mut Vec<String>| -> Result<Vec<u8>, String> {
         let orig_ser = &upk.file_bytes[upk.exports[tmpl_i].serial_offset..upk.exports[tmpl_i].serial_offset + upk.exports[tmpl_i].serial_size];
         let (_, fmt, _, _, _) = parse_tex2d_header_props(&upk, orig_ser);
-        let max_d = if img.width().max(img.height()) >= 1024 { 1024 } else { 512 };
-        let dim = if !force_dxt5 && fmt == "PF_A8R8G8B8" { max_d.min(512) } else { max_d };
+        let dim = cap_studio_tex_dim(img, (!force_dxt5).then_some(fmt.as_str()));
         Ok(build_inline_texture2d_serial_with_names(&upk, orig_ser, img, dim, dim, force_dxt5, names_out)?.0)
     };
 
@@ -2191,9 +2337,7 @@ pub fn patch_texture2d_export_mips(
                 }
             }
             if let Some((pad, sx, sy, is_bgra)) = matched_pad {
-                let resized = DynamicImage::ImageRgba8(user_img.clone())
-                    .resize_exact(sx, sy, FilterType::Lanczos3)
-                    .to_rgba8();
+                let resized = imageops::resize(user_img, sx, sy, FilterType::Lanczos3);
                 let encoded = if is_bgra {
                     encode_bgra8(&resized)
                 } else {
@@ -2243,7 +2387,7 @@ pub fn inject_alphaconsole_ball(
 
     let mut replacements: Vec<(usize, Vec<u8>)> = Vec::new();
     let mut added_names: Vec<String> = Vec::new();
-    let d_dim = if pack.diffuse_img.width().max(pack.diffuse_img.height()) >= 1024 { 1024 } else { 512 };
+    let d_dim = cap_studio_tex_dim(&pack.diffuse_img, None);
     let diff_ser = &upk.file_bytes[upk.exports[diff_idx].serial_offset..upk.exports[diff_idx].serial_offset + upk.exports[diff_idx].serial_size];
     let (new_diff, d_mips, _) =
         build_inline_texture2d_serial_with_names(&upk, diff_ser, &pack.diffuse_img, d_dim, d_dim, false, &mut added_names)?;
@@ -2252,7 +2396,7 @@ pub fn inject_alphaconsole_ball(
     let mut injected_layers = vec!["Diffuse"];
     if let Some(ref norm_img) = pack.normal_img {
         if let Some(norm_idx) = find_ball_tex("Ball_Default_Textures.Textures.Ball_Default00_N") {
-            let n_dim = if norm_img.width().max(norm_img.height()) >= 1024 { 1024 } else { 512 };
+            let n_dim = cap_studio_tex_dim(norm_img, None);
             let n_ser = &upk.file_bytes[upk.exports[norm_idx].serial_offset..upk.exports[norm_idx].serial_offset + upk.exports[norm_idx].serial_size];
             if let Ok((new_norm, _, _)) =
                 build_inline_texture2d_serial_with_names(&upk, n_ser, norm_img, n_dim, n_dim, false, &mut added_names)
@@ -2264,7 +2408,7 @@ pub fn inject_alphaconsole_ball(
     }
     if let Some(ref mask_img) = pack.mask_img {
         if let Some(mask_idx) = find_ball_tex("Ball_Default_Textures.Textures.Ball_Default00_RGB") {
-            let m_dim = if mask_img.width().max(mask_img.height()) >= 1024 { 1024 } else { 512 };
+            let m_dim = cap_studio_tex_dim(mask_img, None);
             let m_ser = &upk.file_bytes[upk.exports[mask_idx].serial_offset..upk.exports[mask_idx].serial_offset + upk.exports[mask_idx].serial_size];
             if let Ok((new_mask, _, _)) =
                 build_inline_texture2d_serial_with_names(&upk, m_ser, mask_img, m_dim, m_dim, false, &mut added_names)
@@ -2413,6 +2557,48 @@ pub fn build_tinted_texture_replacements_with_names(
     (reps, added_names)
 }
 
+pub(crate) fn detect_modified_border_from_exports(upk: &UnpackedUpk, cooked_dir: Option<&Path>) -> bool {
+    let mut best_static_opaque = false;
+    let mut has_static_cutout = false;
+    let mut any_frame_opaque = false;
+    let mut has_frame_cutout = false;
+    for (idx, exp) in upk.exports.iter().enumerate() {
+        if upk.export_class_name(exp) != "Texture2D" {
+            continue;
+        }
+        let full_low = upk.full_export_path(idx + 1).to_lowercase();
+        if is_ignored_border_aux_texture(&full_low) || full_low.ends_with("_n") || full_low.contains("normal") {
+            continue;
+        }
+        if let Some(im) = decode_texture2d_export(upk, idx, cooked_dir) {
+            let (w, h) = im.dimensions();
+            if w < 64 || h < 64 {
+                continue;
+            }
+            let center_a = im.get_pixel(w / 2, h / 2)[3];
+            let prio = border_layer_priority(&full_low);
+            if prio == 0 {
+                if center_a >= 180 {
+                    best_static_opaque = true;
+                } else {
+                    has_static_cutout = true;
+                }
+            } else if prio == 1 {
+                if center_a >= 180 {
+                    any_frame_opaque = true;
+                } else {
+                    has_frame_cutout = true;
+                }
+            }
+        }
+    }
+    if has_static_cutout || best_static_opaque {
+        best_static_opaque && !has_static_cutout
+    } else {
+        any_frame_opaque && !has_frame_cutout
+    }
+}
+
 /// Convenience wrapper returning only replacement `(exp_idx, serial_bytes)` pairs.
 pub fn build_tinted_texture_replacements(
     upk: &UnpackedUpk,
@@ -2420,4 +2606,41 @@ pub fn build_tinted_texture_replacements(
     color: &PaintColorSpec,
 ) -> Vec<(usize, Vec<u8>)> {
     build_tinted_texture_replacements_with_names(upk, cooked_dir, color).0
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Write;
+    use zip::write::SimpleFileOptions;
+    use zip::ZipWriter;
+
+    #[test]
+    fn flat_zip_without_json_parses_for_both_decal_and_ball() {
+        let dir = std::env::temp_dir().join("rl_custom_studio_flat_zip");
+        let _ = fs::remove_dir_all(&dir);
+        fs::create_dir_all(&dir).unwrap();
+
+        let img = RgbaImage::from_pixel(32, 32, Rgba([20, 180, 240, 255]));
+        let mut png_bytes = Vec::new();
+        img.write_to(&mut std::io::Cursor::new(&mut png_bytes), image::ImageFormat::Png).unwrap();
+
+        let zip_p = dir.join("flat_pack.zip");
+        {
+            let mut z = ZipWriter::new(File::create(&zip_p).unwrap());
+            z.start_file("skin.png", SimpleFileOptions::default()).unwrap();
+            z.write_all(&png_bytes).unwrap();
+            z.finish().unwrap();
+        }
+
+        let decals = parse_alphaconsole_decal_source(&zip_p).expect("Flat ZIP without subdirs must parse as decal");
+        assert_eq!(decals.len(), 1);
+        assert!(decals[0].skin_img.is_some());
+
+        let balls = parse_alphaconsole_ball_source(&zip_p).expect("Flat ZIP without manifest must parse as ball");
+        assert_eq!(balls.len(), 1);
+        assert_eq!(balls[0].diffuse_img.dimensions(), (32, 32));
+
+        let _ = fs::remove_dir_all(&dir);
+    }
 }

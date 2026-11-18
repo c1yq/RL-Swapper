@@ -4,6 +4,7 @@ version = "4.1.0"
 edition = "2021"
 authors = ["c1ya"]
 description = "Blazingly fast portable Rocket League Cosmetic Swapper, Workshop Map Loader, Presets & Studio"
+build = "build.rs"
 
 [[bin]]
 name = "RL_Swapper"
